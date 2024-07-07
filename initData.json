@@ -1,0 +1,16 @@
+{
+  "pip": {
+    "emoji": {
+      "pip": "emoji",
+      "pacman": "python-emoji"
+    },
+    "setuptools": {
+      "pip": "setuptools",
+      "pacman": "python-setuptools",
+      "required": true
+    },
+    "flatten": {
+      "pipx_local": "./py/flatten"
+    }
+  }
+}
