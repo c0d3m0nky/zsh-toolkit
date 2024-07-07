@@ -2,7 +2,6 @@ import re
 import sys
 import os
 import argparse
-import time
 import subprocess
 from pathlib import Path
 

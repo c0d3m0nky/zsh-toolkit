@@ -15,5 +15,4 @@ source $ZSH/oh-my-zsh.sh
 ZSHCOM="$HOME/.zsh-toolkit"
 
 source $ZSHCOM/init.sh
-# source /home/c0d3m0nk3y/Dropbox/sys/.zshrc_common
 
