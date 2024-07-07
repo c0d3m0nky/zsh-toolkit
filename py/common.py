@@ -120,7 +120,7 @@ def _pip_check_pip(pkg: str) -> bool:
     global _pip_packages
 
     if _pip_packages is None:
-        res = _sh('pip list --short')
+        res = _sh('pip list')
 
         for ln in res.splitlines():
             m: re.Match = re.search(_pip_list_re, ln)
@@ -132,6 +132,10 @@ def _pip_check_pip(pkg: str) -> bool:
                 _pip_packages.append(m.group(1))
             else:
                 print(f'pip list: Failed to parse line {ln}')
+
+    if _pip_packages is None:
+        print('No pip packages found')
+        return False
 
     return pkg in _pip_packages
 
@@ -152,6 +156,10 @@ def _pip_check_pipx(pkg: str) -> bool:
                 _pipx_packages.append(m.group(1))
             else:
                 print(f'pipx list: Failed to parse line {ln}')
+
+    if _pipx_packages is None:
+        print('No pipx packages found')
+        return False
 
     return pkg in _pipx_packages
 
