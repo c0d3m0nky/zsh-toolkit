@@ -63,7 +63,7 @@ _pip_arch = parse_bool(os.environ.get('ZSHCOM_PIP_ARCH'))
 _pip_install_user: bool = parse_bool(os.environ.get('ZSHCOM_PIP_INSTALL_USER')) or True
 
 if _pip_arch is None:
-    _pip_arch = platform.system() == 'Linux' and platform.freedesktop_os_release()['ID_LIKE'] == 'arch'
+    _pip_arch = platform.system() == 'Linux' and 'ID_LIKE' in platform.freedesktop_os_release() and platform.freedesktop_os_release()['ID_LIKE'] == 'arch'
 
 
 def _sh(cmd: str, check=False, suppress_error=False) -> str:
