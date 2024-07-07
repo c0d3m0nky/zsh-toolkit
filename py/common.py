@@ -243,3 +243,6 @@ def init():
 
         if any_required:
             exit(1)
+
+
+init()
