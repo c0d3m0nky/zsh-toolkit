@@ -1,5 +1,9 @@
 {
   "pip": {
+    "pipx": {
+      "pip": "pipx",
+      "pacman": "python-pipx"
+    },
     "emoji": {
       "pip": "emoji",
       "pacman": "python-emoji"
@@ -9,8 +13,8 @@
       "pacman": "python-setuptools",
       "required": true
     },
-    "flatten": {
-      "pipx_local": "./py/flatten"
+    "zsh_toolkit_py": {
+      "pipx_local": "./py/pack"
     }
   }
 }

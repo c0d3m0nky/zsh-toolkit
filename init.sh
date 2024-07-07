@@ -73,11 +73,7 @@ fi
 
 if [[ $ZSHCOM_NOPY != true ]]
 then
-  for f in $(python3 $ZSHCOM__basedir/py/common.py _funcs)
-  do
-    # echo "_python_redirect $f"
-    _python_redirect "$f"
-  done
+  python3 $ZSHCOM__basedir/py/common.py
 fi
 
 if [[ -d $ZSHCOM_POSTLOAD ]]
