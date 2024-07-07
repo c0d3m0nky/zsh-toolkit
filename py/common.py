@@ -112,8 +112,8 @@ def _pip_install_pipx(pkg: str, local: Path = None):
 
 
 _pip_list_re = re.compile(r'^([^\w]+) +([\d.]+)$')
-_pip_packages: List[str]
-_pipx_packages: List[str]
+_pip_packages: Union[List[str], None] = None
+_pipx_packages: Union[List[str], None] = None
 
 
 def _pip_check_pip(pkg: str) -> bool:
