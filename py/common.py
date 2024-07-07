@@ -123,6 +123,9 @@ def _pip_check_pip(pkg: str) -> bool:
         res = _sh('pip list')
 
         for ln in res.splitlines():
+            if ln.startswith('Package') or ln.startswith('---'):
+                continue
+
             m: re.Match = re.search(_pip_list_re, ln)
 
             if m:
