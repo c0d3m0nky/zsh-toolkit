@@ -12,7 +12,7 @@ then
   rm -rf $HOME/.zsh-toolkit
 fi
 
-git clone git@github.com:c0d3m0nky/zsh-toolkit.git $HOME/.zsh-toolkit
+git clone https://github.com/c0d3m0nky/zsh-toolkit.git $HOME/.zsh-toolkit
 
 zshrcCheck=$(grep '^ZSHCOM=' $HOME/.zshrc)
 
