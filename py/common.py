@@ -111,7 +111,7 @@ def _pip_install_pipx(pkg: str, local: Path = None):
         _sh(f'pipx install {pkg}', check=True)
 
 
-_pip_list_re = re.compile(r'^([^\s]+)]\s+(.+)$')
+_pip_list_re = re.compile(r'^([^\s]+)\s+(.+)$')
 _pip_packages: Union[List[str], None] = None
 _pipx_packages: Union[List[str], None] = None
 
