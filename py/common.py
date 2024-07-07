@@ -238,7 +238,8 @@ def init():
             if mp.required:
                 any_required = True
 
-            print(f'\t{pk}:\t{"REQUIRED" if mp.required else ""}\n\t\t{str(mp).replace("\t", "\n\t\t")}')
+            details = str(mp).replace("\t", "\n\t\t")
+            print(f'\t{pk}:\t{"REQUIRED" if mp.required else ""}\n\t\t{details}')
 
         if any_required:
             exit(1)
