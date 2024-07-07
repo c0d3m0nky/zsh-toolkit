@@ -25,4 +25,5 @@ then
   echo 'source $ZSHCOM/init.sh' >> $HOME/.zshrc
 fi
 
+ZSHCOM="$HOME/.zsh-toolkit"
 source $ZSHCOM/init.sh
