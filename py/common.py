@@ -182,12 +182,14 @@ def _pip_check_pipx(pkg: str) -> str:
             print('Will update zsh_toolkit_py')
             return 'update'
         else:
+            print(f'Will do nothing with {pkg}')
             return ''
     else:
         if pkg not in _pipx_packages:
             print(f'Will install {pkg}')
             return 'install'
         else:
+            print(f'Will do nothing with {pkg}')
             return ''
 
 
