@@ -173,6 +173,7 @@ def _pip_check_pipx(pkg: str) -> str:
         return False
 
     if pkg == 'zsh_toolkit_py':
+        print(_pipx_packages)
         if pkg not in _pipx_packages:
             return 'install'
         elif _pipx_packages[pkg] != zsh_toolkit_version:
