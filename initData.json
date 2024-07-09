@@ -1,20 +1,25 @@
 {
   "pip": {
-    "pipx": {
-      "pip": "pipx",
-      "pacman": "python-pipx"
-    },
-    "emoji": {
-      "pip": "emoji",
-      "pacman": "python-emoji"
-    },
     "setuptools": {
       "pip": "setuptools",
       "pacman": "python-setuptools",
       "required": true
     },
+    "pipx": {
+      "pip": "pipx",
+      "pacman": "python-pipx",
+      "required": true
+    },
+    "GitPython": {
+      "pip": "GitPython",
+      "pacman": "python-gitpython"
+    },
     "zsh_toolkit_py": {
       "pipx_local": "./py/pack"
+    },
+    "emoji": {
+      "pip": "emoji",
+      "pacman": "python-emoji"
     }
   }
 }
