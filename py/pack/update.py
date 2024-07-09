@@ -17,7 +17,7 @@ def _sh(cmd: str, check=False, suppress_error=False) -> str:
 
     return res.stdout.decode('utf-8').strip()
 
-_rx_local_changes = re.compile(r'(Changes not staged for commit)', re.MULTILINE)
+_rx_local_changes = re.compile(r'(Changes not staged for commit|Changes to be committed)', re.MULTILINE)
 _rx_behind_origin = re.compile(r'Your branch is behind .+ by (\d+) commits?', re.MULTILINE)
 _rx_ahead_origin = re.compile(r'Your branch is ahead of .+ by (\d+) commits?', re.MULTILINE)
 _rx_diverged = re.compile(r'and have (\d+) and (\d+) different commits each, respectively', re.MULTILINE)
@@ -34,6 +34,7 @@ def main():
         local_changes = _rx_local_changes.search(status)
         diverged = _rx_diverged.search(status)
         ahead = _rx_ahead_origin.search(status)
+
 
         if diverged or ahead or local_changes:
             print('You have local changes, please update manually')
