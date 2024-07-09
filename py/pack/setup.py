@@ -1,8 +1,9 @@
 from setuptools import setup
+from constants import zsh_toolkit_version
 
 setup(
     name='zsh_toolkit_py',
-    version='1.2.0',
+    version=zsh_toolkit_version,
     description='ZSH utils I find useful',
     author='c0d3m0nky',
     py_modules=['flatten','rxmv','update'],

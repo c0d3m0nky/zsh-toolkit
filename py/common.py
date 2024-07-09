@@ -7,6 +7,9 @@ import subprocess
 
 from typing import Union, Dict, List
 
+from py.pack import constants
+from pack.constants import zsh_toolkit_version
+
 
 class PipPkg:
     pip: str = None
@@ -113,7 +116,7 @@ def _pip_install_pipx(pkg: str, local: Path = None):
 
 _pip_list_re = re.compile(r'^([^\s]+)\s+(.+)$')
 _pip_packages: Union[List[str], None] = None
-_pipx_packages: Union[List[str], None] = None
+_pipx_packages: Union[Dict[str, str], None] = None
 
 
 def _pip_check_pip(pkg: str) -> bool:
@@ -143,7 +146,7 @@ def _pip_check_pip(pkg: str) -> bool:
     return pkg in _pip_packages
 
 
-def _pip_check_pipx(pkg: str) -> bool:
+def _pip_check_pipx(pkg: str) -> str:
     global _pipx_packages
 
     if _pipx_packages is None:
@@ -154,9 +157,9 @@ def _pip_check_pipx(pkg: str) -> bool:
 
             if m:
                 if _pipx_packages is None:
-                    _pipx_packages = []
+                    _pipx_packages = {}
 
-                _pipx_packages.append(m.group(1))
+                _pipx_packages[m.group(1)] = m.group(2)
             else:
                 print(f'pipx list: Failed to parse line {ln}')
 
@@ -164,7 +167,18 @@ def _pip_check_pipx(pkg: str) -> bool:
         print('No pipx packages found')
         return False
 
-    return pkg in _pipx_packages
+    if pkg == 'zsh_toolkit_py':
+        if pkg not in _pipx_packages:
+            return 'install'
+        elif _pipx_packages[pkg] != zsh_toolkit_version:
+            return 'update'
+        else:
+            return ''
+    else:
+        if pkg not in _pipx_packages:
+            return 'install'
+        else:
+            return ''
 
 
 def _pip_check_pacman(pkg: str) -> bool:
@@ -184,15 +198,18 @@ def init():
     for pk in init_data.pip:
         pkg = init_data.pip[pk]
         satisfied = False
+        pipx_local_action = None
 
         if _pip_check_pip(pkg.pip):
             satisfied = True
         elif pkg.pacman and _pip_check_pacman(pkg.pacman):
             satisfied = True
-        elif pkg.pipx and _pip_check_pipx(pkg.pipx):
+        elif pkg.pipx and _pip_check_pipx(pk) != 'install':
             satisfied = True
-        elif pkg.pipx_local and _pip_check_pipx(pk):
-            satisfied = True
+        elif pkg.pipx_local:
+            pipx_local_action = _pip_check_pipx(pk)
+            if pipx_local_action == '':
+                satisfied = True
 
         if not satisfied:
             if pkg.pip and not _pip_arch:
@@ -220,7 +237,10 @@ def init():
                     if not spec_path.is_absolute():
                         spec_path = Path(_basedir / pkg.pipx_local).resolve()
 
-                    _pip_install_pipx(pk, local=spec_path)
+                    if pipx_local_action == 'install':
+                        _pip_install_pipx(pk, local=spec_path)
+                    else:
+                        _pip_upgrade_pipx(pk, local=spec_path)
                     satisfied = True
                 except Exception:
                     print('')
