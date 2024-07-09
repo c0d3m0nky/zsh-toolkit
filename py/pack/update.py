@@ -45,6 +45,10 @@ def main():
         else:
             up_to_date = True
 
+    if up_to_date:
+        print('Repo successfully updated')
+        
+
     # diffs = repo.git.diff(f'origin/{repo.active_branch.name}')
 
 
