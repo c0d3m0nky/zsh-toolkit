@@ -7,7 +7,6 @@ import subprocess
 
 from typing import Union, Dict, List
 
-from py.pack import constants
 from pack.constants import zsh_toolkit_version
 
 
