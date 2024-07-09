@@ -11,7 +11,7 @@ setup(
         'console_scripts': [
             'flatten=flatten:main',
             'rxmv=rxmv:main',
-            'zshToolkitUpdate=update:main'
+            'zsh-toolkit-update=update:main'
         ],
     },
     install_requires=[
