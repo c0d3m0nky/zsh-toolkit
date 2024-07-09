@@ -20,6 +20,6 @@ setup(
         'userinput',
         'numpy',
         'emoji',
-        'git'
+        'GitPython'
     ]
 )
