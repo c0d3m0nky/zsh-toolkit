@@ -170,6 +170,7 @@ def _pip_check_pipx(pkg: str) -> str:
 
     if _pipx_packages is None:
         print('No pipx packages found')
+        return 'install'
 
     if pkg == 'zsh_toolkit_py':
         print('')
