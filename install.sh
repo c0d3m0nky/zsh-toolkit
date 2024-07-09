@@ -1,6 +1,5 @@
 #!/bin/zsh
 
-
 if [[ -d $HOME/.zsh-toolkit ]]
 then
   vared -p 'zsh-toolkit is already installed, would you like to reinstall? (y/n): ' -c resp
