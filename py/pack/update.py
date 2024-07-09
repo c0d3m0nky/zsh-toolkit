@@ -7,6 +7,18 @@ from git import Repo
 
 _basedir = Path(os.environ.get('ZSHCOM__basedir')).resolve()
 
+class shellcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    BLACK = '\033[30m'
+    FAIL = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    OFF = '\033[0m'
+    NOOP = ''
 
 def _sh(cmd: str, check=False, suppress_error=False) -> str:
     if suppress_error:
@@ -25,6 +37,7 @@ _rx_diverged = re.compile(r'and have (\d+) and (\d+) different commits each, res
 def main():
     repo = Repo(_basedir)
     up_to_date = False
+    pulled = False
 
     print('Checking for updates...')
     print('')
@@ -43,18 +56,18 @@ def main():
         elif behind_origin:
             print('You\'re behind origin, updating')
             repo.remotes.origin.pull()
+            pulled = True
         else:
             up_to_date = True
 
     if up_to_date:
         print('')
-        print('Repo successfully updated')
-        print('')
-        print('Updating dependencies')
-        _sh(f'python3 ./py/common.py')
 
+        if pulled:
+            print(f'Repo successfully updated. Updates will be available in new terminal sessions or after running {shellcolors.OKCYAN}source $ZSHCOM/init.sh{shellcolors.OFF}')
+        else:
+            print('Repo is up to date')
 
-    # diffs = repo.git.diff(f'origin/{repo.active_branch.name}')
 
 
 if __name__ == '__main__':
