@@ -1,1 +1,1 @@
-zsh_toolkit_version = '1.2.0'
+zsh_toolkit_version = '1.2.1'

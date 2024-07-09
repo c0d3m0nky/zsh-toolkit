@@ -11,7 +11,7 @@ setup(
         'console_scripts': [
             'flatten=flatten:main',
             'rxmv=rxmv:main',
-            'zsh-toolkit-update=update:main'
+            'zshToolkitUpdate=update:main'
         ],
     },
     install_requires=[
@@ -19,6 +19,7 @@ setup(
         'python-rclone',
         'userinput',
         'numpy',
-        'emoji'
+        'emoji',
+        'git'
     ]
 )
