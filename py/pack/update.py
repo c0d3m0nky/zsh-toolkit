@@ -2,7 +2,6 @@ import os
 import subprocess
 import re
 from pathlib import Path
-from typing import Union
 
 from git import Repo
 
@@ -27,6 +26,9 @@ def main():
     repo = Repo(_basedir)
     up_to_date = False
 
+    print('Checking for updates...')
+    print('')
+
     while not up_to_date:
         repo.remotes.origin.fetch()
         status = _sh('git status')
@@ -34,7 +36,6 @@ def main():
         local_changes = _rx_local_changes.search(status)
         diverged = _rx_diverged.search(status)
         ahead = _rx_ahead_origin.search(status)
-
 
         if diverged or ahead or local_changes:
             print('You have local changes, please update manually')
@@ -46,7 +47,11 @@ def main():
             up_to_date = True
 
     if up_to_date:
+        print('')
         print('Repo successfully updated')
+        print('')
+        print('Updating dependencies')
+        _sh(f'python3 ./py/common.py')
 
 
     # diffs = repo.git.diff(f'origin/{repo.active_branch.name}')

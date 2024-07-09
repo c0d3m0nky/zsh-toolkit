@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='zsh_toolkit_py',
-    version='1.1.3',
+    version='1.2.0',
     description='ZSH utils I find useful',
     author='c0d3m0nky',
     py_modules=['flatten','rxmv','update'],
