@@ -17,8 +17,9 @@ def _sh(cmd: str, check=False, suppress_error=False) -> str:
     return res.stdout.decode('utf-8').strip()
 
 
-_rx_behind_origin = re.compile(r'Your branch is behind .+ by (\d+) commit')
-_rx_diverged = re.compile(r'and have (\d+) and (\d+) different commits each, respectively')
+_rx_behind_origin = re.compile(r'Your branch is behind .+ by (\d+) commits?', re.MULTILINE)
+_rx_ahead_origin = re.compile(r'Your branch is ahead of .+ by (\d+) commits?', re.MULTILINE)
+_rx_diverged = re.compile(r'and have (\d+) and (\d+) different commits each, respectively', re.MULTILINE)
 
 
 def main():
@@ -26,8 +27,9 @@ def main():
     repo.remotes.origin.fetch()
 
     status = _sh('git status')
-    behind_origin = _rx_behind_origin.match(status)
-    diverged = _rx_diverged.match(status)
+    behind_origin = _rx_behind_origin.search(status)
+    diverged = _rx_diverged.search(status)
+    ahead = _rx_ahead_origin.search(status)
 
     diffs = repo.git.diff(f'origin/{repo.active_branch.name}')
 
