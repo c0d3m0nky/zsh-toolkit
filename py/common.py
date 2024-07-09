@@ -64,8 +64,14 @@ _basedir = Path(os.environ.get('ZSHCOM__basedir'))
 _pip_arch = parse_bool(os.environ.get('ZSHCOM_PIP_ARCH'))
 _pip_install_user: bool = parse_bool(os.environ.get('ZSHCOM_PIP_INSTALL_USER')) or True
 
-if _pip_arch is None:
-    _pip_arch = platform.system() == 'Linux' and 'ID_LIKE' in platform.freedesktop_os_release() and platform.freedesktop_os_release()['ID_LIKE'] == 'arch'
+if _pip_arch is None and platform.system() == 'Linux':
+    fdor = getattr(platform, "freedesktop_os_release", None)
+    if callable(fdor):
+        _pip_arch = 'ID_LIKE' in platform.freedesktop_os_release() and platform.freedesktop_os_release()['ID_LIKE'] == 'arch'
+    else:
+        _pip_arch = False
+else:
+    _pip_arch = False
 
 
 def _sh(cmd: str, check=False, suppress_error=False) -> str:
