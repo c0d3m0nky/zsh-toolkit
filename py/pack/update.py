@@ -1,5 +1,6 @@
 import os
 import subprocess
+import re
 from pathlib import Path
 
 from git import Repo
@@ -16,14 +17,18 @@ def _sh(cmd: str, check=False, suppress_error=False) -> str:
     return res.stdout.decode('utf-8').strip()
 
 
-def is_behind_origin() -> bool:
-    resp = _sh('git status | grep -P "Your branch is behind .+ by (\d+) commit"')
+_rx_behind_origin = re.compile(r'Your branch is behind .+ by (\d+) commit')
+_rx_diverged = re.compile(r'and have (\d+) and (\d+) different commits each, respectively')
 
-    return bool(resp)
 
 def main():
     repo = Repo(_basedir)
     repo.remotes.origin.fetch()
+
+    status = _sh('git status')
+    behind_origin = _rx_behind_origin.match(status)
+    diverged = _rx_diverged.match(status)
+
     diffs = repo.git.diff(f'origin/{repo.active_branch.name}')
 
 
