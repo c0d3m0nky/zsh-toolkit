@@ -1,6 +1,5 @@
 #!/bin/zsh
 
-
 export ZSHCOM__basedir=$(dirname "$0")
 self=$(basename "$0")
 
