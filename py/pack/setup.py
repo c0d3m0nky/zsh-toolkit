@@ -5,11 +5,12 @@ setup(
     version='1.1.3',
     description='ZSH utils I find useful',
     author='c0d3m0nky',
-    py_modules=['flatten','rxmv'],
+    py_modules=['flatten','rxmv','update'],
     entry_points={
         'console_scripts': [
             'flatten=flatten:main',
             'rxmv=rxmv:main',
+            'zsh-toolkit-update=update:main'
         ],
     },
     install_requires=[
