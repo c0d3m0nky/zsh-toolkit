@@ -1,10 +1,8 @@
-import sys
 import os
 from dataclasses import dataclass
 from pathlib import Path
 import re
 import shutil
-from typing import Union
 
 from tap import Tap
 
@@ -29,8 +27,8 @@ class Args(Tap):
     plan: bool = False
 
     def configure(self) -> None:
-        self.description = 'Move with regular expressions'
-        # example = r"Example: rxmv -f ./ '!./\1/\2' '^(\d{4})-(\d+).+$'"
+        self.description = 'Move with regular expressions\n'
+        self.epilog = r"Example: rxmv -f ./ '!./\1/\2' '^(\d{4})-(\d+).+$'"
 
         self.add_argument("source", type=arg_to_path, help="Move root")
         self.add_argument("destination", type=str, help="Folder to move to. Prefix with ! for regex replace")
@@ -63,12 +61,7 @@ def main():
     args = Args().parse_args()
 
     src = args.source
-    # tgt = Path(args.destination)
     rx = args.pattern
-
-    # if tgt.exists() and not tgt.is_dir():
-    # 	print('Destination path is existing file')
-    # 	return
 
     actions = []
 
@@ -89,10 +82,6 @@ def main():
                 tgt = Path(re.sub(rx, tgt_replace, p.name))
             else:
                 tgt = Path(args.destination)
-
-            # if tgt.exists() and not tgt.is_dir():
-            #     print(f'Destination path is existing file: {tgt.as_posix()}')
-            #     continue
 
             if tgt.parent.as_posix() == '/':
                 print('Cannot target root directory')
