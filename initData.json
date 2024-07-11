@@ -10,10 +10,6 @@
       "pacman": "python-pipx",
       "required": true
     },
-    "GitPython": {
-      "pip": "GitPython",
-      "pacman": "python-gitpython"
-    },
     "zsh_toolkit_py": {
       "pipx_local": "./py/pack"
     },

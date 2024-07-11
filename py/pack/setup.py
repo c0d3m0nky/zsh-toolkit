@@ -6,12 +6,13 @@ setup(
     version=zsh_toolkit_version,
     description='ZSH utils I find useful',
     author='c0d3m0nky',
-    py_modules=['flatten','rxmv','update'],
+    py_modules=['flatten', 'rxmv', 'update', 'folder_density'],
     entry_points={
         'console_scripts': [
             'flatten=flatten:main',
             'rxmv=rxmv:main',
-            'zsh-toolkit-update=update:main'
+            'ztk-update=update:main',
+            'folderDensity=folder_density:main'
         ],
     },
     install_requires=[
@@ -20,6 +21,7 @@ setup(
         'userinput',
         'numpy',
         'emoji',
-        'GitPython'
+        'GitPython',
+        'tqdm'
     ]
 )
