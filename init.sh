@@ -70,8 +70,6 @@ detectOS
 
 if [[ $ZSHCOM__known_os == 'unraid' ]]; then ZSHCOM__banner=$ZSHCOM__known_os; fi
 
-echo Banner $ZSHCOM__banner
-
 # ToDo: include total
 alias duh="du -hs */ | sort -h"
 alias listDirs="find ./ -type d"
@@ -158,9 +156,9 @@ function _splash() {
 
   print $zcOFF
 
-  echo -e "
-${zcGreen}ztk-update${zcOFF} : Updates zsh-toolkit
-"
+#  echo -e "
+#${zcGreen}ztk-update${zcOFF} : Updates zsh-toolkit
+#"
 
 }
 

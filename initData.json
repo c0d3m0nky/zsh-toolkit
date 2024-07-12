@@ -1,5 +1,5 @@
 {
-  "pip": {
+  "pkg": {
     "setuptools": {
       "pip": "setuptools",
       "pacman": "python-setuptools",

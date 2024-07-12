@@ -42,11 +42,11 @@ class PipPkg:
 
 
 class InitData:
-    pip: Dict[str, PipPkg] = {}
+    pkg: Dict[str, PipPkg] = {}
 
-    def __init__(self, pip: Dict[str, Dict[str, str]] = None) -> None:
-        for pk in pip:
-            self.pip[pk] = PipPkg(**pip[pk])
+    def __init__(self, pkg: Dict[str, Dict[str, str]] = None) -> None:
+        for pk in pkg:
+            self.pkg[pk] = PipPkg(**pkg[pk])
 
 
 def parse_bool(s: str) -> Union[bool, None]:
@@ -125,8 +125,10 @@ _pip_list_re = re.compile(r'^([^\s]+)\s+(.+)$')
 _pip_packages: Union[List[str], None] = None
 _pipx_packages: Union[Dict[str, str], None] = None
 
+def _pkg_check_os() -> bool:
+    return True
 
-def _pip_check_pip(pkg: str) -> bool:
+def _pkg_check_pip(pkg: str) -> bool:
     global _pip_packages
 
     if _pip_packages is None:
@@ -153,7 +155,7 @@ def _pip_check_pip(pkg: str) -> bool:
     return pkg in _pip_packages
 
 
-def _pip_check_pipx(pkg: str) -> str:
+def _pkg_check_pipx(pkg: str) -> str:
     global _pipx_packages
 
     if _pipx_packages is None:
@@ -188,7 +190,7 @@ def _pip_check_pipx(pkg: str) -> str:
             return ''
 
 
-def _pip_check_pacman(pkg: str) -> bool:
+def _pkg_check_pacman(pkg: str) -> bool:
     r = _sh(f'pacman -Q {pkg} && echo good', suppress_error=True)
 
     return r.endswith('good')
@@ -202,21 +204,24 @@ def init():
 
     missing_packages = {}
 
-    for pk in init_data.pip:
-        pkg = init_data.pip[pk]
+    for pk in init_data.pkg:
+        pkg = init_data.pkg[pk]
         satisfied = False
         pipx_local_action = None
 
-        if _pip_check_pip(pkg.pip):
+        if _pkg_check_pip(pkg.pip):
             satisfied = True
-        elif pkg.pacman and _pip_check_pacman(pkg.pacman):
+        elif pkg.pacman and _pkg_check_pacman(pkg.pacman):
             satisfied = True
-        elif pkg.pipx and _pip_check_pipx(pk) != 'install':
+        elif pkg.pipx and _pkg_check_pipx(pk) != 'install':
             satisfied = True
         elif pkg.pipx_local:
-            pipx_local_action = _pip_check_pipx(pk)
+            pipx_local_action = _pkg_check_pipx(pk)
             if pipx_local_action == '':
                 satisfied = True
+        elif pkg.os and _pkg_check_os():
+            satisfied = True
+
 
         if not satisfied:
             if pkg.pip and not _pip_arch:
