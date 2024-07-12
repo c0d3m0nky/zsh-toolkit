@@ -169,8 +169,11 @@ function _splash() {
 
   print $zcOFF
 
-  echo -e "${zcGreen}ztk-update${zcOFF} : Updates zsh-toolkit
+  if [[ $ZSHCOM_HIDE_SPLASH_INFO != true ]]
+  then
+    echo -e "${zcGreen}ztk-update${zcOFF} : Updates zsh-toolkit
   "
+  fi
 
 }
 
