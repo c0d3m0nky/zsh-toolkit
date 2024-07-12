@@ -31,7 +31,6 @@ then
     sudo chmod +x $ZSHCOM__basedir/detectOS.sh
 fi
 
-
 $ZSHCOM__basedir/detectOS.sh
 
 # choose banner

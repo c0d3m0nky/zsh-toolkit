@@ -1,5 +1,7 @@
 #!/bin/zsh
 
+echo Detecting OS
+
 export ZSHCOM__known_os=''
 export ZSHCOM__pkg_install=''
 
