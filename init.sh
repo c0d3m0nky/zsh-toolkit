@@ -157,7 +157,7 @@ function _splash() {
   sf="$ZSHCOM__basedir/banners/${ZSHCOM__banner}.sh"
   echo sf $sf
 
-  if [[ -f "$sf" ]]
+  if [[ ! -f "$sf" ]]
   then
     sf="$ZSHCOM__basedir/banners/default.sh"
   fi
