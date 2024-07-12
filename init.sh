@@ -25,12 +25,6 @@ self=$(basename "$0")
 
 _trace "Loading self: $self"
 
-#if [[ ! -x "$ZSHCOM__basedir/detectOS.sh" ]]
-#then
-#    echo "Setting permissions on detectOS.sh"
-#    sudo chmod +x $ZSHCOM__basedir/detectOS.sh
-#fi
-
 function detectOS() {
   export ZSHCOM__known_os=''
   export ZSHCOM__pkg_install=''
@@ -59,24 +53,18 @@ function detectOS() {
 
   rel=$(cat /etc/os-release | grep -Pi '^(id)=slackware$')
 
-  echo checking os-release
-
   if [[ $rel != '' && -f "/boot/license.txt" ]]
   then
     lic=$(cat "/boot/license.txt" | grep -Pi 'unraid')
-    echo checking license
+
     if [[ $lic != '' ]]
     then
-      echo setting ZSHCOM__known_os
       export ZSHCOM__known_os='unraid'
-      echo $ZSHCOM__known_os
     fi
   fi
 }
 
-#$ZSHCOM__basedir/detectOS.sh
 detectOS
-echo $ZSHCOM__known_os
 
 # choose banner
 
@@ -155,7 +143,6 @@ fi
 function _splash() {
 
   sf="$ZSHCOM__basedir/banners/${ZSHCOM__banner}.sh"
-  echo sf $sf
 
   if [[ ! -f "$sf" ]]
   then
