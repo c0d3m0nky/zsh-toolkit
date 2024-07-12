@@ -19,7 +19,7 @@
       "pacman": "python-emoji"
     },
     "ack": {
-      "__os": "ack"
+      "os": "ack"
     }
   }
 }

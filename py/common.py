@@ -16,15 +16,15 @@ class PipPkg:
     pipx_local: str = None
     pacman: str = None
     required: bool = False
-    __os: bool
+    os: bool
 
-    def __init__(self, pip: str = None, pipx: str = None, pipx_local: str = None, pacman: str = None, required: bool = False, __os: bool = False) -> None:
+    def __init__(self, pip: str = None, pipx: str = None, pipx_local: str = None, pacman: str = None, required: bool = False, os: bool = False) -> None:
         self.pip = pip
         self.pipx = pipx
         self.pipx_local = pipx_local
         self.pacman = pacman
         self.required = required
-        self.__os = __os
+        self.os = os
 
     def __str__(self) -> str:
         op = []
