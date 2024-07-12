@@ -32,6 +32,7 @@ then
 fi
 
 $ZSHCOM__basedir/detectOS.sh
+echo $ZSHCOM__known_os
 
 # choose banner
 
