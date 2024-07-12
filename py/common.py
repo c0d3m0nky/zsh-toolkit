@@ -16,7 +16,7 @@ class PipPkg:
     pipx_local: str = None
     pacman: str = None
     required: bool = False
-    os_pkg: bool
+    __os: bool
 
     def __init__(self, pip: str = None, pipx: str = None, pipx_local: str = None, pacman: str = None, required: bool = False, __os: bool = False) -> None:
         self.pip = pip
@@ -24,7 +24,7 @@ class PipPkg:
         self.pipx_local = pipx_local
         self.pacman = pacman
         self.required = required
-        self.os_pkg = __os
+        self.__os = __os
 
     def __str__(self) -> str:
         op = []
