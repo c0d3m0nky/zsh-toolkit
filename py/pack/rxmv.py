@@ -120,7 +120,7 @@ def main():
                             i += 1
                         np = npa
 
-            np_parent = np.parent if base_renamed else np
+            np_parent = np if base_renamed else np.parent
 
             if not np_parent.exists():
                 actions.append(Action(fp, np_parent, mkdir=True))
