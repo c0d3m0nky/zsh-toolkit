@@ -49,6 +49,11 @@ function detectOS() {
     export ZSHCOM__known_hw='pi'
   fi
 
+  if [[ -f "/.dockerenv" ]]
+  then
+    export ZSHCOM__known_hw='docker'
+  fi
+
   rel=$(cat /etc/os-release | grep -Pi '^(id_like)=arch$')
 
   if [[ $rel != '' ]]
@@ -183,8 +188,8 @@ _updateVar ZSHCOM__known_hw
 
 # choose banner
 
-if [[ $ZSHCOM__known_os == 'unraid' ]]; then ZSHCOM__banner=$ZSHCOM__known_os; fi
-if [[ $ZSHCOM__known_hw == 'pi' ]]; then ZSHCOM__banner=$ZSHCOM__known_hw; fi
+if [[ $ZSHCOM__known_hw == 'pi' || $ZSHCOM__known_hw == 'docker' ]]; then ZSHCOM__banner=$ZSHCOM__known_hw; fi
+if [[ $ZSHCOM__known_os == 'unraid' || $ZSHCOM__known_os == 'debian' ]]; then ZSHCOM__banner=$ZSHCOM__known_os; fi
 
 if [[ $ZSHCOM_HIDE_SPLASH != true ]]
 then
