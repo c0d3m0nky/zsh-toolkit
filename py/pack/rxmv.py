@@ -64,6 +64,7 @@ def main():
     rx = args.pattern
 
     actions = []
+    mkdirs = []
 
     for p in src.iterdir():
         is_match = bool(rx.search(p.name))
@@ -122,21 +123,17 @@ def main():
 
             np_parent = np if base_renamed else np.parent
 
-            if not np_parent.exists():
+            if not np_parent.exists() and np_parent.as_posix() not in mkdirs:
+                mkdirs.append(np_parent.as_posix())
                 actions.append(Action(fp, np_parent, mkdir=True))
 
             actions.append(Action(fp, np))
-
-    mkdirs = []
 
     for a in actions:
         if a.mkdir:
             if args.plan:
                 (rsrc, rdest) = find_common_path(a.src, a.dest)
-                psx = a.dest.as_posix()
-                if psx not in mkdirs:
-                    mkdirs.append(psx)
-                    print(f'mkdir {rdest}')
+                print(f'mkdir {rdest}')
             else:
                 a.dest.mkdir(parents=True)
         else:
