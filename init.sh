@@ -21,6 +21,17 @@ function _trace() {
   fi
 }
 
+function _updateVar() {
+  varf="$ZSHCOM__basedir/.var_$1"
+  varv=$(cat "$varf" 2>/dev/null || echo '~!~')
+
+  if [[ "$varv" != '~!~' ]]
+  then
+    eval $1=$varv
+    rm $varf
+  fi
+}
+
 self=$(basename "$0")
 
 _trace "Loading self: $self"
@@ -30,6 +41,13 @@ function detectOS() {
   export ZSHCOM__pkg_install=''
 
   if [[ ! -f /etc/os-release ]]; then return; fi
+
+  rel=$(cat /proc/cpuinfo | grep -Pi 'model\s+:\s+raspberry')
+
+  if [[ $rel != '' ]]
+  then
+    export ZSHCOM__known_hw='pi'
+  fi
 
   rel=$(cat /etc/os-release | grep -Pi '^(id_like)=arch$')
 
@@ -65,10 +83,6 @@ function detectOS() {
 }
 
 detectOS
-
-# choose banner
-
-if [[ $ZSHCOM__known_os == 'unraid' ]]; then ZSHCOM__banner=$ZSHCOM__known_os; fi
 
 # ToDo: include total
 alias duh="du -hs */ | sort -h"
@@ -139,7 +153,6 @@ then
 fi
 
 function _splash() {
-
   sf="$ZSHCOM__basedir/banners/${ZSHCOM__banner}.sh"
 
   if [[ ! -f "$sf" ]]
@@ -147,7 +160,7 @@ function _splash() {
     sf="$ZSHCOM__basedir/banners/default.sh"
   fi
 
-  if [[ -f $HOME/.ztk-banner ]]
+  if [[ -f $HOME/.ztk-bannerr ]]
   then
     zsh -c "$(cat "$HOME/.ztk-banner")"
   else
@@ -156,10 +169,21 @@ function _splash() {
 
   print $zcOFF
 
-#  echo -e "
-#${zcGreen}ztk-update${zcOFF} : Updates zsh-toolkit
-#"
+  echo -e "${zcGreen}ztk-update${zcOFF} : Updates zsh-toolkit
+  "
 
 }
 
-_splash
+_updateVar ZSHCOM__known_os
+_updateVar ZSHCOM__banner
+_updateVar ZSHCOM__known_hw
+
+# choose banner
+
+if [[ $ZSHCOM__known_os == 'unraid' ]]; then ZSHCOM__banner=$ZSHCOM__known_os; fi
+if [[ $ZSHCOM__known_hw == 'pi' ]]; then ZSHCOM__banner=$ZSHCOM__known_hw; fi
+
+if [[ $ZSHCOM_HIDE_SPLASH != true ]]
+then
+  _splash
+fi

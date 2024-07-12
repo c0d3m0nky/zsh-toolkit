@@ -10,6 +10,11 @@ from typing import Union, Dict, List
 from pack.constants import zsh_toolkit_version
 
 
+def set_parent_var(var: str, value: str):
+    with open(_basedir / f'.var_{var}', 'w') as text_file:
+        text_file.write(value)
+
+
 class PipPkg:
     pip: str = None
     pipx: str = None
@@ -125,8 +130,10 @@ _pip_list_re = re.compile(r'^([^\s]+)\s+(.+)$')
 _pip_packages: Union[List[str], None] = None
 _pipx_packages: Union[Dict[str, str], None] = None
 
+
 def _pkg_check_os() -> bool:
     return True
+
 
 def _pkg_check_pip(pkg: str) -> bool:
     global _pip_packages
@@ -222,7 +229,6 @@ def init():
         elif pkg.os and _pkg_check_os():
             satisfied = True
 
-
         if not satisfied:
             if pkg.pip and not _pip_arch:
                 try:
@@ -286,6 +292,5 @@ def init():
 
         if any_required:
             exit(1)
-
 
 init()
