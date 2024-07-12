@@ -14,9 +14,6 @@ fi
 
 git clone https://github.com/c0d3m0nky/zsh-toolkit.git $HOME/.zsh-toolkit
 
-echo Setting permissions
-chmod +x $HOME/.zsh-toolkit/detectOS.sh
-
 zshrcCheck=$(grep '^ZSHCOM=' $HOME/.zshrc)
 
 if [[ -z $zshrcCheck ]]
