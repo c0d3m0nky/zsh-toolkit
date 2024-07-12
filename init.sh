@@ -82,6 +82,8 @@ echo $ZSHCOM__known_os
 
 if [[ $ZSHCOM__known_os == 'unraid' ]]; then ZSHCOM__banner=$ZSHCOM__known_os; fi
 
+echo Banner $ZSHCOM__banner
+
 # ToDo: include total
 alias duh="du -hs */ | sort -h"
 alias listDirs="find ./ -type d"
