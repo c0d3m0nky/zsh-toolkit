@@ -27,11 +27,15 @@ if [[ $ZSHCOM__known_os != '' ]]; then exit 0; fi
 
 rel=$(cat /etc/os-release | grep -Pi '^(id)=slackware$')
 
+echo checking os-release
+
 if [[ $rel != '' && -f "/boot/license.txt" ]]
 then
-  lic=$(cat /boot/license.txt | grep -Pi 'unraid')
+  lic=$(cat "/boot/license.txt" | grep -Pi 'unraid')
+  echo checking license
   if [[ $lic != '' ]]
   then
+    echo setting ZSHCOM__known_os
     export ZSHCOM__known_os='unraid'
   fi
 fi
