@@ -1,7 +1,5 @@
 #!/bin/zsh
 
-echo Detecting OS
-
 export ZSHCOM__known_os=''
 export ZSHCOM__pkg_install=''
 
@@ -27,7 +25,7 @@ fi
 
 if [[ $ZSHCOM__known_os != '' ]]; then exit 0; fi
 
-rel=$(cat /etc/os-release | grep -Pi '^(id_like)=slackware$')
+rel=$(cat /etc/os-release | grep -Pi '^(id)=slackware$')
 
 if [[ $rel != '' && -f "/boot/license.txt" ]]
 then
