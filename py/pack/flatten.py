@@ -21,7 +21,7 @@ T = TypeVar('T')
 R = TypeVar('R')
 
 _rx_leading_posix_path: re.Pattern = re.compile(r'^.?/?')
-_working_dir: Path = Path('../../').resolve()
+# _working_dir: Path = Path('../../').resolve()
 
 def int_safe(i: str) -> Union[int, None]:
     try:
@@ -124,9 +124,9 @@ class Args(Tap):
 
     def configure(self) -> None:
         self.description = 'Flatten directory tree'
-        self.add_argument('root', type=arg_to_path, help='Directory path to flattenn')
+        self.add_argument('root', type=arg_to_path, help='Directory path to flatten')
         self.add_argument("-d", "--delimiter", help="Path part delimiter")
-        self.add_argument("--plan", action='store_true', help="Don't commit movess")
+        self.add_argument("-p", "--plan", action='store_true', help="Don't commit moves")
         self.add_argument("-e", "--extensions", nargs='+', help="Only include these extensions", required=False)
         self.add_argument("-ei", "--extensions-inverted", nargs='+', help="Exclude these extensions", required=False)
         self.add_argument("-pf", "--path-filter", type=arg_to_re, default='.+',
@@ -261,8 +261,8 @@ def flatten_path():
         nfp = root / nfn.get_path_str()
         rel = f.relative_to(root)
         nrel = nfp.relative_to(root)
-        wdrel_nfp = nfp.relative_to(_working_dir)
-        wdrel_f = f.relative_to(_working_dir)
+        wdrel_nfp = nfp.relative_to(root)
+        wdrel_f = f.relative_to(root)
 
         print(f'{rel.as_posix()}\n{nrel.as_posix()}\n')
         if os.path.exists(wdrel_nfp.as_posix()):
