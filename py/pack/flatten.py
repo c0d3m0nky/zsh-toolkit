@@ -261,15 +261,13 @@ def flatten_path():
         nfp = root / nfn.get_path_str()
         rel = f.relative_to(root)
         nrel = nfp.relative_to(root)
-        wdrel_nfp = nfp.relative_to(root)
-        wdrel_f = f.relative_to(root)
 
         print(f'{rel.as_posix()}\n{nrel.as_posix()}\n')
-        if os.path.exists(wdrel_nfp.as_posix()):
+        if os.path.exists(nfp.as_posix()):
             print(f'Target file already exists: {nrel}')
         else:
             if not _args.plan:
-                os.rename(wdrel_f.as_posix(), wdrel_nfp.as_posix())
+                os.rename(f.as_posix(), nfp.as_posix())
 
     if not _args.plan:
         rclone.with_config("").run_cmd(command="rmdirs", extra_args=[root.as_posix()])
