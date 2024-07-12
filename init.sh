@@ -119,7 +119,7 @@ function _splash() {
   then
     zsh -c "$(cat "$HOME/.ztk-banner")"
   else
-    zsh -c "$(cat \"$sf\")"
+    zsh -c "$(cat "$sf")"
   fi
 
   print $zcOFF
