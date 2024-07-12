@@ -160,7 +160,7 @@ function _splash() {
     sf="$ZSHCOM__basedir/banners/default.sh"
   fi
 
-  if [[ -f $HOME/.ztk-bannerr ]]
+  if [[ -f $HOME/.ztk-banner ]]
   then
     zsh -c "$(cat "$HOME/.ztk-banner")"
   else
