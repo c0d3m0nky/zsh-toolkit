@@ -37,5 +37,6 @@ then
   then
     echo setting ZSHCOM__known_os
     export ZSHCOM__known_os='unraid'
+    echo $ZSHCOM__known_os
   fi
 fi
