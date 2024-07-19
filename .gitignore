@@ -1,5 +1,6 @@
 .var_*
 .cache_*
+.state_*
 
 
 # Byte-compiled / optimized / DLL files

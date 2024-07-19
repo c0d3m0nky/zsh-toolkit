@@ -13,4 +13,4 @@ A collection of bash & python scripts I use as helpers in zsh
   * Scheduled
 * Separate and cache of heuristics
 * Troubleshoot and optimize load times
-* Why is pipx not updating on "source $ZSHCOM/init.sh" after update and requires ssh reconnect?
+* Prevent changes to pack from being committed without updating version

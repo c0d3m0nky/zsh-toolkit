@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from pathlib import Path
 import re
 import os
@@ -8,6 +9,7 @@ import subprocess
 from typing import Union, Dict, List
 
 from pack.constants import zsh_toolkit_version
+from pack.utils import parse_bool
 
 
 def set_parent_var(var: str, value: str):
@@ -52,19 +54,6 @@ class InitData:
     def __init__(self, pkg: Dict[str, Dict[str, str]] = None) -> None:
         for pk in pkg:
             self.pkg[pk] = PipPkg(**pkg[pk])
-
-
-def parse_bool(s: str) -> Union[bool, None]:
-    if s:
-        s = s.lower()
-        if s in ['yes', 'true', 't', 'y', '1']:
-            return True
-        elif s in ['no', 'false', 'f', 'n', '0']:
-            return False
-        else:
-            return None
-    else:
-        return None
 
 
 _basedir = Path(os.environ.get('ZSHCOM__basedir'))
@@ -204,6 +193,22 @@ def _pkg_check_pacman(pkg: str) -> bool:
 
 
 def init():
+    dcs = _basedir / '.state_dependencies_checked'
+    ru = _basedir / '.state_repo_update_checked'
+    ud = _basedir / '.state_update_dependencies'
+
+    if ru.exists() and datetime.fromtimestamp(ru.stat().st_mtime) > (datetime.now() - timedelta(days=7)):
+        # I'm doing this here because in theory, it should already have been satisfied
+        from userinput import userinput
+
+        resp = userinput(f'You have not checked for zsh-toolkit updates in over a week, would you like to check now: ')
+
+
+    if (dcs.exists()
+            and datetime.fromtimestamp(dcs.stat().st_mtime) > (datetime.now() - timedelta(hours=24))
+            and not ud.exists()):
+        return
+
     with open(_basedir / 'initData.json') as jf:
         mp = json.load(jf)
 
@@ -292,5 +297,11 @@ def init():
 
         if any_required:
             exit(1)
+
+    dcs.touch()
+
+    if ud.exists():
+        ud.unlink()
+
 
 init()
