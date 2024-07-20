@@ -16,7 +16,7 @@ class Args(Tap):
 
     def configure(self) -> None:
         self.description = 'Update zsh-toolkit'
-        self.add_argument("-d", "--dependencies", action='store_true', help="Only update dependencies")
+        self.add_argument("-d", "--dependencies", action='store_true', help="Only update dependencies", default=False)
 
 
 def _sh(cmd: str, check=False, suppress_error=False) -> str:

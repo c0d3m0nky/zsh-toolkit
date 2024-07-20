@@ -6,7 +6,7 @@ setup(
     version=zsh_toolkit_version,
     description='ZSH utils I find useful',
     author='c0d3m0nky',
-    py_modules=['flatten', 'rxmv', 'update', 'folder_density'],
+    py_modules=['flatten', 'rxmv', 'update', 'folder_density', 'utils'],
     entry_points={
         'console_scripts': [
             'flatten=flatten:main',
