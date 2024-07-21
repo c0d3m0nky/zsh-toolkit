@@ -197,7 +197,7 @@ def init():
     ru = _basedir / '.state_repo_update_checked'
     ud = _basedir / '.state_update_dependencies'
 
-    if ru.exists() and datetime.fromtimestamp(ru.stat().st_mtime) > (datetime.now() - timedelta(days=7)):
+    if ru.exists() and datetime.fromtimestamp(ru.stat().st_mtime) < (datetime.now() - timedelta(days=7)):
         # I'm doing this here because in theory, it should already have been satisfied
         from userinput import userinput
 
