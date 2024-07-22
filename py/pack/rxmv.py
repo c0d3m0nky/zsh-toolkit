@@ -65,6 +65,7 @@ def main():
 
     actions = []
     mkdirs = []
+    do_all = ''
 
     for p in src.iterdir():
         is_match = bool(rx.search(p.name))
@@ -104,7 +105,12 @@ def main():
                 good = False
                 skip = False
                 while not good:
-                    chc = input(f'{np.name} already exists auto number, skip, or cancel (a/s/c): ').lower()
+                    if not do_all:
+                        chc = input(f'{np.name} already exists auto number, skip, or cancel (a/s/c): ').lower()
+                        do_all = chc.strip('+') if chc.endswith('+') else do_all
+                    else:
+                        chc = do_all
+
                     if chc == 's':
                         good = True
                         skip = True
@@ -120,6 +126,8 @@ def main():
                             npa = np.parent / f'{np.stem} ({i}){np.suffix}'
                             i += 1
                         np = npa
+                    elif do_all:
+                        do_all = ''
 
             np_parent = np if base_renamed else np.parent
 
