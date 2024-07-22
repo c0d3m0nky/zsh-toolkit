@@ -209,6 +209,8 @@ def init():
             and not ud.exists()):
         return
 
+    print('Checking dependencies...')
+
     with open(_basedir / 'initData.json') as jf:
         mp = json.load(jf)
 

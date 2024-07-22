@@ -79,7 +79,6 @@ def main():
             if parse_bool(os.environ.get('ZSHCOM_UPDATE_NORELOAD')):
                 print(f'Repo successfully updated. Updates will be available in new terminal sessions or after running {shellcolors.OKCYAN}source $ZSHCOM/init.sh{shellcolors.OFF}')
             else:
-                os.environ['ZSHCOM'] = _basedir.as_posix()
                 _sh(f'source "{_basedir.as_posix()}/init.sh"')
         else:
             print('Repo is up to date')
