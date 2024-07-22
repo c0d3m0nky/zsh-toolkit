@@ -96,6 +96,7 @@ alias listDirs="find ./ -type d"
 alias whatsmyip="host myip.opendns.com resolver1.opendns.com | ack 'myip.opendns.com has address ([\d.]+)' --output '\$1'"
 alias whatsmyip-curl="curl checkip.amazonaws.com"
 alias clip="tee >(xclip -r -selection clipboard)"
+alias popout='upd=$(dirname $(pwd)); while [[ ! -d "$upd" ]]; do upd=$(dirname "$upd"); done; cd "$upd"'
 
 # ToDo: pip install (needs to be special for Arch distros
 
