@@ -21,6 +21,7 @@ then
   cp $HOME/.zshrc $HOME/.zshrc.bak
 
   echo '\n\n### zsh-toolkit init' >> $HOME/.zshrc
+  echo 'export PATH="$PATH:$HOME/.local/bin"'  >> $HOME/.zshrc
   echo 'ZSHCOM="$HOME/.zsh-toolkit"' >> $HOME/.zshrc
   echo 'source $ZSHCOM/init.sh' >> $HOME/.zshrc
 fi
