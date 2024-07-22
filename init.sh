@@ -1,5 +1,11 @@
 #!/bin/zsh
 
+if [[ -z "$ZSHCOM" ]]
+then
+  echo ZSHCOM is not set
+  exit 1
+fi
+
 ZSHCOM__basedir=$ZSHCOM
 export ZSHCOM__basedir
 export ZSHCOM__banner="default"
