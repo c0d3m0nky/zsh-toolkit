@@ -186,7 +186,7 @@ function _splash() {
     zsh -c "$(cat "$sf")"
   fi
 
-  printf '%s' "$zcOFF"
+  echo -n "$zcOFF"
 
   if [[ $ZSHCOM_HIDE_SPLASH_INFO != true ]]
   then
