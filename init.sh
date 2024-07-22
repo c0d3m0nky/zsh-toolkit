@@ -10,6 +10,7 @@ export zcOrange="\u001b[38;5;202m"
 export zcYellow="\033[93m"
 export zcGreen="\033[92m"
 export zcBlue="\u001b[38;5;12m"
+export zcCyan="\u001b[38;5;12m"
 export zcIndigo="\u001b[38;5;92m"
 export zcViolet="\u001b[38;5;201m"
 export zcOFF="\033[0m"
@@ -54,36 +55,42 @@ function detectOS() {
     export ZSHCOM__known_hw='docker'
   fi
 
-  rel=$(cat /etc/os-release | grep -Pi '^(id_like)=arch$')
-
-  if [[ $rel != '' ]]
+  if [[ -f /etc/os-release ]]
   then
-    export ZSHCOM__known_os='arch'
-    export ZSHCOM__pkg_install='pacman -S'
-  fi
+    rel=$(cat /etc/os-release | grep -Pi '^(id_like)=arch$')
 
-  if [[ $ZSHCOM__known_os != '' ]]; then return; fi
-
-  rel=$(cat /etc/os-release | grep -Pi '^(id_like)=debian$')
-
-  if [[ $rel != '' ]]
-  then
-    export ZSHCOM__known_os='debian'
-    export ZSHCOM__pkg_install='apt install'
-  fi
-
-  if [[ $ZSHCOM__known_os != '' ]]; then return; fi
-
-  rel=$(cat /etc/os-release | grep -Pi '^(id)=slackware$')
-
-  if [[ $rel != '' && -f "/boot/license.txt" ]]
-  then
-    lic=$(cat "/boot/license.txt" | grep -Pi 'unraid')
-
-    if [[ $lic != '' ]]
+    if [[ $rel != '' ]]
     then
-      export ZSHCOM__known_os='unraid'
+      export ZSHCOM__known_os='arch'
+      export ZSHCOM__pkg_install='pacman -S'
     fi
+
+    if [[ $ZSHCOM__known_os != '' ]]; then return; fi
+
+    rel=$(cat /etc/os-release | grep -Pi '^(id_like)=debian$')
+
+    if [[ $rel != '' ]]
+    then
+      export ZSHCOM__known_os='debian'
+      export ZSHCOM__pkg_install='apt install'
+    fi
+
+    if [[ $ZSHCOM__known_os != '' ]]; then return; fi
+
+    rel=$(cat /etc/os-release | grep -Pi '^(id)=slackware$')
+
+    if [[ $rel != '' && -f "/boot/license.txt" ]]
+    then
+      lic=$(cat "/boot/license.txt" | grep -Pi 'unraid')
+
+      if [[ $lic != '' ]]
+      then
+        export ZSHCOM__known_os='unraid'
+      fi
+    fi
+  elif [[ "$OSTYPE" == 'msys' ]]
+  then
+    export ZSHCOM__known_os='win'
   fi
 }
 
@@ -190,7 +197,7 @@ _updateVar ZSHCOM__known_hw
 # choose banner
 
 if [[ $ZSHCOM__known_hw == 'pi' || $ZSHCOM__known_hw == 'docker' ]]; then ZSHCOM__banner=$ZSHCOM__known_hw; fi
-if [[ $ZSHCOM__known_os == 'unraid' || $ZSHCOM__known_os == 'debian' ]]; then ZSHCOM__banner=$ZSHCOM__known_os; fi
+if [[ $ZSHCOM__known_os == 'unraid' || $ZSHCOM__known_os == 'debian' || $ZSHCOM__known_os == 'win' ]]; then ZSHCOM__banner=$ZSHCOM__known_os; fi
 
 if [[ $ZSHCOM_HIDE_SPLASH != true ]]
 then
