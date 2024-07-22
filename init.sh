@@ -2,7 +2,7 @@
 
 if [[ -z "$ZSHCOM" ]]
 then
-  echo ZSHCOM is not set
+  echo "ZSHCOM is not set"
   exit 1
 fi
 

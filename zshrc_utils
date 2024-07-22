@@ -23,7 +23,7 @@ dockerZsh() {
 	docker exec -it "$1" /bin/zsh
 }
 
-function pip-install-save {
+function pip_install_save {
     pip install "$1" && pip freeze | grep "$1" >> requirements.txt
 }
 
