@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-ZSHCOM__basedir=$(dirname "$0")
+ZSHCOM__basedir=$ZSHCOM
 export ZSHCOM__basedir
 export ZSHCOM__banner="default"
 
