@@ -115,11 +115,15 @@ def main():
                         chc = do_all
 
                     if chc == 's':
+                        if do_all:
+                            print(f'Skipping {np.name}')
                         skip = True
                         break
                     elif chc == 'c':
                         return
                     elif chc == 'a':
+                        if do_all:
+                            print(f'Auto numbering {np.name}')
                         good = True
                         npa = np
                         i = 1
