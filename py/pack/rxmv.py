@@ -107,16 +107,17 @@ def main():
                 while not good:
                     if not do_all:
                         chc = input(f'{np.name} already exists auto number, skip, or cancel (a/s/c): ').lower()
-                        do_all = chc.strip('+') if chc.endswith('+') else do_all
+
+                        if chc.endswith('+'):
+                            chc = chc.strip('+')
+                            do_all = chc
                     else:
                         chc = do_all
 
                     if chc == 's':
-                        good = True
                         skip = True
-                        continue
+                        break
                     elif chc == 'c':
-                        good = True
                         return
                     elif chc == 'a':
                         good = True
@@ -128,6 +129,9 @@ def main():
                         np = npa
                     elif do_all:
                         do_all = ''
+
+                if skip:
+                    continue
 
             np_parent = np if base_renamed else np.parent
 
