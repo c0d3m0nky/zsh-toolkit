@@ -21,6 +21,8 @@ T = TypeVar('T')
 R = TypeVar('R')
 
 _rx_leading_posix_path: re.Pattern = re.compile(r'^.?/?')
+_rx_conseq_filler_chars: re.Pattern = re.compile(r'([_-])[_-]+')
+_rx_space: re.Pattern = re.compile(r'\s+')
 # _working_dir: Path = Path('../../').resolve()
 
 def int_safe(i: str) -> Union[int, None]:
@@ -33,6 +35,13 @@ def int_safe(i: str) -> Union[int, None]:
 # region argparse
 
 class RenameParts:
+    file: Path
+    root: Path
+    _orig_parts: List[str]
+    parts: List[str]
+    extension: str
+    delimiter: str
+
     def __init__(self, file: Path, root: Path, parts: List[str], extension: str, delimiter: str):
         self.file: Path = file
         self.root: Path = root
@@ -49,6 +58,22 @@ class RenameParts:
 
     def revert_changes(self):
         self.parts = list(self._orig_parts)
+
+    def remove_consecutive_filler_chars(self):
+        npa = []
+        for p in self.parts:
+            lv = None
+            cv = p
+
+            while lv != cv:
+                lv = cv
+                cv = re.sub(_rx_space, ' ', cv)
+                cv = re.sub(_rx_conseq_filler_chars, r'\1', cv)
+
+            npa.append(cv)
+
+        self.parts = npa
+
 
 
 class PathPartsRename:
@@ -158,6 +183,7 @@ _args: Args
 
 _skipped_extensions = {}
 _skipped_re_filter = 0
+_max_length = 254
 
 
 def flatten_path():
@@ -175,12 +201,12 @@ def flatten_path():
             global skip_file
             altered = False
 
-            while nfn.get_byte_length() > 254:
+            while nfn.get_byte_length() > _max_length:
                 altered = True
                 pc = len(nfn.parts)
                 print(f'File name too long: {nfn.get_path_str()}')
 
-                print('\nTrim')
+                print('\nTrim (will also remove consecutive filler chars in entire string)')
                 for i in range(0, pc):
                     print(f'\t{i + 1}: {nfn.parts[i]}')
 
@@ -190,9 +216,9 @@ def flatten_path():
 
                 print('')
                 strip_dbyte_act = (pc * 2) + 1
-                print(f'\t{strip_dbyte_act}: remove double byte chars')
+                print(f'\t{strip_dbyte_act}: remove double byte chars and consecutive filler chars')
                 strip_emoji_act = (pc * 2) + 2
-                print(f'\t{strip_dbyte_act}: remove emoji chars')
+                print(f'\t{strip_emoji_act}: remove emoji chars and consecutive filler chars')
                 print('')
                 skip_act = (pc * 2) + 3
                 print(f'\t{skip_act}: skip')
@@ -200,14 +226,16 @@ def flatten_path():
                 print(f'\t{cancel_act}: cancel')
 
                 print('\nChoose Action: ')
-                act = userinput('Choose Action: ', validator='integer')
+                act = userinput('Choose Action', validator='integer')
                 # act = input('')
                 act = int_safe(act)
 
                 if act <= pc:
+                    # Trim
+                    nfn.remove_consecutive_filler_chars()
                     pi = act - 1
 
-                    while nfn.get_byte_length() > 255:
+                    while nfn.get_byte_length() > _max_length:
                         nfn.parts[pi] = nfn.parts[pi][:-1]
                 elif pc < act <= pc * 2:
                     pi = act - 1 - pc
@@ -229,6 +257,8 @@ def flatten_path():
                                     np += c
 
                         nfn.parts[i] = np
+
+                    nfn.remove_consecutive_filler_chars()
                 elif act == skip_act:
                     skip_file = True
                     return False
@@ -241,7 +271,7 @@ def flatten_path():
 
         while check_file_name():
             print(f'New file name: {nfn.get_path_str()}')
-            res = userinput('Enter to accept, r to retry, s to skip, c to cancel: ').strip()
+            res = (userinput('Enter to accept, r to retry, s to skip, c to cancel', cache=False) or '').strip()
 
             if res == 's':
                 skip_file = True
