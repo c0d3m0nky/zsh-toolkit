@@ -17,7 +17,7 @@ try:
     from py7zr import SevenZipFile
     from py7zr.py7zr import ArchiveFile
 
-    _feat_sevz = False
+    _feat_sevz = True
 except Exception as e:
     _warned = True
     SevenZipFile = Any
@@ -28,7 +28,7 @@ _feat_rar = False
 try:
     from unrar.cffi import rarfile, RarFile, RarInfo
 
-    _feat_rar = False
+    _feat_rar = True
 except Exception as e:
     _warned = True
     RarFile = Any
@@ -72,16 +72,22 @@ class Args(Tap):
         self.add_argument('root', type=arg_to_path, nargs='?', help='Directory to search for archives', default='./')
         self.add_argument('-g', '--glob', help="File glob to iterate over", default='*.*', required=False)
         self.add_argument('-o', '--output', type=arg_to_path, help='Directory to extract archives to', default='./', required=False)
-        if not _feat_sevz or not _feat_rar:
-            self.epilog = ''
 
-            if not _feat_sevz:
-                self.epilog += '7z unsupported by system\n'
+    def print_help(self, file=None):
+        Tap.print_help(self, file=file)
+        msg = ''
 
-            if not _feat_rar:
-                self.epilog += 'rar unsupported by system\n'
+        if not _feat_sevz:
+            msg += '7z unsupported by system\n'
 
-            self.epilog = self.epilog.strip('\n')
+        if not _feat_rar:
+            msg += 'rar unsupported by system\n'
+
+        msg = msg.strip('\n')
+
+        if msg:
+            print(f'\n{msg}')
+
 
 
 @dataclass
