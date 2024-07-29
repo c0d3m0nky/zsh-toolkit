@@ -22,6 +22,8 @@ setup(
         'numpy',
         'emoji',
         'GitPython',
-        'tqdm'
+        'tqdm',
+        'py7zr',
+        'unrar'
     ]
 )

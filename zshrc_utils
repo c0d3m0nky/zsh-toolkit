@@ -27,19 +27,6 @@ function pip_install_save {
     pip install "$1" && pip freeze | grep "$1" >> requirements.txt
 }
 
-# ToDo: check if top level is single dir
-un7zipall() {
-	for i in *.7z; do 7za x "$i" -o${i%%.7z}; done
-}
-
-unzipall() {
-	for i in *.zip; do unzip "$i" -d "${i%%.zip}"; done
-}
-
-unrarall() {
-	for i in *.rar; do unrar x "$i" "${i%%.rar}/"; done
-}
-
 function set_title() {
   echo -e "\033]0;$1\007";
 }
