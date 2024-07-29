@@ -12,7 +12,9 @@ setup(
             'flatten=flatten:main',
             'rxmv=rxmv:main',
             'ztk-update=update:main',
-            'folderDensity=folder_density:main'
+            'folderDensity=folder_density:main',
+            'decomp=decomp:main',
+            'disk_usage=disk_usage:main'
         ],
     },
     install_requires=[
