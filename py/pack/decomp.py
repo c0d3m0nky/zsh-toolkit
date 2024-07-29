@@ -17,15 +17,17 @@ try:
 
     _feat_sevz = False
 except Exception as e:
+    SevenZipFile = Any
     print('WARN: 7z unsupported by system')
 
 _feat_rar = False
 
 try:
-    from unrar.cffi import rarfile, RarInfo
+    from unrar.cffi import rarfile, RarFile, RarInfo
 
     _feat_rar = False
 except Exception as e:
+    RarFile = Any
     print('WARN: rar unsupported by system')
 
 
@@ -48,7 +50,7 @@ class ContextWrapper:
         pass
 
 
-Archive = Union[ZipFile, SevenZipFile, rarfile.RarFile, ContextWrapper]
+Archive = Union[ZipFile, SevenZipFile, RarFile, ContextWrapper]
 CreateRootFolder = Callable[[Archive], CreateRootFolderResult]
 DeflateArchive = Callable[[Archive, Path], None]
 OpenArchive = Callable[[Path], Archive]
@@ -134,7 +136,7 @@ def zip_create_root_folder(archive: ZipFile) -> CreateRootFolderResult:
     return CreateRootFolderResult(not is_single_root, False, roots[0] if is_single_root else '')
 
 
-def rar_create_root_folder(archive: rarfile.RarFile) -> CreateRootFolderResult:
+def rar_create_root_folder(archive: RarFile) -> CreateRootFolderResult:
     items: List[RarInfo] = list(archive.infolist())
 
     if len(items) == 0:
@@ -167,7 +169,7 @@ def rar_create_root_folder(archive: rarfile.RarFile) -> CreateRootFolderResult:
     return CreateRootFolderResult(not is_single_root, False, roots[0] if is_single_root else '')
 
 
-def rar_deflate(archive: rarfile.RarFile, op: Path) -> None:
+def rar_deflate(archive: RarFile, op: Path) -> None:
     if not op.exists():
         op.mkdir(parents=True)
 
@@ -188,7 +190,7 @@ if _feat_sevz:
     _libs['7z'] = LibFuncs(sevz_create_root_folder, lambda a, o: a.extractall(o), lambda f: SevenZipFile(f, mode='r'))
 
 if _feat_rar:
-    _libs['rar'] = LibFuncs(rar_create_root_folder, rar_deflate, lambda f: ContextWrapper(rarfile.RarFile(f)))
+    _libs['rar'] = LibFuncs(rar_create_root_folder, rar_deflate, lambda f: ContextWrapper(RarFile(f)))
 
 _args = Args().parse_args()
 
