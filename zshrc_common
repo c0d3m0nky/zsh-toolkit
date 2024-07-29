@@ -34,38 +34,6 @@ then
 fi
 
 
-# ToDo: THis is a hack until I smarten up dependency checks
-ZSHCOM__dep_7z=$(which "7za");
-ZSHCOM__dep_zip=$(which unzip);
-ZSHCOM__dep_rar=$(which unrar);
-
-decompall() {
-  # shellcheck disable=SC1073
-  for f in $(find *.("7z"|zip|rar) -type f)
-  do
-    ext=${f##*.}
-    local supp=${(P)${:-ZSHCOM__dep_${ext}}:-unsupported}
-
-    if [[ ${supp} == "unsupported" ]]
-    then
-      echo "Couldn't decompress ${f}, $ext unsupported";
-      continue ;
-    fi
-    echo "Decompressing ${f}"
-    case $ext in
-    "7z")
-       echo "7za x \"$f\" -o\"${f%%.7z}\";"
-       ;;
-    "zip")
-       echo "unzip \"$f\" -d \"${f%%.zip}\";"
-       ;;
-    "rar")
-       echo "unrar x \"$f\" \"${f%%.rar}/\";"
-       ;;
-    esac
-  done
-}
-
 # ToDo: check if top level is single dir
 un7zipall() {
 	for i in *.7z; do 7za x "$i" -o${i%%.7z}; done
