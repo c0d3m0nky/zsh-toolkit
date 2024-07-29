@@ -1,17 +1,41 @@
+import shutil
 from dataclasses import dataclass
-from typing import Callable, Any, Dict
+from typing import Callable, Any, Dict, Union, Tuple, List
 
 from tap import Tap
 from pathlib import Path
 from zipfile import ZipFile
 from py7zr import SevenZipFile
-from unrar import rarfile
+from py7zr.py7zr import ArchiveFile
+from unrar.cffi import rarfile, RarInfo
+import tempfile
 
 from utils import arg_to_path
 
-CreateRootFolder = Callable[[Any], bool]
-DeflateArchive = Callable[[Any, Path], None]
-OpenArchive = Callable[[Path], Any]
+
+@dataclass
+class CreateRootFolderResult:
+    create: bool
+    is_single: bool
+    root_name: str
+
+
+class ContextWrapper:
+
+    def __init__(self, archive):
+        self.archive = archive
+
+    def __enter__(self):
+        return self.archive
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        pass
+
+
+Archive = Union[ZipFile, SevenZipFile, rarfile.RarFile, ContextWrapper]
+CreateRootFolder = Callable[[Archive], CreateRootFolderResult]
+DeflateArchive = Callable[[Archive, Path], None]
+OpenArchive = Callable[[Path], Archive]
 
 
 class Args(Tap):
@@ -33,52 +57,116 @@ class LibFuncs:
     open: OpenArchive
 
 
-def sevz_create_root_folder(archive: SevenZipFile) -> bool:
-    print('Stub sevz_create_root_folder')
-    return True
+def sevz_create_root_folder(archive: SevenZipFile) -> CreateRootFolderResult:
+    items: List[ArchiveFile] = list(archive.files)
+
+    if len(items) == 0:
+        raise 'Archive has no files'
+
+    if len(items) == 1:
+        return CreateRootFolderResult(False, True, items[0].filename)
+
+    roots = []
+
+    for li in items:
+        if not li.is_directory:
+            fp = Path(li.filename)
+
+            if len(fp.parts) > 1:
+                rn = fp.parts[0]
+            else:
+                rn = '.'
+
+            if rn not in roots:
+                roots.append(rn)
+
+    is_single_root = (len(roots) == 1 and roots[0] != '.')
+
+    return CreateRootFolderResult(not is_single_root, False, roots[0] if is_single_root else '')
 
 
-def sevz_deflate(archive: SevenZipFile, output: Path) -> None:
-    print('Stub sevz_deflate')
-    return
+def sevz_deflate(archive: SevenZipFile, output: Path, path: Union[Path, None]) -> None:
+    if path is None:
+        archive.extractall(output)
+    else:
+        archive.extract(output, [path.as_posix()])
 
 
-def sevz_open(file: Path) -> SevenZipFile:
-    return SevenZipFile(file.as_posix(), mode='r')
+def zip_create_root_folder(archive: ZipFile) -> CreateRootFolderResult:
+    if len(archive.filelist) == 0:
+        raise 'Archive has no files'
+
+    if len(archive.filelist) == 1:
+        return CreateRootFolderResult(False, True, archive.filelist[0].filename)
+
+    roots = []
+
+    for li in archive.filelist:
+        if not li.is_dir():
+            fp = Path(li.filename)
+
+            if len(fp.parts) > 1:
+                rn = fp.parts[0]
+            else:
+                rn = '.'
+
+            if rn not in roots:
+                roots.append(rn)
+
+    is_single_root = (len(roots) == 1 and roots[0] != '.')
+
+    return CreateRootFolderResult(not is_single_root, False, roots[0] if is_single_root else '')
 
 
-def zip_create_root_folder(archive: ZipFile) -> bool:
-    print('Stub zip_create_root_folder')
-    return True
+def rar_create_root_folder(archive: rarfile.RarFile) -> CreateRootFolderResult:
+    items: List[RarInfo] = list(archive.infolist())
+
+    if len(items) == 0:
+        raise 'Archive has no files'
+
+    files = []
+    roots = []
+
+    for li in items:
+        if not li.is_dir():
+            files.append(li)
+            fp = Path(li.filename)
+
+            if len(fp.parts) > 1:
+                rn = fp.parts[0]
+            else:
+                rn = '.'
+
+            if rn not in roots:
+                roots.append(rn)
+
+    if len(files) == 0:
+        raise 'Archive has no files'
+
+    if len(files) == 1:
+        return CreateRootFolderResult(False, True, files[0].filename)
+
+    is_single_root = (len(roots) == 1 and roots[0] != '.')
+
+    return CreateRootFolderResult(not is_single_root, False, roots[0] if is_single_root else '')
 
 
-def zip_deflate(archive: SevenZipFile, output: Path) -> None:
-    print('Stub zip_deflate')
-    return
+def rar_deflate(archive: rarfile.RarFile, op: Path) -> None:
+    if not op.exists():
+        op.mkdir(parents=True)
 
-
-def zip_open(file: Path) -> ZipFile:
-    return ZipFile(file.as_posix())
-
-
-def rar_create_root_folder(archive: rarfile.RarFile) -> bool:
-    print('Stub rar_create_root_folder')
-    return True
-
-
-def rar_deflate(archive: rarfile.RarFile, output: Path) -> None:
-    print('Stub rar_deflate')
-    return
-
-
-def rar_open(file: Path) -> rarfile.RarFile:
-    return rarfile.RarFile(file.as_posix())
-
+    for ai in archive.infolist():
+        if not ai.is_dir():
+            fop = op / ai.filename
+            if not fop.parent.exists():
+                fop.parent.mkdir(parents=True)
+            with fop.open('w+b') as f:
+                f.write(archive.read(ai))
 
 _libs: Dict[str, LibFuncs] = {
-    '7z': LibFuncs(sevz_create_root_folder, sevz_deflate, sevz_open),
-    'zip': LibFuncs(zip_create_root_folder, zip_deflate, zip_open),
-    'rar': LibFuncs(rar_create_root_folder, rar_deflate, rar_open)
+    '7z': LibFuncs(sevz_create_root_folder, lambda a, o: a.extractall(o), lambda f: SevenZipFile(f, mode='r')),
+    'zip': LibFuncs(zip_create_root_folder, lambda a, o: a.extractall(o), lambda f: ZipFile(f)),
+    'rar': LibFuncs(rar_create_root_folder, rar_deflate, lambda f: ContextWrapper(rarfile.RarFile(f)))
 }
 
 _args = Args().parse_args()
@@ -93,37 +181,85 @@ def friendly_name(path: Path, root: Path) -> str:
     return fn
 
 
-acnt: int = 0
-root = _args.root.resolve()
-output = _args.output.resolve()
+def main() -> None:
+    acnt: int = 0
+    root = _args.root.resolve()
+    output = _args.output.resolve()
 
-for f in root.glob(_args.glob):
-    if f.is_file() and f.suffix.strip('.') in _libs:
-        acnt += 1
-        lib = _libs[f.suffix.strip('.')]
-
-        with lib.open(f) as a:
-            op = Path(output)
-
-            if lib.create_root_folder(a):
-                dname = f.name.replace(f.suffix, '')
-                nop = op / dname
-                nopi = 0
-
-                while nop.exists():
-                    nopi += 1
-                    nop = op / f'{dname} - {nopi}'
-
-                op = nop
-
+    for f in root.glob(_args.glob):
+        if f.is_file() and f.suffix.strip('.') in _libs:
+            acnt += 1
+            lib = _libs[f.suffix.strip('.')]
             sf = friendly_name(f, root)
-            so = friendly_name(op, root)
-            print(f'Decompressing {sf} to {so}')
 
-            try:
-                lib.deflate(a, op)
-            except Exception as e:
-                print(f'Failed decompressing {sf}: {e}')
+            print(f'Processing {sf}')
 
-if acnt < 1:
-    print('No supported archives found')
+            with lib.open(f) as a:
+                op = Path(output)
+                res = lib.create_root_folder(a)
+                temp_op = None
+
+                if res.create:
+                    nop = op / f.name.replace(f.suffix, '')
+                    nopi = 0
+
+                    while nop.exists():
+                        nopi += 1
+                        nop = op / f'{f.name} - {nopi}'
+
+                    op = nop
+                elif res.is_single:
+                    nf = Path(res.root_name)
+                    nfn = nf.name.replace(nf.suffix, '')
+                    nfs = nf.suffix
+                    nop = op / nf.name
+
+                    if nop.exists():
+                        nopi = 0
+
+                        while nop.exists():
+                            nopi += 1
+                            nop = op / f'{nfn} - {nopi}{nfs}'
+
+                    op = nop
+                    temp_op = Path(tempfile.gettempdir())
+                elif res.root_name:
+                    nop = op / res.root_name
+
+                    if nop.exists():
+                        nopi = 0
+
+                        while nop.exists():
+                            nopi += 1
+                            nop = op / f'{res.root_name} - {nopi}'
+
+                        op = nop
+                        temp_op = Path(tempfile.gettempdir()) / res.root_name
+
+                so = friendly_name(op, root)
+
+                if not output.exists():
+                    output.mkdir(parents=True)
+
+                print(f'Decompressing {sf} to {so}')
+
+                try:
+                    if res.is_single:
+                        lib.deflate(a, temp_op)
+                        shutil.move(temp_op / res.root_name, op)
+                    elif temp_op:
+                        if temp_op.exists():
+                            shutil.rmtree(temp_op)
+                        lib.deflate(a, temp_op.parent)
+                        shutil.move(temp_op, op)
+                    else:
+                        lib.deflate(a, op)
+                except Exception as e:
+                    print(f'Failed decompressing {sf}: {e}')
+
+    if acnt < 1:
+        print('No supported archives found')
+
+
+if __name__ == '__main__':
+    main()

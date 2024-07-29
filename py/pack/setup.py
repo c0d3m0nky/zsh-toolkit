@@ -6,7 +6,7 @@ setup(
     version=zsh_toolkit_version,
     description='ZSH utils I find useful',
     author='c0d3m0nky',
-    py_modules=['flatten', 'rxmv', 'update', 'folder_density', 'utils'],
+    py_modules=['flatten', 'rxmv', 'update', 'folder_density', 'utils', 'decomp', 'disk_usage'],
     entry_points={
         'console_scripts': [
             'flatten=flatten:main',
@@ -24,6 +24,6 @@ setup(
         'GitPython',
         'tqdm',
         'py7zr',
-        'unrar'
+        'unrar2-cffi'
     ]
 )

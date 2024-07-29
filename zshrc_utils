@@ -105,3 +105,16 @@ function touchFiles() {
     find "$root" -maxdepth 1  -type f -exec touch {} +
   fi
 }
+
+# ToDo: Remove when py decomp seems stable
+un7zipall() {
+	for i in *.7z; do 7za x "$i" -o${i%%.7z}; done
+}
+
+unzipall() {
+	for i in *.zip; do unzip "$i" -d "${i%%.zip}"; done
+}
+
+unrarall() {
+	for i in *.rar; do unrar x "$i" "${i%%.rar}/"; done
+}
