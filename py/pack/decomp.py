@@ -9,6 +9,8 @@ import tempfile
 
 from utils import arg_to_path
 
+_warned = False
+
 _feat_sevz = False
 
 try:
@@ -17,6 +19,7 @@ try:
 
     _feat_sevz = False
 except Exception as e:
+    _warned = True
     SevenZipFile = Any
     print('WARN: 7z unsupported by system')
 
@@ -27,9 +30,12 @@ try:
 
     _feat_rar = False
 except Exception as e:
+    _warned = True
     RarFile = Any
     print('WARN: rar unsupported by system')
 
+if _warned:
+    print('')
 
 @dataclass
 class CreateRootFolderResult:
@@ -66,6 +72,16 @@ class Args(Tap):
         self.add_argument('root', type=arg_to_path, nargs='?', help='Directory to search for archives', default='./')
         self.add_argument('-g', '--glob', help="File glob to iterate over", default='*.*', required=False)
         self.add_argument('-o', '--output', type=arg_to_path, help='Directory to extract archives to', default='./', required=False)
+        if not _feat_sevz or not _feat_rar:
+            self.epilog = ''
+
+            if not _feat_sevz:
+                self.epilog += '7z unsupported by system\n'
+
+            if not _feat_rar:
+                self.epilog += 'rar unsupported by system\n'
+
+            self.epilog = self.epilog.strip('\n')
 
 
 @dataclass
