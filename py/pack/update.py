@@ -2,6 +2,7 @@ import os
 import subprocess
 import re
 from pathlib import Path
+from typing import List
 
 from git import Repo
 from tap import Tap
@@ -32,6 +33,14 @@ _rx_local_changes = re.compile(r'(Changes not staged for commit|Changes to be co
 _rx_behind_origin = re.compile(r'Your branch is behind .+ by (\d+) commits?', re.MULTILINE)
 _rx_ahead_origin = re.compile(r'Your branch is ahead of .+ by (\d+) commits?', re.MULTILINE)
 _rx_diverged = re.compile(r'and have (\d+) and (\d+) different commits each, respectively', re.MULTILINE)
+
+_cache_prefixes: List[str] = ['.var_', '.cache_', '.state_']
+
+
+def clear_cache():
+    for f in _basedir.iterdir():
+        if f.is_file() and any([f.name.startswith(p) for p in _cache_prefixes]):
+            f.unlink()
 
 
 def main():
@@ -73,6 +82,7 @@ def main():
         print('')
 
         if pulled:
+            clear_cache()
             (_basedir / '.state_repo_updated').touch()
             (_basedir / '.state_update_dependencies').touch()
 

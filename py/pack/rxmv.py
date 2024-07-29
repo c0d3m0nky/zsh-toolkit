@@ -6,14 +6,7 @@ import shutil
 
 from tap import Tap
 
-
-def arg_to_path(path: str) -> Path:
-    return Path(path)
-
-
-def arg_to_re(pattern: str) -> re.Pattern:
-    return re.compile(pattern, re.I)
-
+from utils import arg_to_re, arg_to_path
 
 class Args(Tap):
     source: Path

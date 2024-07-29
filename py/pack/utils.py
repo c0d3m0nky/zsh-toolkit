@@ -1,4 +1,6 @@
 from typing import Union
+import re
+from pathlib import Path
 
 
 class shellcolors:
@@ -26,3 +28,29 @@ def parse_bool(s: str) -> Union[bool, None]:
             return None
     else:
         return None
+
+
+def pretty_size(size: int) -> str:
+    if size <= 0:
+        return '0'
+    num = size
+    pretty = None
+    for unit in ["", "K", "M", "G", "T", "P", "E", "Z"]:
+        if abs(num) < 1024.0:
+            pretty = f"{num:3.1f}{unit}B"
+            break
+        num /= 1024.0
+
+    if not pretty:
+        pretty = f"{num:.1f}YiB"
+
+    return pretty
+
+
+def arg_to_re(pattern: str) -> re.Pattern:
+    return re.compile(pattern)
+
+
+def arg_to_path(path: str) -> Path:
+    return Path(path)
+

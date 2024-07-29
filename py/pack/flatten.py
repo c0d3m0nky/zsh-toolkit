@@ -12,10 +12,13 @@ import emoji
 
 from typing import List, Callable, Tuple, TypeVar, Union
 
+from utils import arg_to_re, arg_to_path
+
 
 def _sh(cmd: str):
     p = subprocess.Popen(cmd, shell=True)
     p.wait()
+
 
 T = TypeVar('T')
 R = TypeVar('R')
@@ -23,7 +26,7 @@ R = TypeVar('R')
 _rx_leading_posix_path: re.Pattern = re.compile(r'^.?/?')
 _rx_conseq_filler_chars: re.Pattern = re.compile(r'([_-])[_-]+')
 _rx_space: re.Pattern = re.compile(r'\s+')
-# _working_dir: Path = Path('../../').resolve()
+
 
 def int_safe(i: str) -> Union[int, None]:
     try:
@@ -75,7 +78,6 @@ class RenameParts:
         self.parts = npa
 
 
-
 class PathPartsRename:
     _cb_replace: Callable[[Path, Path], RenameParts]
     _search_pattern: re.Pattern
@@ -125,14 +127,6 @@ class PathPartsRename:
 
         res = Path(re.sub(self._search_pattern, self._replace_string, pos_path))
         return RenameParts(file, root, [res.stem], res.suffix, '')
-
-
-def arg_to_re(pattern: str) -> re.Pattern:
-    return re.compile(pattern)
-
-
-def arg_to_path(path: str) -> Path:
-    return Path(path)
 
 
 class Args(Tap):
@@ -227,7 +221,6 @@ def flatten_path():
 
                 print('\nChoose Action: ')
                 act = userinput('Choose Action', validator='integer')
-                # act = input('')
                 act = int_safe(act)
 
                 if act <= pc:
@@ -356,7 +349,6 @@ def _flatten_file(f: Path, root: Path) -> bool:
         return False
 
     return True
-
 
 
 def _with_args(args):

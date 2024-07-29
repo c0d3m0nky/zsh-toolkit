@@ -7,15 +7,10 @@ from tqdm import tqdm
 from tap import Tap
 from typing import Dict, Pattern, Callable, List, Union
 
+from utils import pretty_size, arg_to_path
+
 pprint = lambda s: print(json.dumps(s, indent=2, sort_keys=True))
 
-
-def arg_to_re(pattern: str) -> re.Pattern:
-    return re.compile(pattern)
-
-
-def arg_to_path(path: str) -> Path:
-    return Path(path)
 
 
 class Args(Tap):
@@ -45,23 +40,6 @@ class Args(Tap):
 
 
 _args: Args
-
-
-def pretty_size(size):
-    if size <= 0:
-        return '0'
-    num = size
-    pretty = None
-    for unit in ["", "K", "M", "G", "T", "P", "E", "Z"]:
-        if abs(num) < 1024.0:
-            pretty = f"{num:3.1f}{unit}B"
-            break
-        num /= 1024.0
-
-    if not pretty:
-        pretty = f"{num:.1f}YiB"
-
-    return pretty
 
 
 class FileSize:

@@ -1,0 +1,80 @@
+#!/bin/zsh
+
+# ! ToDo: check for rclone
+alias rmv="rclone move -P --ignore-existing"
+
+# ToDo: include total
+#alias duh="du -hs */ | sort -h"
+alias listDirs="find ./ -type d"
+# shellcheck disable=SC2142
+alias whatsmyip="host myip.opendns.com resolver1.opendns.com | ack 'myip.opendns.com has address ([\d.]+)' --output '\$1'"
+alias whatsmyip-curl="curl checkip.amazonaws.com"
+alias clip="tee >(xclip -r -selection clipboard)"
+# shellcheck disable=SC2154
+alias popout='upd=$(dirname $(pwd)); while [[ ! -d "$upd" ]]; do upd=$(dirname "$upd"); done; cd "$upd"'
+
+### System
+# shellcheck disable=SC2142
+# shellcheck disable=SC2154
+alias ztk-varCache="for f in \$(find \$ZSHCOM/.var*); do echo \$(basename \$f) | ack '^\.var_(.+)$' --output '\$1'; cat \$f; done"
+
+if ! command -v json_pp &> /dev/null
+then
+  alias json_pp='python3 -m json.tool'
+fi
+
+if ! command -v xml_pp &> /dev/null
+then
+  if command -v xmllint &> /dev/null
+  then
+    alias xml_pp="xmllint --format -"
+  else
+    echo No xml pretty printer
+  fi
+fi
+
+
+# ToDo: THis is a hack until I smarten up dependency checks
+ZSHCOM__dep_7z=$(which "7za");
+ZSHCOM__dep_zip=$(which unzip);
+ZSHCOM__dep_rar=$(which unrar);
+
+decompall() {
+  # shellcheck disable=SC1073
+  for f in $(find *.("7z"|zip|rar) -type f)
+  do
+    ext=${f##*.}
+    local supp=${(P)${:-ZSHCOM__dep_${ext}}:-unsupported}
+
+    if [[ ${supp} == "unsupported" ]]
+    then
+      echo "Couldn't decompress ${f}, $ext unsupported";
+      continue ;
+    fi
+    echo "Decompressing ${f}"
+    case $ext in
+    "7z")
+       echo "7za x \"$f\" -o\"${f%%.7z}\";"
+       ;;
+    "zip")
+       echo "unzip \"$f\" -d \"${f%%.zip}\";"
+       ;;
+    "rar")
+       echo "unrar x \"$f\" \"${f%%.rar}/\";"
+       ;;
+    esac
+  done
+}
+
+# ToDo: check if top level is single dir
+un7zipall() {
+	for i in *.7z; do 7za x "$i" -o${i%%.7z}; done
+}
+
+unzipall() {
+	for i in *.zip; do unzip "$i" -d "${i%%.zip}"; done
+}
+
+unrarall() {
+	for i in *.rar; do unrar x "$i" "${i%%.rar}/"; done
+}

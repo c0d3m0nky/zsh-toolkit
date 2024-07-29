@@ -1,0 +1,9 @@
+emoji==2.12.1
+GitPython==3.1.43
+numpy==2.0.0
+py7zr==0.21.1
+python-rclone==0.0.2
+setuptools==70.2.0
+tqdm==4.66.4
+typed-argument-parser==1.10.0
+userinput==1.0.22
