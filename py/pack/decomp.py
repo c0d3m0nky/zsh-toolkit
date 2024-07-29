@@ -5,12 +5,28 @@ from typing import Callable, Any, Dict, Union, Tuple, List
 from tap import Tap
 from pathlib import Path
 from zipfile import ZipFile
-from py7zr import SevenZipFile
-from py7zr.py7zr import ArchiveFile
-from unrar.cffi import rarfile, RarInfo
 import tempfile
 
 from utils import arg_to_path
+
+_feat_sevz = False
+
+try:
+    from py7zr import SevenZipFile
+    from py7zr.py7zr import ArchiveFile
+
+    _feat_sevz = False
+except Exception as e:
+    print('WARN: 7z unsupported by system')
+
+_feat_rar = False
+
+try:
+    from unrar.cffi import rarfile, RarInfo
+
+    _feat_rar = False
+except Exception as e:
+    print('WARN: rar unsupported by system')
 
 
 @dataclass
@@ -163,11 +179,16 @@ def rar_deflate(archive: rarfile.RarFile, op: Path) -> None:
             with fop.open('w+b') as f:
                 f.write(archive.read(ai))
 
+
 _libs: Dict[str, LibFuncs] = {
-    '7z': LibFuncs(sevz_create_root_folder, lambda a, o: a.extractall(o), lambda f: SevenZipFile(f, mode='r')),
-    'zip': LibFuncs(zip_create_root_folder, lambda a, o: a.extractall(o), lambda f: ZipFile(f)),
-    'rar': LibFuncs(rar_create_root_folder, rar_deflate, lambda f: ContextWrapper(rarfile.RarFile(f)))
+    'zip': LibFuncs(zip_create_root_folder, lambda a, o: a.extractall(o), lambda f: ZipFile(f))
 }
+
+if _feat_sevz:
+    _libs['7z'] = LibFuncs(sevz_create_root_folder, lambda a, o: a.extractall(o), lambda f: SevenZipFile(f, mode='r'))
+
+if _feat_rar:
+    _libs['rar'] = LibFuncs(rar_create_root_folder, rar_deflate, lambda f: ContextWrapper(rarfile.RarFile(f)))
 
 _args = Args().parse_args()
 
