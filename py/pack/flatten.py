@@ -29,6 +29,7 @@ _rx_space: re.Pattern = re.compile(r'\s+')
 
 
 def int_safe(i: str) -> Union[int, None]:
+    # noinspection PyBroadException
     try:
         return int(i)
     except:
@@ -192,6 +193,7 @@ def flatten_path():
         skip_file = False
 
         def check_file_name():
+            # noinspection PyGlobalUndefined
             global skip_file
             altered = False
 

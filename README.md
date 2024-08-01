@@ -14,3 +14,4 @@ A collection of bash & python scripts I use as helpers in zsh
 * Separate and cache of heuristics
 * Troubleshoot and optimize load times
 * Prevent changes to pack from being committed without updating version
+* Add oh-my-zsh to install script

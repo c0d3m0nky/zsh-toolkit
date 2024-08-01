@@ -1,9 +1,10 @@
+import enum
 from typing import Union
 import re
 from pathlib import Path
 
 
-class shellcolors:
+class shellcolors(enum.Enum):
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKCYAN = '\033[96m'
@@ -48,7 +49,7 @@ def pretty_size(size: int) -> str:
 
 
 def arg_to_re(pattern: str) -> re.Pattern:
-    return re.compile(pattern)
+    return re.compile(pattern, re.IGNORECASE)
 
 
 def arg_to_path(path: str) -> Path:
