@@ -11,9 +11,11 @@ from typing import Union, Dict, List
 from pack.constants import zsh_toolkit_version
 from pack.utils import parse_bool
 
+import pack.magic_files as mf
+
 
 def set_parent_var(var: str, value: str):
-    with open(_basedir / f'.var_{var}', 'w') as text_file:
+    with open(mf.ztk_basedir / f'.var_{var}', 'w') as text_file:
         text_file.write(value)
 
 
@@ -56,7 +58,6 @@ class InitData:
             self.pkg[pk] = PipPkg(**pkg[pk])
 
 
-_basedir = Path(os.environ.get('ZSHCOM__basedir'))
 _pip_arch = parse_bool(os.environ.get('ZSHCOM_PIP_ARCH'))
 _pip_install_user: bool = parse_bool(os.environ.get('ZSHCOM_PIP_INSTALL_USER')) or True
 
@@ -193,25 +194,24 @@ def _pkg_check_pacman(pkg: str) -> bool:
 
 
 def init():
-    dcs = _basedir / '.state_dependencies_checked'
-    ru = _basedir / '.state_repo_update_checked'
-    ud = _basedir / '.state_update_dependencies'
-
-    if ru.exists() and datetime.fromtimestamp(ru.stat().st_mtime) < (datetime.now() - timedelta(days=7)):
+    if mf.repo_update_checked.exists() and datetime.fromtimestamp(mf.repo_update_checked.stat().st_mtime) < (datetime.now() - timedelta(days=7)):
         # I'm doing this here because in theory, it should already have been satisfied
         from userinput import userinput
 
         resp = userinput(f'You have not checked for zsh-toolkit updates in over a week, would you like to check now: ')
 
+        if resp.lower() == 'y':
+            mf.trigger_update.touch()
+            return
 
-    if (dcs.exists()
-            and datetime.fromtimestamp(dcs.stat().st_mtime) > (datetime.now() - timedelta(hours=24))
-            and not ud.exists()):
+    if (mf.dependencies_checked.exists()
+            and datetime.fromtimestamp(mf.dependencies_checked.stat().st_mtime) > (datetime.now() - timedelta(hours=24))
+            and not mf.update_dependencies.exists()):
         return
 
     print('Checking dependencies...')
 
-    with open(_basedir / 'initData.json') as jf:
+    with open(mf.init_data) as jf:
         mp = json.load(jf)
 
     init_data: InitData = InitData(**mp)
@@ -260,7 +260,7 @@ def init():
                     spec_path = Path(pkg.pipx_local)
 
                     if not spec_path.is_absolute():
-                        spec_path = Path(_basedir / pkg.pipx_local).resolve()
+                        spec_path = Path(mf.ztk_basedir / pkg.pipx_local).resolve()
 
                     if pipx_local_action == 'install':
                         _pip_install_pipx(pk, local=spec_path)
@@ -300,10 +300,10 @@ def init():
         if any_required:
             exit(1)
 
-    dcs.touch()
+    mf.dependencies_checked.touch()
 
-    if ud.exists():
-        ud.unlink()
+    if mf.update_dependencies.exists():
+        mf.update_dependencies.unlink()
 
 
 init()

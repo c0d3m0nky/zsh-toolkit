@@ -7,14 +7,14 @@ setup(
     description='ZSH utils I find useful',
     author='c0d3m0nky',
     py_modules=[
-        'file_utils', 'utils',
+        'file_utils', 'utils', 'magic_files',
         'update', 'flatten', 'rxmv', 'folder_density', 'decomp', 'disk_usage', 'little_guys', 'dockur'
     ],
     entry_points={
         'console_scripts': [
+            '_ztk-update=update:main',
             'flatten=flatten:main',
             'rxmv=rxmv:main',
-            'ztk-update=update:main',
             'folderDensity=folder_density:main',
             'decomp=decomp:main',
             'duh=disk_usage:main',

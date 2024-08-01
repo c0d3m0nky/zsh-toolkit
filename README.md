@@ -15,3 +15,9 @@ A collection of bash & python scripts I use as helpers in zsh
 * Troubleshoot and optimize load times
 * Prevent changes to pack from being committed without updating version
 * Add oh-my-zsh to install script
+* Move transient state files to a "ram disk"
+* Expand magicFiles.sh to all
+* Write tests
+  * magicfiles.sh and magic_files.py are in sync
+  * Each py pack applet
+* Figure out how to have test branches

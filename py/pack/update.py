@@ -1,30 +1,30 @@
 import os
 import subprocess
 import re
-from pathlib import Path
-from typing import List
 
 from git import Repo
 from tap import Tap
 
 from utils import parse_bool, shellcolors
 
-_basedir = Path(os.environ.get('ZSHCOM__basedir')).resolve()
+import magic_files as mf
 
 
 class Args(Tap):
     dependencies: bool
+    force_update_dependencies: bool
 
     def configure(self) -> None:
         self.description = 'Update zsh-toolkit'
         self.add_argument("-d", "--dependencies", action='store_true', help="Only update dependencies", default=False)
+        self.add_argument("-fd", "--force-update-dependencies", action='store_true', help="Clears dependency cache and re-sources", default=False)
 
 
 def _sh(cmd: str, check=False, suppress_error=False) -> str:
     if suppress_error:
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, check=check, cwd=_basedir)
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, check=check, cwd=ztk_basedir)
     else:
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True, check=check, cwd=_basedir)
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True, check=check, cwd=ztk_basedir)
 
     return res.stdout.decode('utf-8').strip()
 
@@ -34,24 +34,22 @@ _rx_behind_origin = re.compile(r'Your branch is behind .+ by (\d+) commits?', re
 _rx_ahead_origin = re.compile(r'Your branch is ahead of .+ by (\d+) commits?', re.MULTILINE)
 _rx_diverged = re.compile(r'and have (\d+) and (\d+) different commits each, respectively', re.MULTILINE)
 
-_cache_prefixes: List[str] = ['.var_', '.cache_', '.state_']
-
-
-def clear_cache():
-    for f in _basedir.iterdir():
-        if f.is_file() and any([f.name.startswith(p) for p in _cache_prefixes]):
-            f.unlink()
-
 
 def main():
     args = Args().parse_args()
 
+    if args.force_update_dependencies:
+        if mf.dependencies_checked.exists():
+            mf.dependencies_checked.unlink()
+            mf.update_dependencies.touch()
+            mf.trigger_re_source.touch()
+            return
+
     if args.dependencies:
-        ud = _basedir / '.state_update_dependencies'
-        ud.touch()
+        mf.update_dependencies.touch()
         exit(0)
 
-    repo = Repo(_basedir)
+    repo = Repo(mf.ztk_basedir)
     up_to_date = False
     pulled = False
 
@@ -76,22 +74,20 @@ def main():
         else:
             up_to_date = True
 
-    (_basedir / '.state_repo_update_checked').touch()
+    mf.repo_update_checked.touch()
 
     if up_to_date:
         print('')
 
         if pulled:
-            clear_cache()
-            (_basedir / '.state_repo_updated').touch()
-            (_basedir / '.state_update_dependencies').touch()
+            mf.clear_cache()
+            mf.repo_updated.touch()
+            mf.update_dependencies.touch()
 
             if parse_bool(os.environ.get('ZSHCOM_UPDATE_NORELOAD')):
                 print(f'Repo successfully updated. Updates will be available in new terminal sessions or after running {shellcolors.OKCYAN}source $ZSHCOM/init.sh{shellcolors.OFF}')
             else:
-                print(f'Re-sourcing')
-                os.environ['ZSHCOM'] = _basedir.as_posix()
-                _sh(f'source "{_basedir.as_posix()}/init.sh"')
+                mf.trigger_re_source.touch()
         else:
             print('Repo is up to date')
 

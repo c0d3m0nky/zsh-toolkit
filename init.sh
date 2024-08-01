@@ -10,6 +10,8 @@ ZSHCOM__basedir=$ZSHCOM
 export ZSHCOM__basedir
 export ZSHCOM__banner="default"
 
+source "$ZSHCOM__basedir/magicFiles.sh"
+
 # https://codehs.com/tutorial/ryan/add-color-with-ansi-in-javascript
 export zcRed="\033[91m"
 export zcOrange="\u001b[38;5;202m"
@@ -78,19 +80,6 @@ then
   # ToDo: handle python
 fi
 
-_loadSource "$ZSHCOM__basedir"
-
-if [[ $ZSHCOM_NOPY != true ]]
-then
-  python3 "$ZSHCOM__basedir/py/dependencies.py"
-fi
-
-if [[ -d $ZSHCOM_POSTLOAD ]]
-then
-  _loadSource "$ZSHCOM_POSTLOAD"
-  # ToDo: handle python
-fi
-
 if [[ -z "$ZSHCOM__known_os" && -z "$ZSHCOM__known_hw" ]]
 then
   _updateVar ZSHCOM__known_os
@@ -105,9 +94,41 @@ then
   _setVarCacehe ZSHCOM__known_hw
 fi
 
-# choose banner
+source "$ZSHCOM__basedir/update.sh"
 
-if [[ $ZSHCOM__known_hw == 'pi' || $ZSHCOM__known_hw == 'docker' ]]; then ZSHCOM__banner=$ZSHCOM__known_hw; fi
-if [[ $ZSHCOM__known_os == 'unraid' || $ZSHCOM__known_os == 'debian' || $ZSHCOM__known_os == 'win' ]]; then ZSHCOM__banner=$ZSHCOM__known_os; fi
+if [[ ! -f "$mf_break_init" ]]
+then
+  _loadSource "$ZSHCOM__basedir"
 
-source "$ZSHCOM__basedir/splash.sh"
+  if [[ $ZSHCOM_NOPY != true ]]
+  then
+    python3 "$ZSHCOM__basedir/py/dependencies.py"
+    if [[ -f "$mf_trigger_update" ]]
+    then
+      rm "$mf_trigger_update"
+      ztk-update
+      touch "$mf_break_init"
+    fi
+  fi
+
+  if [[ ! -f "$mf_break_init" ]]
+  then
+    if [[ -d $ZSHCOM_POSTLOAD ]]
+    then
+      _loadSource "$ZSHCOM_POSTLOAD"
+      # ToDo: handle python
+    fi
+
+    # choose banner
+
+    if [[ $ZSHCOM__known_hw == 'pi' || $ZSHCOM__known_hw == 'docker' ]]; then ZSHCOM__banner=$ZSHCOM__known_hw; fi
+    if [[ $ZSHCOM__known_os == 'unraid' || $ZSHCOM__known_os == 'debian' || $ZSHCOM__known_os == 'win' ]]; then ZSHCOM__banner=$ZSHCOM__known_os; fi
+
+    source "$ZSHCOM__basedir/splash.sh"
+  fi
+fi
+
+if [[ -f "$mf_break_init" ]]
+then
+  rm "$mf_break_init"
+fi
