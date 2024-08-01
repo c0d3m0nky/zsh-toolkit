@@ -4,9 +4,9 @@ if [[ -z $ZSHCOM_DSH_USEZSH ]]; then ZSHCOM_DSH_USEZSH=''; fi
 
 dockerShell() {
 	if [[ $ZSHCOM_DSH_USEZSH == *${1}* ]]; then
-		dockerZsh $1
+		dockerZsh "$1"
 	else
-		docker exec -it $1 bash
+		docker exec -it "$1" bash
 	fi
 }
 
@@ -31,21 +31,9 @@ function set_title() {
   echo -e "\033]0;$1\007";
 }
 
-# ToDo: exclude ack's pid
 function psack () {
+  # shellcheck disable=SC2086
   ps aux | ack -v '/ack ' | ack -i $1
-}
-
-function fack () {
-  if [[ "$1" == "-d" && -z "$2" ]]
-  then
-    find ./ -type d | ack "$2"
-  elif [[ "$1" == "-a" && -z "$2" ]]
-  then
-    find ./ | ack "$2"
-  else
-    find ./ -type f | ack "$1"
-  fi
 }
 
 function findWithExtension() {

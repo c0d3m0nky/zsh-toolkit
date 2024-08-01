@@ -6,7 +6,10 @@ setup(
     version=zsh_toolkit_version,
     description='ZSH utils I find useful',
     author='c0d3m0nky',
-    py_modules=['flatten', 'rxmv', 'update', 'folder_density', 'utils', 'decomp', 'disk_usage'],
+    py_modules=[
+        'file_utils', 'utils',
+        'update', 'flatten', 'rxmv', 'folder_density', 'decomp', 'disk_usage', 'little_guys', 'dockur'
+    ],
     entry_points={
         'console_scripts': [
             'flatten=flatten:main',
@@ -14,7 +17,8 @@ setup(
             'ztk-update=update:main',
             'folderDensity=folder_density:main',
             'decomp=decomp:main',
-            'disk_usage=disk_usage:main'
+            'duh=disk_usage:main',
+            'fack=little_guys:fack'
         ],
     },
     install_requires=[
@@ -26,6 +30,8 @@ setup(
         'GitPython',
         'tqdm',
         'py7zr',
-        'unrar2-cffi'
+        'unrar2-cffi',
+        'docker',
+        'PyYAML'
     ]
 )
