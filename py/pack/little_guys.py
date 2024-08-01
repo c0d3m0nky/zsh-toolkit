@@ -1,10 +1,8 @@
-import os
 import re
 import sys
 
 from pathlib import Path
 from tap import Tap
-from datetime import datetime, timedelta
 
 from utils import arg_to_path, arg_to_re
 
@@ -42,6 +40,5 @@ def fack():
 
 
 if __name__ == '__main__':
-    f = sys.argv.pop(1)
-
-    globals()[f]()
+    func = sys.argv.pop(1)
+    globals()[func]()

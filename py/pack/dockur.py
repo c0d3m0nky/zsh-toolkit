@@ -5,7 +5,7 @@ from typing import Dict, Callable, List, Union
 from docker import from_env as docker_from_env
 from tap import Tap
 
-from logger import Logger, LogLevels
+from logger import Logger
 
 from dockur_models import DockerConnection
 

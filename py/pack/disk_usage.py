@@ -30,9 +30,10 @@ def main():
                 p = Path(path)
                 for f in files:
                     fp = p / f
+                    # noinspection PyBroadException
                     try:
                         size += os.path.getsize(fp)
-                    except Exception as e:
+                    except:
                         print(f'Dont\'t have permissions to {fp.relative_to(root).as_posix()}')
                         exit(1)
 
@@ -46,7 +47,7 @@ def main():
     if root_size > 0:
         dirs.append(Dir('[Root]', root_size))
 
-    dirs = sorted(dirs, key=lambda d: d.size, reverse=False)
+    dirs = sorted(dirs, key=lambda dd: dd.size, reverse=False)
 
     for d in dirs:
         print_dir(d)

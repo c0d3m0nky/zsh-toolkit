@@ -1,6 +1,6 @@
 import shutil
 from dataclasses import dataclass
-from typing import Callable, Any, Dict, Union, Tuple, List
+from typing import Callable, Any, Dict, Union, List
 
 from tap import Tap
 from pathlib import Path
@@ -13,29 +13,32 @@ _warned = False
 
 _feat_sevz = False
 
+# noinspection PyBroadException
 try:
     from py7zr import SevenZipFile
     from py7zr.py7zr import ArchiveFile
 
     _feat_sevz = True
-except Exception as e:
+except:
     _warned = True
     SevenZipFile = Any
     print('WARN: 7z unsupported by system')
 
 _feat_rar = False
 
+# noinspection PyBroadException
 try:
     from unrar.cffi import rarfile, RarFile, RarInfo
 
     _feat_rar = True
-except Exception as e:
+except:
     _warned = True
     RarFile = Any
     print('WARN: rar unsupported by system')
 
 if _warned:
     print('')
+
 
 @dataclass
 class CreateRootFolderResult:
@@ -87,7 +90,6 @@ class Args(Tap):
 
         if msg:
             print(f'\n{msg}')
-
 
 
 @dataclass

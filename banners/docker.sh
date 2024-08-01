@@ -1,3 +1,4 @@
+# shellcheck disable=SC2154
 whl=$zcBlue
 wtr="\u001b[38;5;45m"
 

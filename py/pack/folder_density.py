@@ -12,7 +12,6 @@ from utils import pretty_size, arg_to_path
 pprint = lambda s: print(json.dumps(s, indent=2, sort_keys=True))
 
 
-
 class Args(Tap):
     directory: Path
     file_filter: re.Pattern
@@ -95,7 +94,6 @@ def get_densities(root: Path,
                   file_filter: Pattern[str] = None,
                   directory_filter: Pattern[str] = None,
                   path_filter: Pattern[str] = None,
-                  ignore_file: Path = None,
                   logger: Callable[[str], None] = None,
                   progress: bool = False) -> Union[Dict[str, Result], Result]:
     if not root.is_dir():
@@ -194,7 +192,6 @@ def main():
         _rec(_args.file_filter),
         _rec(_args.directory_filter),
         _rec(_args.path_filter),
-        None,
         lambda m: print(m) if _args.verbose else None,
         not _args.no_progress
     )

@@ -8,6 +8,7 @@ from tap import Tap
 
 from utils import arg_to_re, arg_to_path
 
+
 class Args(Tap):
     source: Path
     destination: str
@@ -41,6 +42,7 @@ class Action:
     mkdir: bool = False
 
 
+# noinspection PyRedundantParentheses
 def find_common_path(src: Path, dest: Path) -> tuple[Path, Path]:
     for dp in dest.parents:
         for sp in src.parents:

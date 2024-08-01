@@ -10,6 +10,8 @@ ZSHCOM__basedir=$ZSHCOM
 export ZSHCOM__basedir
 export ZSHCOM__banner="default"
 
+# ToDo: Hopefully one day shellcheck will use this directive to check for assignment and avoid SC2154 everywhere https://github.com/koalaman/shellcheck/issues/2956
+# shellcheck source=magicFiles.sh
 source "$ZSHCOM__basedir/magicFiles.sh"
 
 # https://codehs.com/tutorial/ryan/add-color-with-ansi-in-javascript
@@ -36,8 +38,9 @@ function _updateVar() {
 
   if [[ "$varv" != '~!~' ]]
   then
-    eval $1=$varv
-    rm $varf
+    # shellcheck disable=SC2086
+    eval $1="$varv"
+    rm "$varf"
   fi
 }
 
@@ -96,6 +99,7 @@ fi
 
 source "$ZSHCOM__basedir/update.sh"
 
+# shellcheck disable=SC2154
 if [[ ! -f "$mf_break_init" ]]
 then
   _loadSource "$ZSHCOM__basedir"

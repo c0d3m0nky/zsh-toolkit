@@ -5,7 +5,7 @@ import re
 from git import Repo
 from tap import Tap
 
-from utils import parse_bool, shellcolors
+from utils import parse_bool, ShellColors
 
 import magic_files as mf
 
@@ -22,9 +22,9 @@ class Args(Tap):
 
 def _sh(cmd: str, check=False, suppress_error=False) -> str:
     if suppress_error:
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, check=check, cwd=ztk_basedir)
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, check=check, cwd=mf.ztk_basedir)
     else:
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True, check=check, cwd=ztk_basedir)
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True, check=check, cwd=mf.ztk_basedir)
 
     return res.stdout.decode('utf-8').strip()
 
@@ -85,7 +85,7 @@ def main():
             mf.update_dependencies.touch()
 
             if parse_bool(os.environ.get('ZSHCOM_UPDATE_NORELOAD')):
-                print(f'Repo successfully updated. Updates will be available in new terminal sessions or after running {shellcolors.OKCYAN}source $ZSHCOM/init.sh{shellcolors.OFF}')
+                print(f'Repo successfully updated. Updates will be available in new terminal sessions or after running {ShellColors.OKCYAN}source $ZSHCOM/init.sh{ShellColors.OFF}')
             else:
                 mf.trigger_re_source.touch()
         else:

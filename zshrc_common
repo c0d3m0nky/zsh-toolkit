@@ -34,8 +34,9 @@ then
 fi
 
 
-# ToDo: check if top level is single dir
+# ToDo: Remove once decomp has proven itself
 un7zipall() {
+	# shellcheck disable=SC2086
 	for i in *.7z; do 7za x "$i" -o${i%%.7z}; done
 }
 

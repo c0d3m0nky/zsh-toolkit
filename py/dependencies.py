@@ -27,13 +27,13 @@ class PipPkg:
     required: bool = False
     os: bool
 
-    def __init__(self, pip: str = None, pipx: str = None, pipx_local: str = None, pacman: str = None, required: bool = False, os: bool = False) -> None:
+    def __init__(self, pip: str = None, pipx: str = None, pipx_local: str = None, pacman: str = None, required: bool = False, os_: bool = False) -> None:
         self.pip = pip
         self.pipx = pipx
         self.pipx_local = pipx_local
         self.pacman = pacman
         self.required = required
-        self.os = os
+        self.os = os_
 
     def __str__(self) -> str:
         op = []
@@ -238,10 +238,11 @@ def init():
 
         if not satisfied:
             if pkg.pip and not _pip_arch:
+                # noinspection PyBroadException
                 try:
                     _pip_install_pip(pkg.pip)
                     satisfied = True
-                except Exception:
+                except:
                     print('')
                     print(f'Failed to install {pk} with pip')
                     satisfied = False
@@ -256,6 +257,7 @@ def init():
                     print(f'Failed to install {pk} with pacman: {e}')
                     satisfied = False
             elif pkg.pipx_local:
+                # noinspection PyBroadException
                 try:
                     spec_path = Path(pkg.pipx_local)
 
@@ -267,15 +269,16 @@ def init():
                     else:
                         _pip_upgrade_pipx(pk, local=spec_path)
                     satisfied = True
-                except Exception:
+                except:
                     print('')
                     print(f'Failed to install {pk} with pipx ({pkg.pipx_local})')
                     satisfied = False
             elif pkg.pipx:
+                # noinspection PyBroadException
                 try:
                     _pip_install_pipx(pkg.pipx)
                     satisfied = True
-                except Exception:
+                except:
                     print('')
                     print(f'Failed to install {pk} with pipx')
                     satisfied = False
