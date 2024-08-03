@@ -11,7 +11,7 @@ alias whatsmyip="host myip.opendns.com resolver1.opendns.com | ack 'myip.opendns
 alias whatsmyip-curl="curl checkip.amazonaws.com"
 alias clip="tee >(xclip -r -selection clipboard)"
 # shellcheck disable=SC2154
-alias popout='upd=$(dirname $(pwd)); while [[ ! -d "$upd" ]]; do upd=$(dirname "$upd"); done; cd "$upd"'
+alias popout='upd=$(dirname "$(pwd)"); while [[ ! -d "$upd" ]]; do upd=$(dirname "$upd"); done; cd "$upd"'
 
 ### System
 # shellcheck disable=SC2142
