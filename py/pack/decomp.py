@@ -69,12 +69,14 @@ class Args(Tap):
     root: Path = Path('./')
     glob: str = '*.*'
     output: Path = Path('./')
+    force_root: bool = False
 
     def configure(self) -> None:
         self.description = 'Bulk decompress archive files'
         self.add_argument('root', type=arg_to_path, nargs='?', help='Directory to search for archives', default='./')
         self.add_argument('-g', '--glob', help="File glob to iterate over", default='*.*', required=False)
         self.add_argument('-o', '--output', type=arg_to_path, help='Directory to extract archives to', default='./', required=False)
+        self.add_argument("-fr", "--force-root", action='store_true', help="Extract to root named after archive")
 
     def print_help(self, file=None):
         Tap.print_help(self, file=file)
@@ -246,7 +248,8 @@ def main() -> None:
                 res = lib.create_root_folder(a)
                 temp_op = None
 
-                if res.create:
+                # ToDo: When single root, ask if want renamed
+                if _args.force_root or res.create:
                     nop = op / f.name.replace(f.suffix, '')
                     nopi = 0
 
