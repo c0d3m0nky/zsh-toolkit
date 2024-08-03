@@ -15,7 +15,7 @@ import pack.magic_files as mf
 
 
 def set_parent_var(var: str, value: str):
-    with open(mf.ztk_basedir / f'.var_{var}', 'w') as text_file:
+    with open(mf.ztk_base_dir / f'.var_{var}', 'w') as text_file:
         text_file.write(value)
 
 
@@ -263,7 +263,7 @@ def init():
                     spec_path = Path(pkg.pipx_local)
 
                     if not spec_path.is_absolute():
-                        spec_path = Path(mf.ztk_basedir / pkg.pipx_local).resolve()
+                        spec_path = Path(mf.ztk_base_dir / pkg.pipx_local).resolve()
 
                     if pipx_local_action == 'install':
                         _pip_install_pipx(pk, local=spec_path)

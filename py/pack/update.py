@@ -22,9 +22,9 @@ class Args(Tap):
 
 def _sh(cmd: str, check=False, suppress_error=False) -> str:
     if suppress_error:
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, check=check, cwd=mf.ztk_basedir)
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, check=check, cwd=mf.ztk_base_dir)
     else:
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True, check=check, cwd=mf.ztk_basedir)
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True, check=check, cwd=mf.ztk_base_dir)
 
     return res.stdout.decode('utf-8').strip()
 
@@ -49,7 +49,7 @@ def main():
         mf.update_dependencies.touch()
         exit(0)
 
-    repo = Repo(mf.ztk_basedir)
+    repo = Repo(mf.ztk_base_dir)
     up_to_date = False
     pulled = False
 
