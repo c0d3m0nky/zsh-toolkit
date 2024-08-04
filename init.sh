@@ -54,14 +54,6 @@ self=$(basename "$0")
 
 _trace "Loading self: $self"
 
-# ToDo: pip install (needs to be special for Arch distros
-
-function _python_redirect() {
-  funcStr="function ${1}() { python3 \$ZSHCOM__basedir/py/dependencies.py ${1} \$@; }"
-  trace "eval $funcStr"
-  eval "$funcStr"
-}
-
 function _loadSource() {
   d=$1
 
@@ -80,7 +72,6 @@ function _loadSource() {
 if [[ -d $ZSHCOM_PRELOAD ]]
 then
   _loadSource "$ZSHCOM_PRELOAD"
-  # ToDo: handle python
 fi
 
 if [[ -z "$ZSHCOM__known_os" && -z "$ZSHCOM__known_hw" ]]
@@ -99,8 +90,18 @@ fi
 
 source "$ZSHCOM__basedir/update.sh"
 
+if [[ -z "$ZSHCOM_PYTHON" ]]
+then
+  ZSHCOM_PYTHON='python3'
+fi
+
 # shellcheck disable=SC2154
-if [[ ! -f "$mf_break_init" ]]
+# shellcheck disable=SC2236
+if [[ ! -z $(which "$ZSHCOM_PYTHON") ]]
+then
+  # shellcheck disable=SC2028
+  echo "Python command not found, install python 3.12+ and/or set ZSHCOM_PYTHON to it\'s command"
+elif [[ ! -f "$mf_break_init" ]]
 then
   _loadSource "$ZSHCOM__basedir"
 

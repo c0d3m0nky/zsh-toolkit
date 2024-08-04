@@ -1,10 +1,12 @@
 #!/bin/zsh
 
-# ! ToDo: check for rclone
-alias rmv="rclone move -P --ignore-existing"
+if [[ -z $(which rclone) ]]
+then
+  alias rmv="rclone move -P --ignore-existing"
+else
+  _trace "rclone not installed"
+fi
 
-# ToDo: include total
-#alias duh="du -hs */ | sort -h"
 alias listDirs="find ./ -type d"
 # shellcheck disable=SC2142
 alias whatsmyip="host myip.opendns.com resolver1.opendns.com | ack 'myip.opendns.com has address ([\d.]+)' --output '\$1'"
