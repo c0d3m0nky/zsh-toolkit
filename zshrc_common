@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-if [[ -z $(which rclone) ]]
+if [[ ${ZSHCOM__feat_rclone:?} == true ]]
 then
   alias rmv="rclone move -P --ignore-existing"
 else

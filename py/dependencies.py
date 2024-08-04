@@ -25,6 +25,7 @@ class PipPkg:
     pipx_local: str = None
     pacman: str = None
     required: bool = False
+    # ToDo: implement
     os: bool
 
     # noinspection PyShadowingNames
@@ -304,6 +305,7 @@ def init():
         if any_required:
             exit(1)
 
+    # ToDo: recheck ZSHCOM__feat_* done in init
     mf.dependencies_checked.touch()
 
     if mf.update_dependencies.exists():

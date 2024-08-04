@@ -88,27 +88,36 @@ then
   _setVarCacehe ZSHCOM__known_hw
 fi
 
-source "$ZSHCOM__basedir/update.sh"
-
 if [[ -z "$ZSHCOM_PYTHON" ]]
 then
   ZSHCOM_PYTHON='python3'
 fi
 
-# shellcheck disable=SC2154
-# shellcheck disable=SC2236
-if [[ ! -z $(which "$ZSHCOM_PYTHON") ]]
+if [[ -z $(which "$ZSHCOM_PYTHON") ]]
 then
   # shellcheck disable=SC2028
-  echo "Python command not found, install python 3.12+ and/or set ZSHCOM_PYTHON to it\'s command"
-elif [[ ! -f "$mf_break_init" ]]
+  echo "Python command not found, install python 3.12+ and/or set ZSHCOM_PYTHON to it's command"
+  touch "${mf_break_init:?}"
+else
+  source "$ZSHCOM__basedir/update.sh"
+fi
+
+
+if [[ ! -f "$mf_break_init" ]]
 then
+  if [[ -n $(which rclone) ]]
+  then
+    export ZSHCOM__feat_rclone=true
+  else
+    export ZSHCOM__feat_rclone=false
+  fi
+
   _loadSource "$ZSHCOM__basedir"
 
   if [[ $ZSHCOM_NOPY != true ]]
   then
     python3 "$ZSHCOM__basedir/py/dependencies.py"
-    if [[ -f "$mf_trigger_update" ]]
+    if [[ -f "${mf_trigger_update:?}" ]]
     then
       rm "$mf_trigger_update"
       ztk-update

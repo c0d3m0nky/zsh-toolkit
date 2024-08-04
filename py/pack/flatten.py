@@ -6,6 +6,11 @@ import subprocess
 from pathlib import Path
 
 from tap import Tap
+
+if os.environ.get('ZSHCOM__feat_rclone') != 'true':
+    print('rclone not installed')
+    exit(1)
+
 import rclone
 from userinput import userinput
 import emoji

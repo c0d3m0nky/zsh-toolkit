@@ -6,7 +6,7 @@ mf_ram_cache=''
 if [[ -d /dev/shm ]]
 then
   mf_ram_cache='/dev/shm/zsh_toolkit'
-  if [[ ! -d mf_ram_cache ]]
+  if [[ ! -d $mf_ram_cache ]]
   then
     mkdir $mf_ram_cache
   fi
@@ -16,8 +16,7 @@ else
 fi
 
 # Shared with python
-# shellcheck disable=SC2154
-mf_dependencies_checked="$ZSHCOM__basedir/.state_dependencies_checked"
+mf_dependencies_checked="${ZSHCOM__basedir:?}/.state_dependencies_checked"
 mf_update_dependencies="$ZSHCOM__basedir/.state_update_dependencies"
 mf_trigger_resource="$ZSHCOM__basedir/.state_trigger_resource"
 mf_trigger_update="$ZSHCOM__basedir/.state_trigger_update"

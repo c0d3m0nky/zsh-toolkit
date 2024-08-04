@@ -4,8 +4,7 @@ if [[ -d $HOME/.zsh-toolkit ]]
 then
   vared -p 'zsh-toolkit is already installed, would you like to reinstall? (y/n): ' -c resp
 
-  # shellcheck disable=SC2154
-  if [[ $resp != 'y' ]]; then
+  if [[ ${resp:?} != 'y' ]]; then
     exit 0
   fi
 
