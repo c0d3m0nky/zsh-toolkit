@@ -132,7 +132,7 @@ def main():
                 if skip:
                     continue
 
-            np_parent = np if base_renamed else np.parent
+            np_parent = np if base_renamed and not p.is_file() else np.parent
 
             if not np_parent.exists() and np_parent.as_posix() not in mkdirs:
                 mkdirs.append(np_parent.as_posix())
