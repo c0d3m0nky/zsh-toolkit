@@ -5,7 +5,7 @@ from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
 from multiprocessing import Pool
-from typing import List, Tuple, Self, Iterator, Dict
+from typing import List, Tuple, Iterator, Dict
 
 from tap import Tap
 
@@ -49,7 +49,9 @@ class State:
     def get_errors(self) -> Dict[str, List[str]]:
         return {k: [self.get_relative_path(p) for p in v] for k, v in self._errors.items()}
 
-    def merge(self, state: Self) -> None:
+    # ToDo: When Slackware finally updates to Python 3.10+, use Self
+    # noinspection PyProtectedMember
+    def merge(self, state) -> None:
         for k in state._errors.keys():
             for path in state._errors[k]:
                 self.error(k, path)
@@ -125,8 +127,7 @@ def walk_dir(wdir: Path, state: State) -> Iterator[Tuple[Path, List[Path]]]:
         cd = dirs_left.pop(0)
 
         try:
-            # noinspection PyUnresolvedReferences,PyProtectedMember
-            scandir_it = cd._scandir()
+            cd_it = cd.iterdir()
         except OSError as e:
             if e.errno == errno.EACCES:
                 state.error('Permission denied in', cd)
@@ -135,11 +136,10 @@ def walk_dir(wdir: Path, state: State) -> Iterator[Tuple[Path, List[Path]]]:
                 raise e
 
         _log.trace(f'Scanning {cd.as_posix()}')
-        with scandir_it:
+        if cd_it:
             files: List[Path] = []
 
-            for de in scandir_it:
-                fso = Path(de.path)
+            for fso in cd_it:
                 try:
                     if not fso.is_mount() and not fso.is_symlink():
                         if fso.is_dir():
@@ -240,8 +240,9 @@ def main():
         if state.any_errors():
             print(ShellColors.FAIL)
             errors = state.get_errors()
+            delim = "\n\t"
             for k in errors:
-                print(f'{k}:\n\t{"\n\t".join(errors[k])}{ShellColors.OFF}')
+                print(f'{k}:\n\t{delim.join(errors[k])}{ShellColors.OFF}')
 
         if _args.timed:
             print(ShellColors.OKGREEN)
