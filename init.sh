@@ -74,6 +74,13 @@ then
   _loadSource "$ZSHCOM_PRELOAD"
 fi
 
+# shellcheck disable=SC2016
+cpuInfo=$(lscpu | ack '((Core[^:]+ per socket|Socket[^:]+): +(\d+))' --output '$1')
+# shellcheck disable=SC2016
+coresPerSocket=$(echo "$cpuInfo" | ack 'Core[^:]+ per socket: +(\d+)' --output '$1')
+sockets=$(echo "$cpuInfo" | ack 'Socket[^:]+: +(\d+)' --output '$1')
+export ZSHCOM__cpu_cores=$((coresPerSocket * sockets))
+
 if [[ -z "$ZSHCOM__known_os" && -z "$ZSHCOM__known_hw" ]]
 then
   _updateVar ZSHCOM__known_os

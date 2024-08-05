@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 
-class ShellColors(enum.Enum):
+class ShellColors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKCYAN = '\033[96m'
@@ -17,6 +17,13 @@ class ShellColors(enum.Enum):
     OFF = '\033[0m'
     NOOP = ''
 
+
+def int_safe(v) -> Union[int, None]:
+    # noinspection PyBroadException
+    try:
+        return int(v)
+    except:
+        return None
 
 def parse_bool(s: str) -> Union[bool, None]:
     if s:
@@ -54,6 +61,3 @@ def arg_to_re(pattern: str) -> re.Pattern:
 
 def arg_to_path(path: str) -> Path:
     return Path(path)
-
-
-

@@ -7,10 +7,10 @@ A collection of bash & python scripts I use as helpers in zsh
 # ToDo
 * Include extra scripts
   * Test shell includes
-  * Figure out how to handle python includes and document
+  * Figure out how to handle python includes and document it
 * Self update
   * ~~Manual~~
-  * Scheduled
+  * Scheduled?
 * Separate and cache of heuristics
 * Troubleshoot and optimize load times
 * Prevent changes to pack from being committed without updating version
@@ -20,4 +20,3 @@ A collection of bash & python scripts I use as helpers in zsh
 * Write tests
   * magicfiles.sh and magic_files.py are in sync
   * Each py pack applet
-* Figure out how to have test branches
