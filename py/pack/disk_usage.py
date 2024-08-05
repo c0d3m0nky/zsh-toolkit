@@ -5,7 +5,7 @@ from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
 from multiprocessing import Pool
-from typing import List, Tuple, Iterator, Dict
+from typing import List, Tuple, Iterator, Dict, Self
 
 from tap import Tap
 
@@ -49,9 +49,7 @@ class State:
     def get_errors(self) -> Dict[str, List[str]]:
         return {k: [self.get_relative_path(p) for p in v] for k, v in self._errors.items()}
 
-    # ToDo: When Slackware finally updates to Python 3.10+, use Self
-    # noinspection PyProtectedMember
-    def merge(self, state) -> None:
+    def merge(self, state: Self) -> None:
         for k in state._errors.keys():
             for path in state._errors[k]:
                 self.error(k, path)
@@ -241,9 +239,8 @@ def main():
         if state.any_errors():
             print(ShellColors.FAIL)
             errors = state.get_errors()
-            delim = "\n\t"
             for k in errors:
-                print(f'{k}:\n\t{delim.join(errors[k])}{ShellColors.OFF}')
+                print(f'{k}:\n\t{"\n\t".join(errors[k])}{ShellColors.OFF}')
 
         if _args.timed:
             print(ShellColors.OKGREEN)
