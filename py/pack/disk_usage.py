@@ -87,10 +87,11 @@ class Args(Tap):
         if self.threads is None:
             cores = int_safe(os.environ.get('ZSHCOM__cpu_cores'))
 
-            if cores is not None:
-                self.threads = int(cores / 2)
-                if self.threads < 1:
-                    self.threads = 1
+            if cores is not None and cores > 2:
+                if cores <= 4:
+                    self.threads = 2
+                else:
+                    self.threads = cores - 1
             else:
                 self.threads = 1
 
