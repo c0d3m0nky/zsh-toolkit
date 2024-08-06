@@ -15,6 +15,14 @@ class ShellColors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
     OFF = '\033[0m'
+    Highlight_Black = '\033[1;40m'
+    Highlight_Red = '\033[1;41m'
+    Highlight_Green = '\033[1;42m'
+    Highlight_Yellow = '\033[1;43m'
+    Highlight_Blue = '\033[1;44m'
+    Highlight_Magenta = '\033[1;45m'
+    Highlight_Cyan = '\033[1;46m'
+    Highlight_White = '\033[1;47m'
     NOOP = ''
 
 
@@ -25,7 +33,8 @@ def int_safe(v) -> Union[int, None]:
     except:
         return None
 
-def parse_bool(s: str) -> Union[bool, None]:
+
+def parse_bool(s: str, default: Union[bool, None] = None) -> Union[bool, None]:
     if s:
         s = s.lower()
         if s in ['yes', 'true', 't', 'y', '1']:
@@ -33,9 +42,9 @@ def parse_bool(s: str) -> Union[bool, None]:
         elif s in ['no', 'false', 'f', 'n', '0']:
             return False
         else:
-            return None
+            return default
     else:
-        return None
+        return default
 
 
 def pretty_size(size: int) -> str:

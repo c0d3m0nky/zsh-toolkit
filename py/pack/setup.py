@@ -8,7 +8,7 @@ setup(
     author='c0d3m0nky',
     py_modules=[
         'file_utils', 'utils', 'magic_files', 'logger',
-        'update', 'flatten', 'rxmv', 'folder_density', 'decomp', 'disk_usage', 'little_guys', 'dockur'
+        'update', 'flatten', 'rxmv', 'folder_density', 'decomp', 'disk_usage', 'little_guys', 'dockur', 'replace_double_byte_chars'
     ],
     entry_points={
         'console_scripts': [
@@ -18,7 +18,8 @@ setup(
             'folderDensity=folder_density:main',
             'decomp=decomp:main',
             'duh=disk_usage:main',
-            'fack=little_guys:fack'
+            'fack=little_guys:fack',
+            'repdb=replace_double_byte_chars:main'
         ],
     },
     install_requires=[
