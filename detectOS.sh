@@ -3,8 +3,6 @@
 export ZSHCOM__known_os=''
 export ZSHCOM__pkg_install=''
 
-if [[ ! -f /etc/os-release ]]; then return; fi
-
 rel=$(cat /proc/cpuinfo | grep -Pi 'model\s+:\s+raspberry')
 
 if [[ $rel != '' ]]
