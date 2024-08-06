@@ -1,11 +1,11 @@
 import errno
 import os
-import traceback
 from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
 from multiprocessing import Pool
-from typing import List, Tuple, Iterator, Dict, Self
+from typing import List, Tuple, Iterator, Dict, Self, Union
+from prettytable import PrettyTable, PLAIN_COLUMNS
 
 from tap import Tap
 
@@ -14,24 +14,36 @@ from logger import Logger
 
 _log: Logger
 
+
 @dataclass
 class Dir:
     name: str
     size: int
+    file_count: Union[int, None]
+
+    def density(self) -> Union[int, None]:
+        if self.file_count is None:
+            return None
+
+        return round(self.size/self.file_count)
 
 
 class State:
     _errors: Dict[str, List[Path]]
     root: Path
     dirs: List[Dir]
-    total: int
+    total_size: int
+    total_file_count: int
     root_size: int
+    root_file_count: int
 
     def __init__(self, root: Path) -> None:
         self._errors = {}
         self.dirs = []
-        self.total = 0
+        self.total_size = 0
+        self.total_file_count = 0
         self.root_size = 0
+        self.root_file_count = 0
         self.root = root
 
     def error(self, key: str, path: Path) -> None:
@@ -57,8 +69,10 @@ class State:
         for d in state.dirs:
             self.dirs.append(d)
 
-        self.total += state.total
+        self.total_size += state.total_size
+        self.total_file_count += state.total_file_count
         self.root_size += state.root_size
+        self.root_file_count += state.root_file_count
 
 
 class Args(Tap):
@@ -96,6 +110,7 @@ class Args(Tap):
             if self.threads < 2:
                 _log.warn('Running in single-threaded mode')
 
+        # noinspection SpellCheckingInspection
         efpath = Path(Path.home() / '.duh_exclude')
 
         if efpath.exists():
@@ -112,10 +127,6 @@ _args: Args
 
 def exclude_dir(d: Path) -> bool:
     return (_args.exclude_hidden and d.name.startswith('.')) or d.resolve() in _args.exclude_folders or d.is_mount()
-
-
-def print_dir(d: Dir):
-    print(f'{pretty_size(d.size)}\t\t{d.name}')
 
 
 def walk_dir(wdir: Path, state: State) -> Iterator[Tuple[Path, List[Path]]]:
@@ -160,6 +171,7 @@ def process_root_fso(fso: Path, task_state: State) -> State:
     try:
         if fso.is_dir() and not fso.is_symlink():
             size: int = 0
+            count: int = 0
 
             for path, files in walk_dir(fso, task_state):
                 if _args.exclude_hidden and path.name.startswith('.'):
@@ -172,16 +184,21 @@ def process_root_fso(fso: Path, task_state: State) -> State:
                     # noinspection PyBroadException
                     try:
                         size += f.stat().st_size
+                        count += 1
                     except:
                         task_state.error('Unable to stat', f)
 
-            task_state.total += size
-            task_state.dirs.append(Dir(fso.name, size))
+            task_state.total_size += size
+            task_state.total_file_count += count
+            task_state.dirs.append(Dir(fso.name, size, count))
         elif fso.is_file():
             if not _args.exclude_hidden or not fso.name.startswith('.'):
                 # noinspection PyBroadException
                 try:
                     task_state.root_size += fso.stat().st_size
+                    task_state.root_file_count += 1
+                    task_state.total_size += task_state.root_size
+                    task_state.total_file_count += 1
                 except:
                     task_state.error('Unable to stat', fso)
     except Exception as e:
@@ -207,6 +224,26 @@ def collect_sizes_single(state: State) -> None:
             process_root_fso(d, state)
 
 
+def print_dir(d: Dir):
+    print(f'{pretty_size(d.size)}\t\t{d.name}')
+
+
+def print_grid(dirs: List[Dir]):
+    dirs = [[pretty_size(d.size), pretty_size(d.density()) if d.file_count else '', d.name] for d in dirs]
+    grid = PrettyTable(['Size', 'Density', 'Folder'])
+    grid.add_rows(dirs)
+    grid.set_style(PLAIN_COLUMNS)
+    grid.border = False
+    grid.padding_width = 0
+    grid.left_padding_width = 0
+    grid.right_padding_width = 2
+    grid.align['Size'] = 'r'
+    grid.align['Density'] = 'r'
+    grid.align['Folder'] = 'l'
+
+    print(grid)
+
+
 def main():
     global _args
 
@@ -224,17 +261,12 @@ def main():
             exit(1)
         st = datetime.now() - st
 
-        state.total += state.root_size
-
         if state.root_size > 0:
-            state.dirs.append(Dir('[Root]', state.root_size))
+            state.dirs.append(Dir('[Root]', state.root_size, state.root_file_count))
 
         dirs = sorted(state.dirs, key=lambda dd: dd.size, reverse=False)
-
-        for d in dirs:
-            print_dir(d)
-
-        print_dir(Dir('[Total]', state.total))
+        dirs.append(Dir('[Total]', state.total_size, state.total_file_count))
+        print_grid(dirs)
 
         if state.any_errors():
             print(ShellColors.FAIL)
