@@ -1,10 +1,11 @@
 import errno
 import os
+import signal
 from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
 from multiprocessing import Pool
-from typing import List, Tuple, Iterator, Dict, Self, Union
+from typing import List, Tuple, Iterator, Dict, Self, Union, Any
 from prettytable import PrettyTable, PLAIN_COLUMNS
 
 from tap import Tap
@@ -25,7 +26,7 @@ class Dir:
         if self.file_count is None:
             return None
 
-        return round(self.size/self.file_count)
+        return round(self.size / self.file_count)
 
 
 class State:
@@ -80,6 +81,7 @@ class Args(Tap):
     threads: int = None
     timed: bool = False
     trace: bool = False
+    no_term_colors: bool = False
     exclude_hidden: bool = False
     exclude_folders: List[Path] = []
 
@@ -90,11 +92,12 @@ class Args(Tap):
         self.add_argument("-eh", "--exclude-hidden", action='store_true', help="Exclude hidden files and folders", default=False)
         self.add_argument("--timed", action='store_true', help="Print seek time")
         self.add_argument("--trace", action='store_true', help="Trace logging")
+        self.add_argument("--no-term-colors", action='store_true', help="Disable terminal colors", default=False)
 
     def process_args(self) -> None:
         global _log
 
-        _log = Logger(self.trace, False)
+        _log = Logger(self.trace, self.trace, disable_log_color=self.no_term_colors)
 
         if self.threads is None:
             cores = int_safe(os.environ.get('ZSHCOM__cpu_cores'))
@@ -125,15 +128,15 @@ class Args(Tap):
 _args: Args
 
 
-def exclude_dir(d: Path) -> bool:
-    return (_args.exclude_hidden and d.name.startswith('.')) or d.resolve() in _args.exclude_folders or d.is_mount()
+def exclude_dir(d: Path, args: Args) -> bool:
+    return (args.exclude_hidden and d.name.startswith('.')) or d.resolve() in args.exclude_folders or d.is_mount()
 
 
-def walk_dir(wdir: Path, state: State) -> Iterator[Tuple[Path, List[Path]]]:
-    _log.trace(f'Waling {wdir.as_posix()}')
+def walk_dir(wdir: Path, state: State, log: Logger, args: Args) -> Iterator[Tuple[Path, List[Path]]]:
+    log.trace(f'Walking {wdir.as_posix()}')
     dirs_left: List[Path] = [wdir]
 
-    while dirs_left:
+    while len(dirs_left) > 0:
         cd = dirs_left.pop(0)
 
         try:
@@ -145,7 +148,7 @@ def walk_dir(wdir: Path, state: State) -> Iterator[Tuple[Path, List[Path]]]:
             else:
                 raise e
 
-        _log.trace(f'Scanning {cd.as_posix()}')
+        log.trace(f'Getting fs {cd.as_posix()}')
         if cd_it:
             files: List[Path] = []
 
@@ -153,8 +156,10 @@ def walk_dir(wdir: Path, state: State) -> Iterator[Tuple[Path, List[Path]]]:
                 try:
                     if not fso.is_mount() and not fso.is_symlink():
                         if fso.is_dir():
-                            if not exclude_dir(fso):
+                            if not exclude_dir(fso, args):
                                 dirs_left.append(fso)
+                            else:
+                                state.error('Excluded', fso)
                         elif fso.is_file():
                             files.append(fso)
                 except OSError as e:
@@ -166,19 +171,21 @@ def walk_dir(wdir: Path, state: State) -> Iterator[Tuple[Path, List[Path]]]:
             yield cd, files
 
 
-def process_root_fso(fso: Path, task_state: State) -> State:
+def process_root_fso(fso: Path, task_state: State, log: Logger, args: Args) -> State:
     # noinspection PyBroadException
     try:
+        log.trace(f'Processing {fso.as_posix()}')
         if fso.is_dir() and not fso.is_symlink():
             size: int = 0
             count: int = 0
 
-            for path, files in walk_dir(fso, task_state):
-                if _args.exclude_hidden and path.name.startswith('.'):
+            for path, files in walk_dir(fso, task_state, log, args):
+                log.trace(f'Scanning   {path.as_posix()}')
+                if args.exclude_hidden and path.name.startswith('.'):
                     continue
 
                 for f in files:
-                    if _args.exclude_hidden and f.name.startswith('.'):
+                    if args.exclude_hidden and f.name.startswith('.'):
                         continue
 
                     # noinspection PyBroadException
@@ -192,7 +199,7 @@ def process_root_fso(fso: Path, task_state: State) -> State:
             task_state.total_file_count += count
             task_state.dirs.append(Dir(fso.name, size, count))
         elif fso.is_file():
-            if not _args.exclude_hidden or not fso.name.startswith('.'):
+            if not args.exclude_hidden or not fso.name.startswith('.'):
                 # noinspection PyBroadException
                 try:
                     task_state.root_size += fso.stat().st_size
@@ -201,27 +208,62 @@ def process_root_fso(fso: Path, task_state: State) -> State:
                     task_state.total_file_count += 1
                 except:
                     task_state.error('Unable to stat', fso)
+    except OSError as e:
+        if e.errno == errno.EACCES:
+            task_state.error('Permission denied in', fso)
+        else:
+            task_state.error(f'OSERROR ({e.errno})', fso)
     except Exception as e:
-        _log.error(f'Exception raised processing "{task_state.get_relative_path(fso)}"', e)
-        exit(1)
+        task_state.error('Unhandled Exception', fso)
 
+    log.trace(f'Completed  {fso.as_posix()}')
     return task_state
 
 
 def collect_sizes_parallel(state: State) -> None:
-    pool = Pool(processes=_args.threads)
-    pool_objs = [(d, State(state.root)) for d in state.root.iterdir() if not exclude_dir(d)]
+    pool_objs = []
 
-    results = pool.starmap(process_root_fso, pool_objs)
+    for d in state.root.iterdir():
+        if not exclude_dir(d, _args):
+            pool_objs.append((d, State(state.root), _log, _args))
+        else:
+            state.error('Excluded', d)
 
-    for r in results:
-        state.merge(r)
+    original_sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
+    with Pool(processes=_args.threads) as pool:
+        sigint_fired = False
+
+        def sigint_handler(sig, frame) -> Any:
+            # noinspection PyGlobalUndefined
+            global sigint_fired
+
+            _log.trace('SIGINT fired')
+            sigint_fired = True
+            return original_sigint_handler(sig, frame)
+
+        signal.signal(signal.SIGINT, sigint_handler)
+
+        try:
+            task = pool.starmap_async(process_root_fso, pool_objs)
+            while not task.ready():
+                if sigint_fired:
+                    _log.trace('Waiting for task')
+                continue
+            _log.trace("Collecting thread results")
+            results: List[State] = task.get()
+        except KeyboardInterrupt:
+            exit(0)
+
+        for r in results:
+            state.merge(r)
 
 
 def collect_sizes_single(state: State) -> None:
     for d in state.root.iterdir():
-        if not exclude_dir(d):
-            process_root_fso(d, state)
+        if not exclude_dir(d, _args):
+            process_root_fso(d, state, _log, _args)
+        else:
+            state.error('Excluded', d)
 
 
 def print_dir(d: Dir):

@@ -33,6 +33,7 @@ setup(
         'py7zr',
         'unrar2-cffi',
         'docker',
-        'PyYAML'
+        'PyYAML',
+        'prettytable'
     ]
 )
