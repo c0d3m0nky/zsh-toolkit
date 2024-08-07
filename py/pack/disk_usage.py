@@ -26,6 +26,8 @@ class Dir:
     def density(self) -> Union[int, None]:
         if self.file_count is None:
             return None
+        elif self.file_count == 0 or self.size == 0:
+            return 0
 
         return round(self.size / self.file_count)
 
@@ -272,7 +274,7 @@ def print_dir(d: Dir):
 
 
 def print_grid(dirs: List[Dir]):
-    dirs = [[pretty_size(d.size), pretty_size(d.density()) if d.file_count else '', d.name] for d in dirs]
+    dirs = [[pretty_size(d.size), pretty_size(d.density()), d.name] for d in dirs]
     grid = PrettyTable(['Size', 'Density', 'Folder'])
     grid.add_rows(dirs)
     grid.set_style(PLAIN_COLUMNS)
