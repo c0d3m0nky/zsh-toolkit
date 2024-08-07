@@ -10,10 +10,6 @@ ZSHCOM__basedir=$ZSHCOM
 export ZSHCOM__basedir
 export ZSHCOM__banner="default"
 
-# ToDo: Hopefully one day shellcheck will use this directive to check for assignment and avoid SC2154 everywhere https://github.com/koalaman/shellcheck/issues/2956
-# shellcheck source=magicFiles.sh
-source "$ZSHCOM__basedir/magicFiles.sh"
-
 # https://codehs.com/tutorial/ryan/add-color-with-ansi-in-javascript
 export zcRed="\033[91m"
 export zcOrange="\u001b[38;5;202m"
@@ -69,18 +65,6 @@ function _loadSource() {
   done
 }
 
-if [[ -d $ZSHCOM_PRELOAD ]]
-then
-  _loadSource "$ZSHCOM_PRELOAD"
-fi
-
-# shellcheck disable=SC2016
-cpuInfo=$(lscpu | ack '((Core[^:]+ per socket|Socket[^:]+): +(\d+))' --output '$1')
-# shellcheck disable=SC2016
-coresPerSocket=$(echo "$cpuInfo" | ack 'Core[^:]+ per socket: +(\d+)' --output '$1')
-sockets=$(echo "$cpuInfo" | ack 'Socket[^:]+: +(\d+)' --output '$1')
-export ZSHCOM__cpu_cores=$((coresPerSocket * sockets))
-
 if [[ -z "$ZSHCOM__known_os" && -z "$ZSHCOM__known_hw" ]]
 then
   _updateVar ZSHCOM__known_os
@@ -93,6 +77,28 @@ then
 
   _setVarCacehe ZSHCOM__known_os
   _setVarCacehe ZSHCOM__known_hw
+fi
+
+# ToDo: Hopefully one day shellcheck will use this directive to check for assignment and avoid SC2154 everywhere https://github.com/koalaman/shellcheck/issues/2956
+# shellcheck source=magicFiles.sh
+source "$ZSHCOM__basedir/magicFiles.sh"
+
+if [[ ${ZSHCOM__known_os:?} == 'win' ]]
+then
+  ZSHCOM__cpu_cores=$(wmic cpu get numberofcores | ack '^\d+')
+  export ZSHCOM__cpu_cores="$ZSHCOM__cpu_cores"
+else
+  # shellcheck disable=SC2016
+  cpuInfo=$(lscpu | ack '((Core[^:]+ per socket|Socket[^:]+): +(\d+))' --output '$1')
+  # shellcheck disable=SC2016
+  coresPerSocket=$(echo "$cpuInfo" | ack 'Core[^:]+ per socket: +(\d+)' --output '$1')
+  sockets=$(echo "$cpuInfo" | ack 'Socket[^:]+: +(\d+)' --output '$1')
+  export ZSHCOM__cpu_cores=$((coresPerSocket * sockets))
+fi
+
+if [[ -d $ZSHCOM_PRELOAD ]]
+then
+  _loadSource "$ZSHCOM_PRELOAD"
 fi
 
 if [[ -z "$ZSHCOM_PYTHON" ]]
@@ -108,7 +114,6 @@ then
 else
   source "$ZSHCOM__basedir/update.sh"
 fi
-
 
 if [[ ! -f "$mf_break_init" ]]
 then

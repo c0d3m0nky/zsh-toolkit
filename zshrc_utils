@@ -31,10 +31,18 @@ function set_title() {
   echo -e "\033]0;$1\007";
 }
 
-function psack () {
-  # shellcheck disable=SC2086
-  ps aux | ack -v '/ack ' | ack -i $1
-}
+if [[ ${ZSHCOM__known_os:?} == 'win' ]]
+then
+  function psack () {
+    # shellcheck disable=SC2086
+    ps aux -W | ack -v '/ack ' | ack -i $1
+  }
+else
+  function psack () {
+    # shellcheck disable=SC2086
+    ps aux | ack -v '/ack ' | ack -i $1
+  }
+fi
 
 function findWithExtension() {
   badImg='\.(jpg_.+|r\d+|me-downloaders|torrent)$'

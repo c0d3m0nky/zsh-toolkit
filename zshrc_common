@@ -11,7 +11,10 @@ alias listDirs="find ./ -type d"
 # shellcheck disable=SC2142
 alias whatsmyip="host myip.opendns.com resolver1.opendns.com | ack 'myip.opendns.com has address ([\d.]+)' --output '\$1'"
 alias whatsmyip-curl="curl checkip.amazonaws.com"
-alias clip="tee >(xclip -r -selection clipboard)"
+
+if [[ ${ZSHCOM__known_os:?} == 'win' ]]; then  alias clip="tee /dev/clipboard";
+else alias clip="tee >(xclip -r -selection clipboard)"; fi
+
 # shellcheck disable=SC2154
 alias popout='upd=$(dirname "$(pwd)"); while [[ ! -d "$upd" ]]; do upd=$(dirname "$upd"); done; cd "$upd"'
 

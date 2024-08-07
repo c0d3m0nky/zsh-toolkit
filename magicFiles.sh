@@ -1,18 +1,29 @@
 #!/bin/zsh
 # shellcheck disable=SC2034
 
-mf_ram_cache=''
+mf_transient=''
 
-if [[ -d /dev/shm ]]
+if [[ ${ZSHCOM__known_os:?} == 'win' ]]
 then
-  mf_ram_cache='/dev/shm/zsh_toolkit'
-  if [[ ! -d $mf_ram_cache ]]
+  mf_transient='/tmp/zsh_toolkit'
+  if [[ ! -d $mf_transient ]]
   then
-    mkdir $mf_ram_cache
+    mkdir $mf_transient
   fi
-  export ZSHCOM__ramcache=$mf_ram_cache
+elif [[ -d /dev/shm ]]
+then
+  mf_transient='/dev/shm/zsh_toolkit'
+  if [[ ! -d $mf_transient ]]
+  then
+    mkdir $mf_transient
+  fi
+fi
+
+if [[ -d $mf_transient ]]
+then
+  export ZSHCOM__transient=$mf_transient
 else
-  echo "!!! RamCache not supported"
+  echo "!!! Transient cache not supported"
 fi
 
 # Shared with python

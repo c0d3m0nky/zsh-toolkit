@@ -4,10 +4,10 @@ from typing import List, Union
 
 ztk_base_dir = Path(os.environ.get('ZSHCOM__basedir')).resolve()
 
-ztk_ram_cache: Union[Path, None] = os.environ.get('ZSHCOM__ramcache')
+ztk_ram_cache: Union[Path, None] = os.environ.get('ZSHCOM__transient')
 
 if ztk_ram_cache:
-    ztk_ram_cache: Path = Path(os.environ.get('ZSHCOM__ramcache')).resolve()
+    ztk_ram_cache: Path = Path(os.environ.get('ZSHCOM__transient')).resolve()
 else:
     ztk_ram_cache = None
 
