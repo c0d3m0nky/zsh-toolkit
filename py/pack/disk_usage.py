@@ -1,4 +1,5 @@
 import errno
+import traceback
 import os
 import signal
 from datetime import datetime
@@ -140,7 +141,7 @@ def walk_dir(wdir: Path, state: State, log: Logger, args: Args) -> Iterator[Tupl
         cd = dirs_left.pop(0)
 
         try:
-            cd_it = cd.iterdir()
+            cd_it = list(cd.iterdir())
         except OSError as e:
             if e.errno == errno.EACCES:
                 state.error('Permission denied in', cd)
@@ -211,7 +212,7 @@ def process_root_fso(fso: Path, task_state: State, log: Logger, args: Args) -> S
     except OSError as e:
         if e.errno == errno.EACCES:
             task_state.error('Permission denied in', fso)
-        else:
+        elif e.errno != errno.ESTALE:
             task_state.error(f'OSERROR ({e.errno})', fso)
     except Exception as e:
         task_state.error('Unhandled Exception', fso)
