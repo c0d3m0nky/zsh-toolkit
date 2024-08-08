@@ -7,7 +7,7 @@ from pathlib import Path
 
 from tap import Tap
 
-from py.pack import string_utils
+import string_utils
 
 if os.environ.get('ZSHCOM__feat_rclone') != 'true':
     print('rclone not installed')
@@ -15,7 +15,6 @@ if os.environ.get('ZSHCOM__feat_rclone') != 'true':
 
 import rclone
 from userinput import userinput
-import emoji
 
 from typing import List, Callable, Tuple, TypeVar, Union
 

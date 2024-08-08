@@ -7,7 +7,7 @@ import emoji
 from tap import Tap
 from userinput import userinput
 
-from utils import parse_bool, ShellColors
+from utils import parse_bool
 import string_utils
 
 
