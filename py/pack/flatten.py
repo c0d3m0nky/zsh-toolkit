@@ -7,6 +7,8 @@ from pathlib import Path
 
 from tap import Tap
 
+from py.pack import string_utils
+
 if os.environ.get('ZSHCOM__feat_rclone') != 'true':
     print('rclone not installed')
     exit(1)
@@ -218,8 +220,8 @@ def flatten_path():
                 print('')
                 strip_dbyte_act = (pc * 2) + 1
                 print(f'\t{strip_dbyte_act}: remove double byte chars and consecutive filler chars')
-                strip_emoji_act = (pc * 2) + 2
-                print(f'\t{strip_emoji_act}: remove emoji chars and consecutive filler chars')
+                strip_dbyte_keep_emoji_act = (pc * 2) + 2
+                print(f'\t{strip_dbyte_keep_emoji_act}: but keep emoji')
                 print('')
                 skip_act = (pc * 2) + 3
                 print(f'\t{skip_act}: skip')
@@ -243,20 +245,13 @@ def flatten_path():
 
                     if repl.strip() != '~':
                         nfn.parts[pi] = repl
-                elif act == strip_dbyte_act or act == strip_emoji_act:
-                    strip_all = act == strip_dbyte_act
+                elif act == strip_dbyte_act or act == strip_dbyte_keep_emoji_act:
                     for i in range(0, len(nfn.parts)):
                         p = nfn.parts[i]
-                        np = ''
-                        for c in p:
-                            if strip_all:
-                                if len(c.encode('utf-8')) == 1:
-                                    np += c
-                            else:
-                                if not emoji.is_emoji(c):
-                                    np += c
+                        np = string_utils.replace_dbl_byte_chars(p, act == strip_dbyte_keep_emoji_act)
 
-                        nfn.parts[i] = np
+                        if np.clean != p:
+                            nfn.parts[i] = np.clean
 
                     nfn.remove_consecutive_filler_chars()
                 elif act == skip_act:

@@ -1,5 +1,5 @@
 import enum
-from typing import Union
+from typing import Union, List
 import re
 from pathlib import Path
 
@@ -34,17 +34,17 @@ def int_safe(v) -> Union[int, None]:
         return None
 
 
-def parse_bool(s: str, default: Union[bool, None] = None) -> Union[bool, None]:
-    if s:
+def parse_bool(s: str, also_true: List[Union[str, None]] = []) -> Union[bool, None]:
+    if s is str:
         s = s.lower()
         if s in ['yes', 'true', 't', 'y', '1']:
             return True
         elif s in ['no', 'false', 'f', 'n', '0']:
-            return False
+            return s in also_true
         else:
-            return default
-    else:
-        return default
+            return s in also_true
+
+    return s in also_true
 
 
 def pretty_size(size: int) -> str:
