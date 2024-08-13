@@ -128,7 +128,7 @@ then
 
   if [[ $ZSHCOM_NOPY != true ]]
   then
-    python3 "$ZSHCOM__basedir/py/dependencies.py"
+    $ZSHCOM_PYTHON "$ZSHCOM__basedir/py/dependencies.py"
     if [[ -f "${mf_trigger_update:?}" ]]
     then
       rm "$mf_trigger_update"
