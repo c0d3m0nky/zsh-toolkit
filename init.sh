@@ -147,8 +147,13 @@ then
 
     # choose banner
 
-    if [[ $ZSHCOM__known_hw == 'pi' || $ZSHCOM__known_hw == 'docker' ]]; then ZSHCOM__banner=$ZSHCOM__known_hw; fi
-    if [[ $ZSHCOM__known_os == 'unraid' || $ZSHCOM__known_os == 'debian' || $ZSHCOM__known_os == 'win' ]]; then ZSHCOM__banner=$ZSHCOM__known_os; fi
+    if [[ -n "$ZSHCOM_BANNER" ]]
+    then
+      ZSHCOM__banner=$ZSHCOM_BANNER
+    else
+      if [[ $ZSHCOM__known_hw == 'pi' || $ZSHCOM__known_hw == 'docker' ]]; then ZSHCOM__banner=$ZSHCOM__known_hw; fi
+      if [[ $ZSHCOM__known_os == 'unraid' || $ZSHCOM__known_os == 'debian' || $ZSHCOM__known_os == 'win' ]]; then ZSHCOM__banner=$ZSHCOM__known_os; fi
+    fi
 
     source "$ZSHCOM__basedir/splash.sh"
   fi
