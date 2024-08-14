@@ -7,7 +7,7 @@ setup(
     description='ZSH utils I find useful',
     author='c0d3m0nky',
     py_modules=[
-        'file_utils', 'utils', 'magic_files', 'logger', 'string_utils',
+        'file_utils', 'utils', 'magic_files', 'logger', 'string_utils', 'cli_args',
         'update', 'flatten', 'rxmv', 'folder_density', 'decomp', 'disk_usage', 'little_guys', 'dockur', 'replace_double_byte_chars'
     ],
     entry_points={
