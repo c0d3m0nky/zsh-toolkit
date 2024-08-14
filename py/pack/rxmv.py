@@ -1,4 +1,5 @@
 import os
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 import re
@@ -88,6 +89,9 @@ def main():
                 np = tgt.resolve()
             else:
                 np = (tgt / p.name).resolve()
+
+            if np == fp:
+                continue
 
             if np.is_relative_to(fp):
                 (rfp, rnp) = find_common_path(fp, np)
