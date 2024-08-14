@@ -63,10 +63,3 @@ def pretty_size(size: int) -> str:
 
     return pretty
 
-
-def arg_to_re(pattern: str) -> re.Pattern:
-    return re.compile(pattern, re.IGNORECASE)
-
-
-def arg_to_path(path: str) -> Path:
-    return Path(path)

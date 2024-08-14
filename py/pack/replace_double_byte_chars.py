@@ -4,19 +4,19 @@ from pathlib import Path
 from typing import Dict
 
 import emoji
-from tap import Tap
 from userinput import userinput
 
 from utils import parse_bool
+from cli_args import BaseTap
 import string_utils
 
 
-class Args(Tap):
+class Args(BaseTap):
     plan: bool = False
 
     def configure(self) -> None:
-        self.description = "Replace double byte chars in file & folder names"
-        self.add_argument('-p', "--plan", action='store_true', help="Don't commit renames")
+        self.description = 'Replace double byte chars in file & folder names'
+        self.add_plan("Don't commit renames")
 
 
 _args: Args

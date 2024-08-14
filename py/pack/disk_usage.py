@@ -9,9 +9,9 @@ from multiprocessing import Pool
 from typing import List, Tuple, Iterator, Dict, Self, Union, Any
 from prettytable import PrettyTable, PLAIN_COLUMNS
 
-from tap import Tap
+from cli_args import BaseTap
 
-from utils import pretty_size, int_safe, arg_to_path, ShellColors
+from utils import pretty_size, int_safe, ShellColors
 from logger import Logger
 
 _log: Logger
@@ -79,7 +79,7 @@ class State:
         self.root_file_count += state.root_file_count
 
 
-class Args(Tap):
+class Args(BaseTap):
     root: Path = Path('./')
     threads: int = None
     timed: bool = False
@@ -90,12 +90,12 @@ class Args(Tap):
 
     def configure(self) -> None:
         self.description = "A beefed up du"
-        self.add_argument('root', type=arg_to_path, nargs='?', help='Path to scan')
-        self.add_argument("-t", "--threads", type=int, help="Max threads")
-        self.add_argument("-eh", "--exclude-hidden", action='store_true', help="Exclude hidden files and folders", default=False)
-        self.add_argument("--timed", action='store_true', help="Print seek time")
-        self.add_argument("--trace", action='store_true', help="Trace logging")
-        self.add_argument("--no-term-colors", action='store_true', help="Disable terminal colors", default=False)
+        self.add_root_optional('Path to scan')
+        self.add_argument("-th", "--threads", help="Max threads", type=int)
+        self.add_flag("-eh", "--exclude-hidden", help="Exclude hidden files and folders")
+        self.add_flag("--timed", help="Print seek time")
+        self.add_flag("--no-term-colors", help="Disable terminal colors")
+        self.add_trace()
 
     def process_args(self) -> None:
         global _log

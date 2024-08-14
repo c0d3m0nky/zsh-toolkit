@@ -18,7 +18,7 @@ from userinput import userinput
 
 from typing import List, Callable, Tuple, TypeVar, Union
 
-from utils import arg_to_re, arg_to_path
+from cli_args import BaseTap, RegExArg
 
 
 def _sh(cmd: str):
@@ -136,7 +136,7 @@ class PathPartsRename:
         return RenameParts(file, root, [res.stem], res.suffix, '')
 
 
-class Args(Tap):
+class Args(BaseTap):
     root: Path
     delimiter: str = '_'
     extensions: List[str] = None
@@ -150,17 +150,16 @@ class Args(Tap):
 
     def configure(self) -> None:
         self.description = 'Flatten directory tree'
-        self.add_argument('root', type=arg_to_path, help='Directory path to flatten')
-        self.add_argument("-d", "--delimiter", help="Path part delimiter")
-        self.add_argument("-p", "--plan", action='store_true', help="Don't commit moves")
-        self.add_argument("-e", "--extensions", nargs='+', help="Only include these extensions", required=False)
-        self.add_argument("-ei", "--extensions-inverted", nargs='+', help="Exclude these extensions", required=False)
-        self.add_argument("-pf", "--path-filter", type=arg_to_re, default='.+',
-                          help="Regular expression filter on full path (relative path string is provided without leading . or /)")
-        self.add_argument("-ff", "--file-filter", type=arg_to_re, default='.+', help="Regular expression filter on file name")
-        self.add_argument("-fr", "--file-rename", type=str, default='', help="Regular expression rename on file (relative path string is provided without leading . or /)")
-        self.add_argument("--keep-empty-dirs", type=bool, help="Keep empty dirs", required=False)
-        self.add_argument("-s", "--sorter", help=argparse.SUPPRESS)
+        self.add_root('Directory path to flatten')
+        self.add_plan("Don't commit moves")
+        self.add_optional("-d", "--delimiter", help="Path part delimiter")
+        self.add_list("-e", "--extensions", help="Only include these extensions")
+        self.add_list("-ei", "--extensions-inverted", help="Exclude these extensions")
+        self.add_optional("-pf", "--path-filter", type=RegExArg, default='.+', help="RegEx filter on full path (relative path string is provided without leading . or /)")
+        self.add_optional("-ff", "--file-filter", type=RegExArg, default='.+', help="RegEx filter on file name")
+        self.add_optional("-fr", "--file-rename", type=str, default='', help="RegEx rename on file (relative path string is provided without leading . or /)")
+        self.add_flag("--keep-empty-dirs", help="Keep empty dirs")
+        self.add_hidden("-s", "--sorter")
 
     def process_args(self) -> None:
         if not self.delimiter == '_' and self.file_rename:
