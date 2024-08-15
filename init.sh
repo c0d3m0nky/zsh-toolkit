@@ -29,21 +29,21 @@ function _trace() {
 }
 
 function _updateVar() {
-  varf="$ZSHCOM__basedir/.var_$1"
-  varv=$(cat "$varf" 2>/dev/null || echo '~!~')
+  varFile="$ZSHCOM__basedir/.var_$1"
+  varVal=$(cat "$varFile" 2>/dev/null || echo '~!~')
 
-  if [[ "$varv" != '~!~' ]]
+  if [[ "$varVal" != '~!~' ]]
   then
     # shellcheck disable=SC2086
-    eval $1="$varv"
-    rm "$varf"
+    eval $1="$varVal"
+    rm "$varFile"
   fi
 }
 
-function _setVarCacehe() {
-  varf="$ZSHCOM__basedir/.var_$1"
+function _setVarCache() {
+  varFile="$ZSHCOM__basedir/.var_$1"
 
-  eval "echo \$$1" > "$varf"
+  eval "echo \$$1" > "$varFile"
 }
 
 self=$(basename "$0")
@@ -75,8 +75,8 @@ then
     source "$ZSHCOM__basedir/detectOS.sh"
   fi
 
-  _setVarCacehe ZSHCOM__known_os
-  _setVarCacehe ZSHCOM__known_hw
+  _setVarCache ZSHCOM__known_os
+  _setVarCache ZSHCOM__known_hw
 fi
 
 # ToDo: Hopefully one day shellcheck will use this directive to check for assignment and avoid SC2154 everywhere https://github.com/koalaman/shellcheck/issues/2956
@@ -92,6 +92,7 @@ else
   cpuInfo=$(lscpu | ack '((Core[^:]+ per socket|Socket[^:]+): +(\d+))' --output '$1')
   # shellcheck disable=SC2016
   coresPerSocket=$(echo "$cpuInfo" | ack 'Core[^:]+ per socket: +(\d+)' --output '$1')
+  # shellcheck disable=SC2016
   sockets=$(echo "$cpuInfo" | ack 'Socket[^:]+: +(\d+)' --output '$1')
   export ZSHCOM__cpu_cores=$((coresPerSocket * sockets))
 fi

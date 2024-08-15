@@ -205,12 +205,12 @@ def main():
             print(f'{desc} - {density} | {mx}')
 
     if not _args.summary:
-        sortkey = lambda t: t[1].size
+        sort_key = lambda t: t[1].size
 
         if _args.sort:
-            sortkey = lambda t: t[2]
+            sort_key = lambda t: t[2]
 
-        for r in sorted(map(lambda k: (k, _res[k].files, _res[k].max), _res), key=sortkey, reverse=False):
+        for r in sorted(map(lambda k: (k, _res[k].files, _res[k].max), _res), key=sort_key, reverse=False):
             output(r[0], r[1], pretty_size(r[2]))
     else:
         # print(_res)

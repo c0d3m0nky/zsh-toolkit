@@ -64,8 +64,8 @@ _pip_arch = parse_bool(os.environ.get('ZSHCOM_PIP_ARCH'))
 _pip_install_user: bool = parse_bool(os.environ.get('ZSHCOM_PIP_INSTALL_USER')) or True
 
 if _pip_arch is None and platform.system() == 'Linux':
-    fdor = getattr(platform, "freedesktop_os_release", None)
-    if callable(fdor):
+    os_release = getattr(platform, "freedesktop_os_release", None)
+    if callable(os_release):
         _pip_arch = 'ID_LIKE' in platform.freedesktop_os_release() and platform.freedesktop_os_release()['ID_LIKE'] == 'arch'
     else:
         _pip_arch = False
@@ -249,8 +249,6 @@ def init():
                     print(f'Failed to install {pk} with pip')
                     satisfied = False
             elif pkg.pacman and _pip_arch:
-                # print(f'Cannot install {pk} with pacman because it requires sudo. Please install manually')
-                # satisfied = False
                 try:
                     _pip_install_pacman(pkg.pacman)
                     satisfied = True

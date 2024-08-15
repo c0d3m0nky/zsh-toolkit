@@ -37,18 +37,3 @@ then
     echo No xml pretty printer
   fi
 fi
-
-
-# ToDo: Remove once decomp has proven itself
-un7zipall() {
-	# shellcheck disable=SC2086
-	for i in *.7z; do 7za x "$i" -o${i%%.7z}; done
-}
-
-unzipall() {
-	for i in *.zip; do unzip "$i" -d "${i%%.zip}"; done
-}
-
-unrarall() {
-	for i in *.rar; do unrar x "$i" "${i%%.rar}/"; done
-}

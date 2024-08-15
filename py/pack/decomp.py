@@ -230,13 +230,13 @@ def friendly_name(path: Path, root: Path) -> str:
 
 
 def main() -> None:
-    acnt: int = 0
+    archive_cnt: int = 0
     root = _args.root.resolve()
     output = _args.output.resolve()
 
     for f in root.glob(_args.glob):
         if f.is_file() and f.suffix.strip('.') in _libs:
-            acnt += 1
+            archive_cnt += 1
             lib = _libs[f.suffix.strip('.')]
             sf = friendly_name(f, root)
 
@@ -306,7 +306,7 @@ def main() -> None:
                 except Exception as e:
                     print(f'Failed decompressing {sf}: {e}')
 
-    if acnt < 1:
+    if archive_cnt < 1:
         print('No supported archives found')
 
 

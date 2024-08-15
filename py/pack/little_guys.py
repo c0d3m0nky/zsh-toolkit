@@ -2,7 +2,6 @@ import re
 import sys
 
 from pathlib import Path
-from tap import Tap
 
 from cli_args import BaseTap, RegExArg
 

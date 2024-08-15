@@ -1,5 +1,4 @@
 import os
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 import re
@@ -145,19 +144,19 @@ def main():
     for a in actions:
         if a.mkdir:
             if args.plan:
-                (rsrc, rdest) = find_common_path(a.src, a.dest)
-                print(f'mkdir {rdest}')
+                (rel_src, rel_dest) = find_common_path(a.src, a.dest)
+                print(f'mkdir {rel_dest}')
             else:
                 a.dest.mkdir(parents=True)
         else:
             if args.plan:
                 max_width = os.get_terminal_size().columns
-                (rsrc, rdes) = find_common_path(a.src, a.dest)
-                npn = rdes.as_posix()
+                (rel_src, rel_dest) = find_common_path(a.src, a.dest)
+                npn = rel_dest.as_posix()
                 opr = '+' if args.do_copy else '-'
-                msg = f'{rsrc} {opr}> {npn}'
+                msg = f'{rel_src} {opr}> {npn}'
                 if len(msg) > max_width:
-                    print(f'\n{rsrc}\n↓\n{npn}')
+                    print(f'\n{rel_src}\n↓\n{npn}')
                 else:
                     print(msg)
             else:

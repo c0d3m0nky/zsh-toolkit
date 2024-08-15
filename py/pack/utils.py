@@ -1,20 +1,19 @@
-import enum
 from typing import Union, List
-import re
-from pathlib import Path
 
 
 class ShellColors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    BLACK = '\033[30m'
-    FAIL = '\033[91m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    OFF = '\033[0m'
+    Blue = '\033[94m'
+    Cyan = '\033[96m'
+    Green = '\033[92m'
+    Yellow = '\033[93m'
+    Black = '\033[30m'
+    Red = '\033[91m'
+    Bold = '\033[1m'
+    Underline = '\033[4m'
+    Off = '\033[0m'
+    Orange = '\033[38;5;12m'
+    Indigo = '\033[38;5;92m'
+    Violet = '\033[38;5;201m'
     Highlight_Black = '\033[1;40m'
     Highlight_Red = '\033[1;41m'
     Highlight_Green = '\033[1;42m'
@@ -23,7 +22,6 @@ class ShellColors:
     Highlight_Magenta = '\033[1;45m'
     Highlight_Cyan = '\033[1;46m'
     Highlight_White = '\033[1;47m'
-    NOOP = ''
 
 
 def int_safe(v) -> Union[int, None]:
@@ -34,6 +32,7 @@ def int_safe(v) -> Union[int, None]:
         return None
 
 
+# noinspection PyDefaultArgument
 def parse_bool(s: str, also_true: List[Union[str, None]] = []) -> Union[bool, None]:
     if s is str:
         s = s.lower()
@@ -62,4 +61,3 @@ def pretty_size(size: int) -> str:
         pretty = f"{num:.1f}YiB"
 
     return pretty
-

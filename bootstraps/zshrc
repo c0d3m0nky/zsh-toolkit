@@ -1,8 +1,9 @@
 export ZSH="$HOME/.oh-my-zsh"
 
+# shellcheck disable=SC2034
 ZSH_THEME="robbyrussell"
 
-# cd $ZSH_CUSTOM/plugins
+# shellcheck disable=SC2034
 plugins=(
 	git
 	autoupdate					#https://github.com/TamCore/autoupdate-oh-my-zsh-plugins
@@ -10,9 +11,10 @@ plugins=(
 	zsh-syntax-highlighting		#https://github.com/zsh-users/zsh-syntax-highlighting.git
 )
 
+# shellcheck disable=SC2086
 source $ZSH/oh-my-zsh.sh
 
+export PATH="$PATH:$HOME/.local/bin"
 ZSHCOM="$HOME/.zsh-toolkit"
-
-source $ZSHCOM/init.sh
+source "$ZSHCOM"/init.sh
 

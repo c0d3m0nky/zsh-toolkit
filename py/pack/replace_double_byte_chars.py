@@ -1,9 +1,4 @@
-import os
-
 from pathlib import Path
-from typing import Dict
-
-import emoji
 from userinput import userinput
 
 from utils import parse_bool
@@ -40,7 +35,7 @@ def main():
             if nf.exists():
                 print(f'{rel_path(root, nf)} exists')
             else:
-                resp = parse_bool(userinput('', label=f'Rename file? {repl.highlighted}', cache=False), True)
+                resp = parse_bool(userinput('', label=f'Rename file? {repl.highlighted}', cache=False), [None])
 
                 if resp:
                     if _args.plan:

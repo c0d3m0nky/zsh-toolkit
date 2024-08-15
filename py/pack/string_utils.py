@@ -19,7 +19,7 @@ _mark_char = os.environ.get('ZSHCOM_TEXT_HIGHLIGHT')
 if _mark_char:
     _mark_char = bytes(_mark_char, "utf-8").decode('unicode_escape')
 else:
-    _mark_char = ShellColors.BLACK + ShellColors.Highlight_Yellow
+    _mark_char = ShellColors.Black + ShellColors.Highlight_Yellow
 
 
 @dataclass
@@ -80,7 +80,7 @@ def _replace_dbl_byte_char(char: str, before: str, after: str, keep_emoji: bool)
     elif emoji.is_emoji(char):
         return char if keep_emoji else ''
     else:
-        print(f'New double byte char found: {before}{_mark_char}{char}{ShellColors.OFF}{after}')
+        print(f'New double byte char found: {before}{_mark_char}{char}{ShellColors.Off}{after}')
         repl_char = None
 
         while repl_char is None:
@@ -118,7 +118,7 @@ def replace_dbl_byte_chars(s: str, keep_emoji: bool = False) -> Replacement:
             nc = _replace_dbl_byte_char(c, clean, s[ci + 1:], keep_emoji)
             if nc:
                 clean += nc
-                highlighted += f'{_mark_char}{nc}{ShellColors.OFF}'
+                highlighted += f'{_mark_char}{nc}{ShellColors.Off}'
         else:
             clean += c
             highlighted += c

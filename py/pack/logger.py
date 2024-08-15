@@ -14,10 +14,10 @@ class LogLevel:
 
 
 class LogLevels(enum.Enum):
-    ERROR = LogLevel('ERROR', ShellColors.FAIL)
-    WARN = LogLevel('WARN', ShellColors.WARNING)
+    ERROR = LogLevel('ERROR', ShellColors.Red)
+    WARN = LogLevel('WARN', ShellColors.Yellow)
     LOG = LogLevel('LOG', None)
-    TRACE = LogLevel('TRACE', ShellColors.OFF)
+    TRACE = LogLevel('TRACE', ShellColors.Off)
 
 
 class Logger:
@@ -28,13 +28,12 @@ class Logger:
     _log_color: ShellColors
 
     def __init__(self, trace: bool = False, inject_date: bool = True, ts_format: str = '%Y-%m-%d %H:%M:%S',
-                 disable_log_color: bool = False, log_color: ShellColors = ShellColors.OKGREEN):
+                 disable_log_color: bool = False, log_color: ShellColors = ShellColors.Green):
         self._trace = trace
         self._inject_ts = inject_date
         self._ts_format = ts_format
-        self._log_color = log_color or ShellColors.OFF
+        self._log_color = log_color or ShellColors.Off
         self._disable_log_color = disable_log_color
-
 
     def error(self, msg: str, exc: Exception = None) -> None:
         if exc:
@@ -53,7 +52,7 @@ class Logger:
 
     def log(self, msg: str, level: LogLevels = LogLevels.LOG) -> None:
         pref = (level.value.color or self._log_color) if not self._disable_log_color else ''
-        suff = ShellColors.OFF if not self._disable_log_color else ''
+        suff = ShellColors.Off if not self._disable_log_color else ''
 
         if self._inject_ts:
             pref += f'{datetime.now().strftime(self._ts_format)}  '

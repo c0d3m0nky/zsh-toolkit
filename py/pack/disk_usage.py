@@ -1,5 +1,4 @@
 import errno
-import traceback
 import os
 import signal
 from datetime import datetime
@@ -314,14 +313,14 @@ def main():
         print_grid(dirs)
 
         if state.any_errors():
-            print(ShellColors.FAIL)
+            print(ShellColors.Red)
             errors = state.get_errors()
             for k in errors:
-                print(f'{k}:\n\t{"\n\t".join(errors[k])}{ShellColors.OFF}')
+                print(f'{k}:\n\t{"\n\t".join(errors[k])}{ShellColors.Off}')
 
         if _args.timed:
-            print(ShellColors.OKGREEN)
-            print(f'Seek time: {st.total_seconds()}{ShellColors.OFF}')
+            print(ShellColors.Green)
+            print(f'Seek time: {st.total_seconds()}{ShellColors.Off}')
     except KeyboardInterrupt:
         exit(0)
 

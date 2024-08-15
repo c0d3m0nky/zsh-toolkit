@@ -1,11 +1,8 @@
 import re
 import sys
 import os
-import argparse
 import subprocess
 from pathlib import Path
-
-from tap import Tap
 
 import string_utils
 
@@ -30,7 +27,7 @@ T = TypeVar('T')
 R = TypeVar('R')
 
 _rx_leading_posix_path: re.Pattern = re.compile(r'^.?/?')
-_rx_conseq_filler_chars: re.Pattern = re.compile(r'([_-])[_-]+')
+_rx_consecutive_filler_chars: re.Pattern = re.compile(r'([_-])[_-]+')
 _rx_space: re.Pattern = re.compile(r'\s+')
 
 
@@ -78,7 +75,7 @@ class RenameParts:
             while lv != cv:
                 lv = cv
                 cv = re.sub(_rx_space, ' ', cv)
-                cv = re.sub(_rx_conseq_filler_chars, r'\1', cv)
+                cv = re.sub(_rx_consecutive_filler_chars, r'\1', cv)
 
             npa.append(cv)
 
@@ -283,11 +280,11 @@ def flatten_path():
 
         nfp = root / nfn.get_path_str()
         rel = f.relative_to(root)
-        nrel = nfp.relative_to(root)
+        n_rel = nfp.relative_to(root)
 
-        print(f'{rel.as_posix()}\n{nrel.as_posix()}\n')
+        print(f'{rel.as_posix()}\n{n_rel.as_posix()}\n')
         if os.path.exists(nfp.as_posix()):
-            print(f'Target file already exists: {nrel}')
+            print(f'Target file already exists: {n_rel}')
         else:
             if not _args.plan:
                 os.rename(f.as_posix(), nfp.as_posix())

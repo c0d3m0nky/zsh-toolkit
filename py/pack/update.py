@@ -84,7 +84,7 @@ def main():
             mf.update_dependencies.touch()
 
             if parse_bool(os.environ.get('ZSHCOM_UPDATE_NORELOAD')):
-                print(f'Repo successfully updated. Updates will be available in new terminal sessions or after running {ShellColors.OKCYAN}source $ZSHCOM/init.sh{ShellColors.OFF}')
+                print(f'Repo successfully updated. Updates will be available in new terminal sessions or after running {ShellColors.Cyan}source $ZSHCOM/init.sh{ShellColors.Off}')
             else:
                 mf.trigger_re_source.touch()
         else:
