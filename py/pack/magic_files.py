@@ -19,11 +19,11 @@ repo_update_checked = ztk_base_dir / '.state_repo_update_checked'
 repo_updated = ztk_base_dir / '.state_repo_updated'
 init_data = ztk_base_dir / 'initData.json'
 
-
 _cache_prefixes: List[str] = ['.var_', '.cache_', '.state_']
+_clear_cache_exclude: List[str] = ['.state_repo_update_checked']
 
 
 def clear_cache():
     for f in ztk_base_dir.iterdir():
-        if f.is_file() and any([f.name.startswith(p) for p in _cache_prefixes]):
+        if f.is_file() and f.name not in _clear_cache_exclude and any([f.name.startswith(p) for p in _cache_prefixes]):
             f.unlink()
