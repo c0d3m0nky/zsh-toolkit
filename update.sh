@@ -21,9 +21,11 @@ function ztk-update() {
 
 function _post_ztk-update() {
   rm "$mf_repo_updated"
+
   echo "Re-sourcing $mf_init"
   # shellcheck disable=SC1090
   source "$mf_init"
+  
   touch "${mf_break_init:?}"
 }
 
