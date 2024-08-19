@@ -11,6 +11,7 @@ from cli_args import BaseTap
 
 pprint = lambda s: print(json.dumps(s, indent=2, sort_keys=True))
 
+# ToDo: deprecated?, migrate additional features to disk_usage
 
 class Args(BaseTap):
     root: Path

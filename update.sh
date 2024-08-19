@@ -25,7 +25,7 @@ function _post_ztk-update() {
   echo "Re-sourcing $mf_init"
   # shellcheck disable=SC1090
   source "$mf_init"
-  
+
   touch "${mf_break_init:?}"
 }
 

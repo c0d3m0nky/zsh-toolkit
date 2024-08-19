@@ -1,4 +1,6 @@
-from typing import Union, List
+from typing import Union, List, Any, TypeVar, Callable
+
+ZTK_UTV = TypeVar('ZTK_UTV')
 
 
 class ShellColors:
@@ -61,3 +63,61 @@ def pretty_size(size: int) -> str:
         pretty = f"{num:.1f}YiB"
 
     return pretty
+
+
+def truncate(s: str, max_len: int, add_ellipse: bool = False) -> str:
+    if len(s) > max_len:
+        if add_ellipse:
+            return s[:max_len - 1] + '…'
+        else:
+            return s[:max_len]
+    else:
+        return s
+
+
+def is_in(obj: ZTK_UTV, seq: List[ZTK_UTV], eq: Callable[[ZTK_UTV, ZTK_UTV], bool]) -> bool:
+    for i in seq:
+        if eq(i, obj):
+            return True
+
+    return False
+
+
+def distinct(seq: List[ZTK_UTV], eq: Union[Callable[[ZTK_UTV, ZTK_UTV], bool], None] = None) -> List[ZTK_UTV]:
+    res: List[ZTK_UTV] = []
+
+    if eq is None:
+        for i in seq:
+            if i not in res:
+                res.append(i)
+    else:
+        for i in seq:
+            if not is_in(i, res, eq):
+                res.append(i)
+
+    return res
+
+
+def pop_n(seq: List[Any], n: int) -> List[Any]:
+    res: List[Any] = []
+
+    for i in range(n):
+        res.append(seq.pop())
+
+    return list(reversed(res))
+
+
+def human_int(i: int) -> str:
+    sa = list(str(i))
+    res = ''
+
+    while len(sa) > 0:
+        if len(sa) >= 3:
+            rp = ''.join(pop_n(sa, 3))
+        else:
+            rp = ''.join(pop_n(sa, len(sa)))
+
+        res = f'{rp},{res}' if res else rp
+
+    return res
+
