@@ -25,6 +25,7 @@ _fields: Dict[str, Callable[[Stat], Any]] = {
     'size': lambda d: d.size,
     'count': lambda d: d.file_count,
     'density': lambda d: d.density,
+    'max': lambda d: d.max_size,
 }
 _field_choices = [f for f in _fields.keys() if f != 'size']
 
