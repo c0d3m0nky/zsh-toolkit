@@ -124,8 +124,6 @@ class State:
         for d in state._dirs:
             self.add_dir(d)
 
-        self._total_size += state.total_size
-        self._total_file_count += state.total_file_count
         self._root_size += state.root_size
         self._root_file_count += state.root_file_count
 

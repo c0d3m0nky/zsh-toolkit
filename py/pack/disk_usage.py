@@ -1,5 +1,6 @@
 import errno
 import os
+import shutil
 import signal
 from datetime import datetime
 from pathlib import Path
@@ -13,6 +14,11 @@ from utils import pretty_size, int_safe, ShellColors, truncate, distinct, human_
 from logger import Logger
 
 from disk_usage_models import Dir, State, Field, Grid
+
+
+def get_term_cols():
+    return shutil.get_terminal_size().columns
+
 
 _log: Logger
 _fields: Dict[str, Callable[[Dir], Any]] = {
@@ -250,7 +256,7 @@ def print_grid(sorted_dirs: List[Dir], total_dir: Dir):
     # ToDo: Refactor to calculate this before scan and break if can't fit
     size_field_width = 7
     name_min_width = 17
-    cols = os.get_terminal_size().columns
+    cols = get_term_cols()
 
     def color(f: Field, d: Dir, value: str) -> str:
         pref = ''
@@ -332,7 +338,7 @@ def print_grid(sorted_dirs: List[Dir], total_dir: Dir):
 def main():
     global _args
 
-    if os.get_terminal_size().columns < 60:
+    if get_term_cols() < 60:
         print('Terminal too narrow')
         exit(1)
 
