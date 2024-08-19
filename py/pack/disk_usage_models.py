@@ -4,60 +4,126 @@ from typing import List, Iterator, Dict, Self, Union, Callable
 from utils import ShellColors, is_in
 
 
-class Dir:
-    _density: Union[int, None] = None
+class Stat:
     name: str
-    size: int
-    file_count: Union[int, None]
-    has_errors: bool
 
-    def __init__(self, name: str, size: int = 0, file_count: int = 0, has_errors: bool = False):
+    def __init__(self, name: str):
         self.name = name
-        self.size = size
-        self.file_count = file_count
-        self.has_errors = has_errors
+
+    @property
+    def has_errors(self) -> bool:
+        raise NotImplementedError
+
+    @property
+    def size(self) -> int:
+        raise NotImplementedError
+
+    @property
+    def file_count(self) -> int:
+        raise NotImplementedError
 
     @property
     def density(self) -> int:
-        if self._density is None:
-            self.recalculate()
+        if self.file_count == 0 or self.size <= 0:
+            return 0
 
-        return self._density
+        return round(self.size / self.file_count)
 
-    def recalculate(self) -> None:
-        if self.file_count is None:
-            self._density = None
-            return
-        elif self.file_count == 0 or self.size <= 0:
-            self._density = 0
-            return
+    @property
+    def max_size(self) -> int:
+        raise NotImplementedError
 
-        self._density = round(self.size / self.file_count)
+
+class BareStat(Stat):
+    _has_errors: bool
+    _size: int
+    _file_count: int
+    _max_size: int
+
+    def __init__(self, name: str):
+        super().__init__(name)
+        self._size = 0
+        self._file_count = 0
+        self._max_size = 0
+        self._has_errors = False
+
+    @property
+    def has_errors(self) -> bool:
+        return self._has_errors
+
+    @property
+    def size(self) -> int:
+        return self._size
+
+    @property
+    def file_count(self) -> int:
+        return self._file_count
+
+    @property
+    def density(self) -> int:
+        if self.file_count == 0 or self.size <= 0:
+            return 0
+
+        return round(self.size / self.file_count)
+
+    @property
+    def max_size(self) -> int:
+        return self._max_size
+
+
+class Dir(Stat):
+    _density: Union[int, None] = None
+    _has_errors: bool
+    name: str
+    sizes: List[int]
+
+    def __init__(self, name: str):
+        super().__init__(name)
+        self.name = name
+        self.sizes = []
+        self._has_errors = False
+
+    @property
+    def size(self) -> int:
+        return sum(self.sizes)
+
+    @property
+    def file_count(self):
+        return len(self.sizes)
+
+    @property
+    def max_size(self) -> int:
+        return max(self.sizes) if self.sizes else 0
+
+    @property
+    def has_errors(self) -> bool:
+        return self._has_errors
+
+    def had_error(self, he: bool) -> None:
+        self._has_errors = self._has_errors or he
 
 
 class State:
     _errors: Dict[str, List[Path]]
-    _dirs: List[Dir]
+    _dirs: List[Stat]
     _root: Path
-    _total_size: int
-    _total_file_count: int
-    _root_size: int
-    _root_file_count: int
-    _root_has_errors: bool
+    name: str
+    total_stat: BareStat
+    root_stat: BareStat
 
-    def __init__(self, root: Path) -> None:
-        # These must be set here or multithreading won't serialize
+    def __init__(self, root: Path, root_stat: BareStat, total_stat: BareStat) -> None:
+        self._root = root
+        self.name = root.name
         self._errors = {}
         self._dirs = []
-        self._total_size = 0
-        self._total_file_count = 0
-        self._root_size = 0
-        self._root_file_count = 0
-        self._root = root
-        self._root_has_errors = False
+        self.total_stat = total_stat
+        self.root_stat = root_stat
+
+    def task_state(self, base: Path) -> Self:
+        return State(base, BareStat(self.root_stat.name), BareStat(self.total_stat.name))
 
     @property
-    def dirs(self) -> Iterator[Dir]:
+    def dirs(self) -> Iterator[Stat]:
         return iter(self._dirs)
 
     @property
@@ -65,41 +131,28 @@ class State:
         return self._root
 
     @property
-    def root_size(self) -> int:
-        return self._root_size
-
-    @property
-    def root_file_count(self) -> int:
-        return self._root_file_count
-
-    @property
-    def root_has_errors(self) -> bool:
-        return self._root_has_errors
-
-    @property
-    def total_size(self) -> int:
-        return self._total_size
-
-    @property
-    def total_file_count(self) -> int:
-        return self._total_file_count
-
-    @property
     def has_errors(self) -> bool:
         return bool(self._errors.keys())
 
-    # noinspection PyShadowingBuiltins
-    def add_dir(self, dir: Dir) -> None:
+    # noinspection PyShadowingBuiltins, PyProtectedMember
+    def add_dir(self, dir: Stat) -> None:
         self._dirs.append(dir)
-        self._total_size += dir.size
-        self._total_file_count += dir.file_count
 
-    def add_to_root(self, size: int, file_count: int, has_errors: bool) -> None:
-        self._root_size += size
-        self._root_file_count += file_count
-        self._total_size += size
-        self._total_file_count += file_count
-        self._root_has_errors = self._root_has_errors or has_errors
+        self.total_stat._size += dir.size
+        self.total_stat._file_count += dir.file_count
+        dmx = dir.max_size
+
+        if dmx > self.total_stat.max_size:
+            self.total_stat._max_size = dmx
+
+    # noinspection PyProtectedMember
+    def add_to_root(self, size: int, has_errors: bool) -> None:
+        self.root_stat._size += size
+        self.root_stat._file_count += 1
+        self.root_stat._has_errors = self.root_stat.has_errors or has_errors
+
+        if size > self.root_stat.max_size:
+            self.root_stat._max_size = size
 
     def calculate(self) -> None:
         pass
@@ -116,6 +169,7 @@ class State:
     def get_errors(self) -> Dict[str, List[str]]:
         return {k: [self.get_relative_path(p) for p in v] for k, v in self._errors.items()}
 
+    # noinspection PyProtectedMember
     def merge(self, state: Self) -> None:
         for k in state._errors.keys():
             for path in state._errors[k]:
@@ -124,8 +178,15 @@ class State:
         for d in state._dirs:
             self.add_dir(d)
 
-        self._root_size += state.root_size
-        self._root_file_count += state.root_file_count
+        self.root_stat._size += state.root_stat.size
+
+        if state.root_stat.max_size > self.root_stat.max_size:
+            self.root_stat._max_size = state.root_stat.max_size
+
+        self.root_stat._file_count += state.root_stat.file_count
+
+        if state.root_stat.max_size > self.total_stat.max_size:
+            self.total_stat._max_size = state.root_stat.max_size
 
 
 # region Grid classes
@@ -133,11 +194,11 @@ class State:
 class Field:
     name: str
     alignment: str
-    get_value: Callable[[Self, Dir], str]
+    get_value: Callable[[Self, Stat], str]
     width: int
     color: Union[ShellColors, None]
 
-    def __init__(self, name: str, alignment: str, get_value: Callable[[Self, Dir], str], width: int, color: Union[ShellColors, None] = None) -> None:
+    def __init__(self, name: str, alignment: str, get_value: Callable[[Self, Stat], str], width: int, color: Union[ShellColors, None] = None) -> None:
         self.name = name
         self.alignment = alignment
         self.get_value = get_value
@@ -187,6 +248,5 @@ class Grid:
 
     def remaining_width(self, buffer: int = 0) -> int:
         return self.max_width - self._left_padding - sum([f.width + self.field_padding for f in self.fields]) - buffer - self._right_padding
-
 
 # endregion

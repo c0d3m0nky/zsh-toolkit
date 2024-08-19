@@ -13,7 +13,7 @@ from cli_args import BaseTap
 from utils import pretty_size, int_safe, ShellColors, truncate, distinct, human_int
 from logger import Logger
 
-from disk_usage_models import Dir, State, Field, Grid
+from disk_usage_models import Dir, State, Field, Grid, BareStat, Stat
 
 
 def get_term_cols():
@@ -21,7 +21,7 @@ def get_term_cols():
 
 
 _log: Logger
-_fields: Dict[str, Callable[[Dir], Any]] = {
+_fields: Dict[str, Callable[[Stat], Any]] = {
     'size': lambda d: d.size,
     'count': lambda d: d.file_count,
     'density': lambda d: d.density,
@@ -131,9 +131,8 @@ def walk_dir(wdir: Path, state: State, log: Logger, args: Args) -> Iterator[Tupl
             yield cd, files
 
 
-def process_files(files: List[Path], task_state: State, args: Args) -> Tuple[State, int, int]:
-    size: int = 0
-    count: int = 0
+def process_files(files: List[Path], task_state: State, args: Args) -> Tuple[State, List[int]]:
+    sizes: List[int] = []
 
     for f in files:
         if args.exclude_hidden and f.name.startswith('.'):
@@ -141,13 +140,12 @@ def process_files(files: List[Path], task_state: State, args: Args) -> Tuple[Sta
 
         # noinspection PyBroadException
         try:
-            size += f.stat().st_size
-            count += 1
+            sizes.append(f.stat().st_size)
         except:
             task_state.error('Unable to stat', f)
 
     # noinspection PyRedundantParentheses
-    return (task_state, size, count)
+    return (task_state, sizes)
 
 
 def process_root_fso(fso: Path, task_state: State, log: Logger, args: Args) -> State:
@@ -162,10 +160,9 @@ def process_root_fso(fso: Path, task_state: State, log: Logger, args: Args) -> S
                 if args.exclude_hidden and path.name.startswith('.'):
                     continue
 
-                (_, s, c) = process_files(files, task_state, args)
-                dr.size += s
-                dr.file_count += c
-                dr.has_errors = dr.has_errors or task_state.has_errors
+                (_, s) = process_files(files, task_state, args)
+                dr.sizes += s
+                dr.had_error(task_state.has_errors)
 
             task_state.add_dir(dr)
         elif fso.is_file():
@@ -189,7 +186,7 @@ def collect_sizes_parallel(state: State) -> None:
     for d in state.root.iterdir():
         if d.is_dir():
             if not exclude_dir(d, _args):
-                pool_objs.append((d, State(state.root), _log, _args))
+                pool_objs.append((d, state.task_state(d), _log, _args))
             else:
                 # ToDo: Make warning/log
                 state.error('Excluded', d)
@@ -212,7 +209,7 @@ def collect_sizes_parallel(state: State) -> None:
 
         try:
             task = pool.starmap_async(process_root_fso, pool_objs)
-            task2 = pool.starmap_async(process_files, [(root_files, State(state.root), _args)])
+            task2 = pool.starmap_async(process_files, [(root_files, state.task_state(state.root), _args)])
             while not task.ready():
                 if sigint_fired:
                     _log.trace('Waiting for walk task')
@@ -230,8 +227,9 @@ def collect_sizes_parallel(state: State) -> None:
         for r in results:
             state.merge(r)
 
-        for (task_state, size, count) in results2:
-            task_state.add_to_root(size, count, task_state.has_errors)
+        for (task_state, sizes) in results2:
+            for size in sizes:
+                task_state.add_to_root(size, task_state.has_errors)
             state.merge(task_state)
 
 
@@ -241,18 +239,19 @@ def collect_sizes_single(state: State) -> None:
     for d in state.root.iterdir():
         if d.is_dir():
             if not exclude_dir(d, _args):
-                state.merge(process_root_fso(d, State(state.root), _log, _args))
+                state.merge(process_root_fso(d, state.task_state(d), _log, _args))
             else:
                 state.error('Excluded', d)
         elif d.is_file():
             root_files.append(d)
 
-    (task_state, size, count) = process_files(root_files, State(state.root), _args)
-    task_state.add_to_root(size, count, task_state.has_errors)
+    (task_state, sizes) = process_files(root_files, state.task_state(state.root), _args)
+    for size in sizes:
+        task_state.add_to_root(size, task_state.has_errors)
     state.merge(task_state)
 
 
-def print_grid(sorted_dirs: List[Dir], total_dir: Dir):
+def print_grid(sorted_dirs: List[Stat], total_dir: Stat):
     # ToDo: Refactor to calculate this before scan and break if can't fit
     size_field_width = 7
     name_min_width = 17
@@ -285,7 +284,8 @@ def print_grid(sorted_dirs: List[Dir], total_dir: Dir):
     # The order determines priority of auto adding
     additional_fields: Dict[str, Field] = {
         'density': Field('Density', 'r', lambda f, d: color(f, d, pretty_size(d.density)), size_field_width, ShellColors.Cyan),
-        'count': Field('Count', 'r', lambda f, d: color(f, d, human_int(d.file_count)), max_count_len + grid.int_field_padding)
+        'count': Field('Count', 'r', lambda f, d: color(f, d, human_int(d.file_count)), max_count_len + grid.int_field_padding),
+        'max': Field('Max', 'r', lambda f, d: color(f, d, pretty_size(d.max_size)), max_count_len + grid.int_field_padding)
     }
 
     if _args.sort and _args.sort != 'size':
@@ -344,9 +344,9 @@ def main():
 
     try:
         _args = Args().parse_args()
-        state = State(_args.root.resolve())
+        state = State(_args.root.resolve(), BareStat('./'), BareStat('Total'))
 
-        sorter: Callable[[Dir], Any]
+        sorter: Callable[[Stat], Any]
 
         if _args.sort in _fields:
             sorter = _fields[_args.sort]
@@ -364,11 +364,11 @@ def main():
             exit(1)
         st = datetime.now() - st
 
-        if state.root_size > 0:
-            state.add_dir(Dir('./', state.root_size, state.root_file_count, state.root_has_errors))
+        if state.root_stat.size > 0:
+            state.add_dir(state.root_stat)
 
         sorted_dirs = sorted(state.dirs, key=sorter, reverse=False)
-        print_grid(sorted_dirs, Dir('Total', state.total_size, state.total_file_count, False))
+        print_grid(sorted_dirs, state.total_stat)
 
         if state.has_errors:
             print('')
