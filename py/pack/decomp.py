@@ -2,12 +2,11 @@ import shutil
 from dataclasses import dataclass
 from typing import Callable, Any, Dict, Union, List
 
-from tap import Tap
 from pathlib import Path
 from zipfile import ZipFile
 import tempfile
 
-from utils import arg_to_path
+from cli_args import BaseTap, PathArg
 
 _warned = False
 
@@ -65,7 +64,7 @@ DeflateArchive = Callable[[Archive, Path], None]
 OpenArchive = Callable[[Path], Archive]
 
 
-class Args(Tap):
+class Args(BaseTap):
     root: Path = Path('./')
     glob: str = '*.*'
     output: Path = Path('./')
@@ -73,13 +72,13 @@ class Args(Tap):
 
     def configure(self) -> None:
         self.description = 'Bulk decompress archive files'
-        self.add_argument('root', type=arg_to_path, nargs='?', help='Directory to search for archives', default='./')
-        self.add_argument('-g', '--glob', help="File glob to iterate over", default='*.*', required=False)
-        self.add_argument('-o', '--output', type=arg_to_path, help='Directory to extract archives to', default='./', required=False)
-        self.add_argument("-fr", "--force-root", action='store_true', help="Extract to root named after archive", default=False)
+        self.add_root_optional('Directory to search for archives')
+        self.add_optional('-g', '--glob', help="File glob to iterate over", default='*.*')
+        self.add_optional('-o', '--output', type=PathArg, help='Directory to extract archives to', default='./')
+        self.add_flag("-fr", "--force-root", help="Extract to root named after archive")
 
     def print_help(self, file=None):
-        Tap.print_help(self, file=file)
+        BaseTap.print_help(self, file=file)
         msg = ''
 
         if not _feat_sevz:
@@ -231,13 +230,13 @@ def friendly_name(path: Path, root: Path) -> str:
 
 
 def main() -> None:
-    acnt: int = 0
+    archive_cnt: int = 0
     root = _args.root.resolve()
     output = _args.output.resolve()
 
     for f in root.glob(_args.glob):
         if f.is_file() and f.suffix.strip('.') in _libs:
-            acnt += 1
+            archive_cnt += 1
             lib = _libs[f.suffix.strip('.')]
             sf = friendly_name(f, root)
 
@@ -307,7 +306,7 @@ def main() -> None:
                 except Exception as e:
                     print(f'Failed decompressing {sf}: {e}')
 
-    if acnt < 1:
+    if archive_cnt < 1:
         print('No supported archives found')
 
 

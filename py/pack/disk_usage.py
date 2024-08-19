@@ -1,86 +1,32 @@
 import errno
-import traceback
 import os
 import signal
 from datetime import datetime
-from dataclasses import dataclass
 from pathlib import Path
 from multiprocessing import Pool
-from typing import List, Tuple, Iterator, Dict, Self, Union, Any
+from typing import List, Tuple, Iterator, Dict, Any, Callable
 from prettytable import PrettyTable, PLAIN_COLUMNS
 
-from tap import Tap
+from cli_args import BaseTap
 
-from utils import pretty_size, int_safe, arg_to_path, ShellColors
+from utils import pretty_size, int_safe, ShellColors, truncate, distinct, human_int
 from logger import Logger
 
+from disk_usage_models import Dir, State, Field, Grid
+
 _log: Logger
+_fields: Dict[str, Callable[[Dir], Any]] = {
+    'size': lambda d: d.size,
+    'count': lambda d: d.file_count,
+    'density': lambda d: d.density,
+}
+_field_choices = [f for f in _fields.keys() if f != 'size']
 
 
-@dataclass
-class Dir:
-    name: str
-    size: int
-    file_count: Union[int, None]
-
-    def density(self) -> Union[int, None]:
-        if self.file_count is None:
-            return None
-        elif self.file_count == 0 or self.size == 0:
-            return 0
-
-        return round(self.size / self.file_count)
-
-
-class State:
-    _errors: Dict[str, List[Path]]
-    root: Path
-    dirs: List[Dir]
-    total_size: int
-    total_file_count: int
-    root_size: int
-    root_file_count: int
-
-    def __init__(self, root: Path) -> None:
-        self._errors = {}
-        self.dirs = []
-        self.total_size = 0
-        self.total_file_count = 0
-        self.root_size = 0
-        self.root_file_count = 0
-        self.root = root
-
-    def error(self, key: str, path: Path) -> None:
-        if key not in self._errors:
-            self._errors[key] = []
-
-        self._errors[key].append(path)
-
-    def any_errors(self) -> bool:
-        return bool(self._errors.keys())
-
-    def get_relative_path(self, path: Path) -> str:
-        return path.relative_to(self.root).as_posix()
-
-    def get_errors(self) -> Dict[str, List[str]]:
-        return {k: [self.get_relative_path(p) for p in v] for k, v in self._errors.items()}
-
-    def merge(self, state: Self) -> None:
-        for k in state._errors.keys():
-            for path in state._errors[k]:
-                self.error(k, path)
-
-        for d in state.dirs:
-            self.dirs.append(d)
-
-        self.total_size += state.total_size
-        self.total_file_count += state.total_file_count
-        self.root_size += state.root_size
-        self.root_file_count += state.root_file_count
-
-
-class Args(Tap):
+class Args(BaseTap):
     root: Path = Path('./')
+    fields: List[str]
+    sort: str
     threads: int = None
     timed: bool = False
     trace: bool = False
@@ -90,17 +36,22 @@ class Args(Tap):
 
     def configure(self) -> None:
         self.description = "A beefed up du"
-        self.add_argument('root', type=arg_to_path, nargs='?', help='Path to scan')
-        self.add_argument("-t", "--threads", type=int, help="Max threads")
-        self.add_argument("-eh", "--exclude-hidden", action='store_true', help="Exclude hidden files and folders", default=False)
-        self.add_argument("--timed", action='store_true', help="Print seek time")
-        self.add_argument("--trace", action='store_true', help="Trace logging")
-        self.add_argument("--no-term-colors", action='store_true', help="Disable terminal colors", default=False)
+        self.add_root_optional('Path to scan')
+        self.add_multi('-f', '--fields', help="Fields to output", choices=_field_choices, default=None)
+        self.add_optional('-s', '--sort', help='Sort by field', choices=list(_fields.keys()), default='size')
+        self.add_argument("-th", "--threads", help="Max threads", type=int)
+        self.add_flag("-eh", "--exclude-hidden", help="Exclude hidden files and folders")
+        self.add_flag("--timed", help="Print seek time")
+        self.add_flag("--no-term-colors", help="Disable terminal colors")
+        self.add_trace()
 
     def process_args(self) -> None:
         global _log
 
         _log = Logger(self.trace, self.trace, disable_log_color=self.no_term_colors)
+
+        if self.fields:
+            self.fields = distinct(self.fields)
 
         if self.threads is None:
             cores = int_safe(os.environ.get('ZSHCOM__cpu_cores'))
@@ -132,7 +83,7 @@ _args: Args
 
 
 def exclude_dir(d: Path, args: Args) -> bool:
-    return (args.exclude_hidden and d.name.startswith('.')) or d.resolve() in args.exclude_folders or d.is_mount()
+    return (args.exclude_hidden and d.name.startswith('.')) or d.resolve() in args.exclude_folders or d.is_mount() or d.is_symlink()
 
 
 def walk_dir(wdir: Path, state: State, log: Logger, args: Args) -> Iterator[Tuple[Path, List[Path]]]:
@@ -174,43 +125,45 @@ def walk_dir(wdir: Path, state: State, log: Logger, args: Args) -> Iterator[Tupl
             yield cd, files
 
 
+def process_files(files: List[Path], task_state: State, args: Args) -> Tuple[State, int, int]:
+    size: int = 0
+    count: int = 0
+
+    for f in files:
+        if args.exclude_hidden and f.name.startswith('.'):
+            continue
+
+        # noinspection PyBroadException
+        try:
+            size += f.stat().st_size
+            count += 1
+        except:
+            task_state.error('Unable to stat', f)
+
+    # noinspection PyRedundantParentheses
+    return (task_state, size, count)
+
+
 def process_root_fso(fso: Path, task_state: State, log: Logger, args: Args) -> State:
     # noinspection PyBroadException
     try:
         log.trace(f'Processing {fso.as_posix()}')
-        if fso.is_dir() and not fso.is_symlink():
-            size: int = 0
-            count: int = 0
+        if fso.is_dir() and not exclude_dir(fso, args):
+            dr = Dir(fso.name)
 
             for path, files in walk_dir(fso, task_state, log, args):
                 log.trace(f'Scanning   {path.as_posix()}')
                 if args.exclude_hidden and path.name.startswith('.'):
                     continue
 
-                for f in files:
-                    if args.exclude_hidden and f.name.startswith('.'):
-                        continue
+                (_, s, c) = process_files(files, task_state, args)
+                dr.size += s
+                dr.file_count += c
+                dr.has_errors = dr.has_errors or task_state.has_errors
 
-                    # noinspection PyBroadException
-                    try:
-                        size += f.stat().st_size
-                        count += 1
-                    except:
-                        task_state.error('Unable to stat', f)
-
-            task_state.total_size += size
-            task_state.total_file_count += count
-            task_state.dirs.append(Dir(fso.name, size, count))
+            task_state.add_dir(dr)
         elif fso.is_file():
-            if not args.exclude_hidden or not fso.name.startswith('.'):
-                # noinspection PyBroadException
-                try:
-                    task_state.root_size += fso.stat().st_size
-                    task_state.root_file_count += 1
-                    task_state.total_size += task_state.root_size
-                    task_state.total_file_count += 1
-                except:
-                    task_state.error('Unable to stat', fso)
+            task_state.error('process_root_fso is file', fso)
     except OSError as e:
         if e.errno == errno.EACCES:
             task_state.error('Permission denied in', fso)
@@ -225,12 +178,17 @@ def process_root_fso(fso: Path, task_state: State, log: Logger, args: Args) -> S
 
 def collect_sizes_parallel(state: State) -> None:
     pool_objs = []
+    root_files: List[Path] = []
 
     for d in state.root.iterdir():
-        if not exclude_dir(d, _args):
-            pool_objs.append((d, State(state.root), _log, _args))
-        else:
-            state.error('Excluded', d)
+        if d.is_dir():
+            if not exclude_dir(d, _args):
+                pool_objs.append((d, State(state.root), _log, _args))
+            else:
+                # ToDo: Make warning/log
+                state.error('Excluded', d)
+        elif d.is_file():
+            root_files.append(d)
 
     original_sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
     with Pool(processes=_args.threads) as pool:
@@ -248,53 +206,147 @@ def collect_sizes_parallel(state: State) -> None:
 
         try:
             task = pool.starmap_async(process_root_fso, pool_objs)
+            task2 = pool.starmap_async(process_files, [(root_files, State(state.root), _args)])
             while not task.ready():
                 if sigint_fired:
-                    _log.trace('Waiting for task')
+                    _log.trace('Waiting for walk task')
+                continue
+            while not task2.ready():
+                if sigint_fired:
+                    _log.trace('Waiting for root files task')
                 continue
             _log.trace("Collecting thread results")
             results: List[State] = task.get()
+            results2: List[State] = task2.get()
         except KeyboardInterrupt:
             exit(0)
 
         for r in results:
             state.merge(r)
 
+        for (task_state, size, count) in results2:
+            task_state.add_to_root(size, count, task_state.has_errors)
+            state.merge(task_state)
+
 
 def collect_sizes_single(state: State) -> None:
+    root_files: List[Path] = []
+
     for d in state.root.iterdir():
-        if not exclude_dir(d, _args):
-            process_root_fso(d, state, _log, _args)
+        if d.is_dir():
+            if not exclude_dir(d, _args):
+                state.merge(process_root_fso(d, State(state.root), _log, _args))
+            else:
+                state.error('Excluded', d)
+        elif d.is_file():
+            root_files.append(d)
+
+    (task_state, size, count) = process_files(root_files, State(state.root), _args)
+    task_state.add_to_root(size, count, task_state.has_errors)
+    state.merge(task_state)
+
+
+def print_grid(sorted_dirs: List[Dir], total_dir: Dir):
+    # ToDo: Refactor to calculate this before scan and break if can't fit
+    size_field_width = 7
+    name_min_width = 17
+    cols = os.get_terminal_size().columns
+
+    def color(f: Field, d: Dir, value: str) -> str:
+        pref = ''
+        suff = ''
+
+        if d.has_errors:
+            pref = ShellColors.Yellow
+            suff = ShellColors.Off
+        elif f.color is not None:
+            pref = f.color
+            suff = ShellColors.Off
+
+        return f'{pref}{value}{suff}'
+
+    max_count_len = len(human_int(total_dir.file_count))
+    max_name_len = len(total_dir.name)
+
+    for dr in sorted_dirs:
+        dir_len = len(dr.name)
+        if dir_len > max_count_len:
+            max_count_len = dir_len
+
+    grid = Grid(cols)
+    grid.add_field(Field('Size', 'r', lambda f, d: color(f, d, pretty_size(d.size)), size_field_width))
+
+    # The order determines priority of auto adding
+    additional_fields: Dict[str, Field] = {
+        'density': Field('Density', 'r', lambda f, d: color(f, d, pretty_size(d.density)), size_field_width, ShellColors.Cyan),
+        'count': Field('Count', 'r', lambda f, d: color(f, d, human_int(d.file_count)), max_count_len + grid.int_field_padding)
+    }
+
+    if _args.sort and _args.sort != 'size':
+        fld = additional_fields[_args.sort]
+        fld.color = ShellColors.Green
+        grid.add_field(fld)
+
+    if _args.fields:
+        for fld in _args.fields:
+            if fld in additional_fields:
+                grid.add_field(additional_fields[fld])
+
+        if grid.remaining_width(grid.field_padding) <= name_min_width:
+            print('Terminal too narrow')
+            exit(1)
+    else:
+        if grid.remaining_width(grid.field_padding) <= name_min_width:
+            print('Terminal too narrow')
+            exit(1)
+
+        if max_name_len > 32:
+            name_allocation = 32
         else:
-            state.error('Excluded', d)
+            name_allocation = max_name_len
 
+        for fld in additional_fields.values():
+            if grid.can_fit_field(fld, name_allocation):
+                grid.add_field(fld)
 
-def print_dir(d: Dir):
-    print(f'{pretty_size(d.size)}\t\t{d.name}')
+    name_max_width = grid.remaining_width() - grid.field_padding
+    grid.add_field(Field('Folder', 'l', lambda f, d: color(f, d, truncate(d.name, name_max_width, True)), name_max_width))
 
+    dirs = [[f.get_value(f, d) for f in grid.fields] for d in sorted_dirs]
+    dirs.append([f'{ShellColors.Bold}{f.get_value(f, total_dir)}{ShellColors.Off}' for f in grid.fields])
 
-def print_grid(dirs: List[Dir]):
-    dirs = [[pretty_size(d.size), pretty_size(d.density()), d.name] for d in dirs]
-    grid = PrettyTable(['Size', 'Density', 'Folder'])
-    grid.add_rows(dirs)
-    grid.set_style(PLAIN_COLUMNS)
-    grid.border = False
-    grid.padding_width = 0
-    grid.left_padding_width = 0
-    grid.right_padding_width = 2
-    grid.align['Size'] = 'r'
-    grid.align['Density'] = 'r'
-    grid.align['Folder'] = 'l'
+    pt = PrettyTable([f.name for f in grid.fields])
+    pt.set_style(PLAIN_COLUMNS)
+    pt.border = False
+    pt.padding_width = 0
+    pt.left_padding_width = grid.field_left_padding_width
+    pt.right_padding_width = grid.field_right_padding_width
+    pt.add_rows(dirs)
 
-    print(grid)
+    for fld in grid.fields:
+        pt.align[fld.name] = fld.alignment
+
+    print(pt)
 
 
 def main():
     global _args
 
+    if os.get_terminal_size().columns < 60:
+        print('Terminal too narrow')
+        exit(1)
+
     try:
         _args = Args().parse_args()
         state = State(_args.root.resolve())
+
+        sorter: Callable[[Dir], Any]
+
+        if _args.sort in _fields:
+            sorter = _fields[_args.sort]
+        else:
+            print(f'Invalid sort argument {_args.sort}')
+            exit(1)
 
         st = datetime.now()
         if _args.threads == 1:
@@ -307,21 +359,20 @@ def main():
         st = datetime.now() - st
 
         if state.root_size > 0:
-            state.dirs.append(Dir('[Root]', state.root_size, state.root_file_count))
+            state.add_dir(Dir('./', state.root_size, state.root_file_count, state.root_has_errors))
 
-        dirs = sorted(state.dirs, key=lambda dd: dd.size, reverse=False)
-        dirs.append(Dir('[Total]', state.total_size, state.total_file_count))
-        print_grid(dirs)
+        sorted_dirs = sorted(state.dirs, key=sorter, reverse=False)
+        print_grid(sorted_dirs, Dir('Total', state.total_size, state.total_file_count, False))
 
-        if state.any_errors():
-            print(ShellColors.FAIL)
+        if state.has_errors:
+            print('')
             errors = state.get_errors()
             for k in errors:
-                print(f'{k}:\n\t{"\n\t".join(errors[k])}{ShellColors.OFF}')
+                print(f'{ShellColors.Red}{k}:{ShellColors.Off}\n\t{"\n\t".join(errors[k])}')
 
         if _args.timed:
-            print(ShellColors.OKGREEN)
-            print(f'Seek time: {st.total_seconds()}{ShellColors.OFF}')
+            print(ShellColors.Green)
+            print(f'Seek time: {st.total_seconds()}{ShellColors.Off}')
     except KeyboardInterrupt:
         exit(0)
 

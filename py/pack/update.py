@@ -3,21 +3,20 @@ import subprocess
 import re
 
 from git import Repo
-from tap import Tap
 
 from utils import parse_bool, ShellColors
-
+from cli_args import BaseTap
 import magic_files as mf
 
 
-class Args(Tap):
+class Args(BaseTap):
     dependencies: bool
     force_update_dependencies: bool
 
     def configure(self) -> None:
         self.description = 'Update zsh-toolkit'
-        self.add_argument("-d", "--dependencies", action='store_true', help="Only update dependencies", default=False)
-        self.add_argument("-fd", "--force-update-dependencies", action='store_true', help="Clears dependency cache and re-sources", default=False)
+        self.add_flag('-d', '--dependencies', help="Only update dependencies")
+        self.add_flag("-fd", "--force-update-dependencies", help='Clears dependency cache and re-sources')
 
 
 def _sh(cmd: str, check=False, suppress_error=False) -> str:
@@ -85,7 +84,7 @@ def main():
             mf.update_dependencies.touch()
 
             if parse_bool(os.environ.get('ZSHCOM_UPDATE_NORELOAD')):
-                print(f'Repo successfully updated. Updates will be available in new terminal sessions or after running {ShellColors.OKCYAN}source $ZSHCOM/init.sh{ShellColors.OFF}')
+                print(f'Repo successfully updated. Updates will be available in new terminal sessions or after running {ShellColors.Cyan}source $ZSHCOM/init.sh{ShellColors.Off}')
             else:
                 mf.trigger_re_source.touch()
         else:

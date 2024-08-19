@@ -1,22 +1,17 @@
-import os
-
 from pathlib import Path
-from typing import Dict
-
-import emoji
-from tap import Tap
 from userinput import userinput
 
 from utils import parse_bool
+from cli_args import BaseTap
 import string_utils
 
 
-class Args(Tap):
+class Args(BaseTap):
     plan: bool = False
 
     def configure(self) -> None:
-        self.description = "Replace double byte chars in file & folder names"
-        self.add_argument('-p', "--plan", action='store_true', help="Don't commit renames")
+        self.description = 'Replace double byte chars in file & folder names'
+        self.add_plan("Don't commit renames")
 
 
 _args: Args
@@ -40,7 +35,7 @@ def main():
             if nf.exists():
                 print(f'{rel_path(root, nf)} exists')
             else:
-                resp = parse_bool(userinput('', label=f'Rename file? {repl.highlighted}', cache=False), True)
+                resp = parse_bool(userinput('', label=f'Rename file? {repl.highlighted}', cache=False), [None])
 
                 if resp:
                     if _args.plan:

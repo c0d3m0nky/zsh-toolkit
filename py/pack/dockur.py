@@ -3,8 +3,8 @@ import sys
 from typing import Dict, Callable, List, Union
 
 from docker import from_env as docker_from_env
-from tap import Tap
 
+from cli_args import BaseTap
 from logger import Logger
 
 from dockur_models import DockerConnection
@@ -21,7 +21,7 @@ def sh(cmd: str):
     p.wait()
 
 
-class Args(Tap):
+class Args(BaseTap):
     command: str
     trace: bool = False
     plan: bool = False
@@ -32,9 +32,9 @@ class Args(Tap):
 
     def configure(self) -> None:
         self.description = 'Docker utilities'
-        self.add_argument('command', type=str, choices=self._command_choices, help='Helper action')
-        self.add_argument('-t', '--trace', action='store_true', help='Trace logging', required=False)
-        self.add_argument('-p', '--plan', action='store_true', help='Don\'t overwrite (shows diff)', required=False)
+        self.add_argument('command', help='Helper action', choices=self._command_choices)
+        self.add_plan("Don't overwrite (shows diff)")
+        self.add_trace()
 
     def process_args(self) -> None:
         pass

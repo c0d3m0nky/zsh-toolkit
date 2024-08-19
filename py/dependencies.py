@@ -64,8 +64,8 @@ _pip_arch = parse_bool(os.environ.get('ZSHCOM_PIP_ARCH'))
 _pip_install_user: bool = parse_bool(os.environ.get('ZSHCOM_PIP_INSTALL_USER')) or True
 
 if _pip_arch is None and platform.system() == 'Linux':
-    fdor = getattr(platform, "freedesktop_os_release", None)
-    if callable(fdor):
+    os_release = getattr(platform, "freedesktop_os_release", None)
+    if callable(os_release):
         _pip_arch = 'ID_LIKE' in platform.freedesktop_os_release() and platform.freedesktop_os_release()['ID_LIKE'] == 'arch'
     else:
         _pip_arch = False
@@ -196,11 +196,8 @@ def _pkg_check_pacman(pkg: str) -> bool:
 
 
 def init():
-    if mf.repo_update_checked.exists() and datetime.fromtimestamp(mf.repo_update_checked.stat().st_mtime) < (datetime.now() - timedelta(days=7)):
-        # I'm doing this here because in theory, it should already have been satisfied
-        from userinput import userinput
-
-        resp = userinput(f'You have not checked for zsh-toolkit updates in over a week, would you like to check now: ')
+    if not mf.repo_update_checked.exists() or datetime.fromtimestamp(mf.repo_update_checked.stat().st_mtime) < (datetime.now() - timedelta(days=7)):
+        resp = input(f'You have not checked for zsh-toolkit updates in over a week, would you like to check now: ').strip()
 
         if resp.lower() == 'y':
             mf.trigger_update.touch()
@@ -249,8 +246,6 @@ def init():
                     print(f'Failed to install {pk} with pip')
                     satisfied = False
             elif pkg.pacman and _pip_arch:
-                # print(f'Cannot install {pk} with pacman because it requires sudo. Please install manually')
-                # satisfied = False
                 try:
                     _pip_install_pacman(pkg.pacman)
                     satisfied = True
