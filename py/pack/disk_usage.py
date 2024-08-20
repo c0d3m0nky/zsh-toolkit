@@ -17,7 +17,8 @@ from disk_usage_models import Dir, State, Field, Grid, BareStat, Stat
 
 
 def get_term_cols():
-    return shutil.get_terminal_size().columns
+    return 63
+    # return shutil.get_terminal_size().columns
 
 
 _log: Logger
@@ -277,7 +278,7 @@ def print_grid(sorted_dirs: List[Stat], total_dir: Stat):
     for dr in sorted_dirs:
         dir_len = len(dr.name)
         if dir_len > max_count_len:
-            max_count_len = dir_len
+            max_name_len = dir_len
 
     grid = Grid(cols)
     grid.add_field(Field('Size', 'r', lambda f, d: color(f, d, pretty_size(d.size)), size_field_width))
@@ -286,7 +287,7 @@ def print_grid(sorted_dirs: List[Stat], total_dir: Stat):
     additional_fields: Dict[str, Field] = {
         'density': Field('Density', 'r', lambda f, d: color(f, d, pretty_size(d.density)), size_field_width, ShellColors.Cyan),
         'count': Field('Count', 'r', lambda f, d: color(f, d, human_int(d.file_count)), max_count_len + grid.int_field_padding),
-        'max': Field('Max', 'r', lambda f, d: color(f, d, pretty_size(d.max_size)), max_count_len + grid.int_field_padding)
+        'max': Field('Max', 'r', lambda f, d: color(f, d, pretty_size(d.max_size)), size_field_width + grid.int_field_padding)
     }
 
     if _args.sort and _args.sort != 'size':
