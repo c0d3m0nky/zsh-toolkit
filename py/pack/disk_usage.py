@@ -17,8 +17,8 @@ from disk_usage_models import Dir, State, Field, Grid, BareStat, Stat
 
 
 def get_term_cols():
-    return 63
-    # return shutil.get_terminal_size().columns
+    # return 63
+    return shutil.get_terminal_size().columns
 
 
 _log: Logger
