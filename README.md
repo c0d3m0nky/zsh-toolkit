@@ -18,7 +18,7 @@ A collection of bash & python scripts I use as helpers in zsh
   * magicfiles.sh and magic_files.py are in sync
   * Each py pack applet
 * Add to install script
-  * Check in zsh
+  * Check for zsh
   * Check for python3.12+
   * Check/install python-env
   * Check/install pip

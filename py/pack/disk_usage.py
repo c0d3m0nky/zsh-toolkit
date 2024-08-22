@@ -35,6 +35,7 @@ class Args(BaseTap):
     root: Path = Path('./')
     fields: List[str]
     sort: str
+    sort_reversed: bool
     threads: int = None
     timed: bool = False
     trace: bool = False
@@ -47,6 +48,7 @@ class Args(BaseTap):
         self.add_root_optional('Path to scan')
         self.add_multi('-f', '--fields', help="Fields to output", choices=_field_choices, default=None)
         self.add_optional('-s', '--sort', help='Sort by field', choices=list(_fields.keys()), default='size')
+        self.add_flag('-r', '--sort-reversed', help='Reversed sort')
         self.add_argument("-th", "--threads", help="Max threads", type=int)
         self.add_flag("-eh", "--exclude-hidden", help="Exclude hidden files and folders")
         self.add_flag("--timed", help="Print seek time")
@@ -88,6 +90,8 @@ class Args(BaseTap):
 
 
 _args: Args
+_size_field_width = 7
+_name_min_width = 17
 
 
 def exclude_dir(d: Path, args: Args) -> bool:
@@ -181,21 +185,10 @@ def process_root_fso(fso: Path, task_state: State, log: Logger, args: Args) -> S
     return task_state
 
 
-def collect_sizes_parallel(state: State) -> None:
-    pool_objs = []
-    root_files: List[Path] = []
-
-    for d in state.root.iterdir():
-        if d.is_dir():
-            if not exclude_dir(d, _args):
-                pool_objs.append((d, state.task_state(d), _log, _args))
-            else:
-                # ToDo: Make warning/log
-                state.error('Excluded', d)
-        elif d.is_file():
-            root_files.append(d)
-
+def collect_sizes_parallel(state: State, dirs: List[Path], root_files: List[Path]) -> None:
+    pool_objs = [(d, state.task_state(d), _log, _args) for d in dirs]
     original_sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
+
     with Pool(processes=_args.threads) as pool:
         sigint_fired = False
 
@@ -235,17 +228,9 @@ def collect_sizes_parallel(state: State) -> None:
             state.merge(task_state)
 
 
-def collect_sizes_single(state: State) -> None:
-    root_files: List[Path] = []
-
-    for d in state.root.iterdir():
-        if d.is_dir():
-            if not exclude_dir(d, _args):
-                state.merge(process_root_fso(d, state.task_state(d), _log, _args))
-            else:
-                state.error('Excluded', d)
-        elif d.is_file():
-            root_files.append(d)
+def collect_sizes_single(state: State, dirs: List[Path], root_files: List[Path]) -> None:
+    for d in dirs:
+        state.merge(process_root_fso(d, state.task_state(d), _log, _args))
 
     (task_state, sizes) = process_files(root_files, state.task_state(state.root), _args)
     for size in sizes:
@@ -253,72 +238,30 @@ def collect_sizes_single(state: State) -> None:
     state.merge(task_state)
 
 
-def print_grid(sorted_dirs: List[Stat], total_dir: Stat):
-    # ToDo: Refactor to calculate this before scan and break if can't fit
-    size_field_width = 7
-    name_min_width = 17
-    cols = get_term_cols()
+def color_field(f: Field, d: Dir, value: str) -> str:
+    pref = ''
+    suff = ''
 
-    def color(f: Field, d: Dir, value: str) -> str:
-        pref = ''
-        suff = ''
+    if d.has_errors:
+        pref = ShellColors.Yellow
+        suff = ShellColors.Off
+    elif f.color is not None:
+        pref = f.color
+        suff = ShellColors.Off
 
-        if d.has_errors:
-            pref = ShellColors.Yellow
-            suff = ShellColors.Off
-        elif f.color is not None:
-            pref = f.color
-            suff = ShellColors.Off
+    return f'{pref}{value}{suff}'
 
-        return f'{pref}{value}{suff}'
 
+def print_grid(grid: Grid, sorted_dirs: List[Stat], total_dir: Stat):
     max_count_len = len(human_int(total_dir.file_count))
-    max_name_len = len(total_dir.name)
 
-    for dr in sorted_dirs:
-        dir_len = len(dr.name)
-        if dir_len > max_count_len:
-            max_name_len = dir_len
+    grid.additional_fields['count'].width = max_count_len + grid.int_field_padding
 
-    grid = Grid(cols)
-    grid.add_field(Field('Size', 'r', lambda f, d: color(f, d, pretty_size(d.size)), size_field_width))
-
-    # The order determines priority of auto adding
-    additional_fields: Dict[str, Field] = {
-        'density': Field('Density', 'r', lambda f, d: color(f, d, pretty_size(d.density)), size_field_width, ShellColors.Cyan),
-        'count': Field('Count', 'r', lambda f, d: color(f, d, human_int(d.file_count)), max_count_len + grid.int_field_padding),
-        'max': Field('Max', 'r', lambda f, d: color(f, d, pretty_size(d.max_size)), size_field_width + grid.int_field_padding)
-    }
-
-    if _args.sort and _args.sort != 'size':
-        fld = additional_fields[_args.sort]
-        fld.color = ShellColors.Green
-        grid.add_field(fld)
-
-    if _args.fields:
-        for fld in _args.fields:
-            if fld in additional_fields:
-                grid.add_field(additional_fields[fld])
-
-        if grid.remaining_width(grid.field_padding) <= name_min_width:
-            print('Terminal too narrow')
-            exit(1)
-    else:
-        if grid.remaining_width(grid.field_padding) <= name_min_width:
-            print('Terminal too narrow')
-            exit(1)
-
-        if max_name_len > 32:
-            name_allocation = 32
-        else:
-            name_allocation = max_name_len
-
-        for fld in additional_fields.values():
-            if grid.can_fit_field(fld, name_allocation):
-                grid.add_field(fld)
+    while grid.remaining_width(grid.field_padding) <= _name_min_width:
+        grid.remove_last_field()
 
     name_max_width = grid.remaining_width() - grid.field_padding
-    grid.add_field(Field('Folder', 'l', lambda f, d: color(f, d, truncate(d.name, name_max_width, True)), name_max_width))
+    grid.add_field(Field('Folder', 'l', lambda f, d: color_field(f, d, truncate(d.name, name_max_width, True)), name_max_width))
 
     dirs = [[f.get_value(f, d) for f in grid.fields] for d in sorted_dirs]
     dirs.append([f'{ShellColors.Bold}{f.get_value(f, total_dir)}{ShellColors.Off}' for f in grid.fields])
@@ -337,12 +280,45 @@ def print_grid(sorted_dirs: List[Stat], total_dir: Stat):
     print(pt)
 
 
-def main():
-    global _args
+def prep_grid(max_name_len: int) -> Grid:
+    grid = Grid(get_term_cols(), max_name_len)
+    grid.add_field(Field('Size', 'r', lambda f, d: color_field(f, d, pretty_size(d.size)), _size_field_width))
 
-    if get_term_cols() < 60:
+    # The order determines priority of auto adding
+    grid.additional_fields = {
+        'density': Field('Density', 'r', lambda f, d: color_field(f, d, pretty_size(d.density)), _size_field_width + grid.int_field_padding, ShellColors.Cyan),
+        'count': Field('Count', 'r', lambda f, d: color_field(f, d, human_int(d.file_count)), _size_field_width + grid.int_field_padding),
+        'max': Field('Max', 'r', lambda f, d: color_field(f, d, pretty_size(d.max_size)), _size_field_width + grid.int_field_padding)
+    }
+
+    if _args.sort and _args.sort != 'size':
+        fld = grid.additional_fields[_args.sort]
+        fld.color = ShellColors.Green
+        grid.add_field(fld)
+
+    if grid.remaining_width(grid.field_padding) <= _name_min_width:
         print('Terminal too narrow')
         exit(1)
+
+    if _args.fields:
+        for fld in _args.fields:
+            if fld in grid.additional_fields:
+                grid.add_field(grid.additional_fields[fld])
+    else:
+        if max_name_len > 32:
+            name_allocation = 32
+        else:
+            name_allocation = max_name_len
+
+        for fld in grid.additional_fields.values():
+            if grid.can_fit_field(fld, name_allocation):
+                grid.add_field(fld)
+
+    return grid
+
+
+def main():
+    global _args
 
     try:
         _args = Args().parse_args()
@@ -357,10 +333,30 @@ def main():
             exit(1)
 
         st = datetime.now()
+
+        max_name_len = 0
+        root_dirs: List[Path] = []
+        root_files: List[Path] = []
+
+        for fso in _args.root.iterdir():
+            if fso.is_dir():
+                if not exclude_dir(fso, _args):
+                    root_dirs.append(fso)
+                    name_len = len(fso.name)
+                    if name_len > max_name_len:
+                        max_name_len = name_len
+                else:
+                    # ToDo: Make warning/log
+                    state.error('Excluded', fso)
+            elif fso.is_file():
+                root_files.append(fso)
+
+        grid = prep_grid(max_name_len)
+
         if _args.threads == 1:
-            collect_sizes_single(state)
+            collect_sizes_single(state, root_dirs, root_files)
         elif _args.threads > 1:
-            collect_sizes_parallel(state)
+            collect_sizes_parallel(state, root_dirs, root_files)
         else:
             _log.error('Threads must be 1 or greater.')
             exit(1)
@@ -369,8 +365,8 @@ def main():
         if state.root_stat.size > 0:
             state.add_dir(state.root_stat)
 
-        sorted_dirs = sorted(state.dirs, key=sorter, reverse=False)
-        print_grid(sorted_dirs, state.total_stat)
+        sorted_dirs = sorted(state.dirs, key=sorter, reverse=_args.sort_reversed)
+        print_grid(grid, sorted_dirs, state.total_stat)
 
         if state.has_errors:
             print('')

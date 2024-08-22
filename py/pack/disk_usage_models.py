@@ -214,10 +214,14 @@ class Grid:
     _int_field_padding = 1
     _fields: List[Field] = []
 
+    additional_fields: Dict[str, Field]
+    max_name_len: int
     max_width: int
 
-    def __init__(self, max_width: int):
+    def __init__(self, max_width: int, max_name_len: int) -> None:
         self.max_width = max_width
+        self.max_name_len = max_name_len
+        self.additional_fields = {}
 
     @property
     def field_padding(self) -> int:
@@ -242,6 +246,9 @@ class Grid:
     def add_field(self, field: Field) -> None:
         if not is_in(field, self._fields, lambda a, b: a.name == b.name):
             self._fields.append(field)
+
+    def remove_last_field(self) -> None:
+        _ = self._fields.pop()
 
     def can_fit_field(self, field: Field, buffer: int = 0) -> bool:
         return self.remaining_width(buffer) > field.width + self.field_padding
