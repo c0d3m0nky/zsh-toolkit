@@ -16,6 +16,10 @@ then
   if [[ ${ZSHCOM__known_os:?} == 'win' ]]
   then
     mf_transient='/tmp/zsh_toolkit'
+  elif [[ -d "/run/user/$UID" ]]
+  then
+    mf_transient="/run/user/$UID/zsh_toolkit"
+  fi
   elif [[ -d /dev/shm ]]
   then
     mf_transient='/dev/shm/zsh_toolkit'
