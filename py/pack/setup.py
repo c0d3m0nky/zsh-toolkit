@@ -8,7 +8,7 @@ setup(
     author='c0d3m0nky',
     py_modules=[
         'file_utils', 'utils', 'magic_files', 'logger', 'string_dbyte_utils', 'cli_args', 'disk_usage_models',
-        'update', 'flatten', 'rxmv', 'folder_density', 'decomp', 'disk_usage', 'little_guys', 'dockur', 'replace_double_byte_chars'
+        'update', 'flatten', 'rxmv', 'decomp', 'disk_usage', 'little_guys', 'dockur', 'replace_double_byte_chars'
     ],
     entry_points={
         'console_scripts': [

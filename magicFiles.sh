@@ -22,7 +22,7 @@ then
   fi
 fi
 
-if [[ -n "${mf_transient}" && -d $(dirname $mf_transient) ]]
+if [[ -n "${mf_transient}" && -d $(dirname "$mf_transient") ]]
 then
   export ZSHCOM__transient=$mf_transient
 else

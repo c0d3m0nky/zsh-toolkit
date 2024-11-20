@@ -2,7 +2,7 @@ import errno
 import os
 import shutil
 import signal
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from multiprocessing import Pool
 from typing import List, Tuple, Iterator, Dict, Any, Callable
@@ -42,6 +42,7 @@ class Args(BaseTap):
     no_term_colors: bool = False
     exclude_hidden: bool = False
     exclude_folders: List[Path] = []
+    csv: bool
 
     def configure(self) -> None:
         self.description = "A beefed up du"
@@ -53,6 +54,7 @@ class Args(BaseTap):
         self.add_flag("-eh", "--exclude-hidden", help="Exclude hidden files and folders")
         self.add_flag("--timed", help="Print seek time")
         self.add_flag("--no-term-colors", help="Disable terminal colors")
+        self.add_flag("--csv", help="Prints CSV compatible")
         self.add_trace()
 
     def process_args(self) -> None:
@@ -251,6 +253,49 @@ def color_field(f: Field, d: Dir, value: str) -> str:
     return f'{pref}{value}{suff}'
 
 
+def print_csv(state: State, sorted_dirs: List[Stat], stopwatch: timedelta):
+    folder_key: str = 'folder'
+    field_keys = [folder_key] + list(_fields.keys())
+    cell_count = len(field_keys)
+
+    def print_row(row_data: List[Any]):
+        extra_cols = [''] * (cell_count - len(row_data))
+        print(','.join([f'"{str(c)}"' for c in (row_data + extra_cols)]))
+
+    def print_gap():
+        print_row([])
+        print_row([])
+
+    print_row(['root', state.root.as_posix()])
+    print_gap()
+
+    print_row([f.title() for f in field_keys])
+
+    for d in sorted_dirs:
+        cells: List[str] = []
+
+        for f in field_keys:
+            if f == folder_key:
+                cells.append(d.name)
+            else:
+                cells.append(str(_fields[f](d)))
+
+        print_row(cells)
+
+    if state.has_errors:
+        print_gap()
+        print_row(['key', 'error'])
+
+        errors = state.get_errors()
+        for k in errors:
+            for ke in errors[k]:
+                print_row([k, ke])
+
+    if _args.timed:
+        print_gap()
+        print_row(['Seek time', stopwatch.total_seconds()])
+
+
 def print_grid(grid: Grid, sorted_dirs: List[Stat], total_dir: Stat):
     max_count_len = len(human_int(total_dir.file_count))
 
@@ -331,7 +376,7 @@ def main():
             print(f'Invalid sort argument {_args.sort}')
             exit(1)
 
-        st = datetime.now()
+        st: datetime = datetime.now()
 
         max_name_len = 0
         root_dirs: List[Path] = []
@@ -350,7 +395,7 @@ def main():
             elif fso.is_file():
                 root_files.append(fso)
 
-        grid = prep_grid(max_name_len)
+        grid: Grid = prep_grid(max_name_len) if not _args.csv else None
 
         if _args.threads == 1:
             collect_sizes_single(state, root_dirs, root_files)
@@ -359,23 +404,26 @@ def main():
         else:
             _log.error('Threads must be 1 or greater.')
             exit(1)
-        st = datetime.now() - st
+        st: timedelta = datetime.now() - st
 
         if state.root_stat.size > 0:
             state.add_dir(state.root_stat)
 
         sorted_dirs = sorted(state.dirs, key=sorter, reverse=_args.sort_reversed)
-        print_grid(grid, sorted_dirs, state.total_stat)
+        if _args.csv:
+            print_csv(state, sorted_dirs, st)
+        else:
+            print_grid(grid, sorted_dirs, state.total_stat)
 
-        if state.has_errors:
-            print('')
-            errors = state.get_errors()
-            for k in errors:
-                print(f'{ShellColors.Red}{k}:{ShellColors.Off}\n\t{"\n\t".join(errors[k])}')
+            if state.has_errors:
+                print('')
+                errors = state.get_errors()
+                for k in errors:
+                    print(f'{ShellColors.Red}{k}:{ShellColors.Off}\n\t{"\n\t".join(errors[k])}')
 
-        if _args.timed:
-            print(ShellColors.Green)
-            print(f'Seek time: {st.total_seconds()}{ShellColors.Off}')
+            if _args.timed:
+                print(ShellColors.Green)
+                print(f'Seek time: {st.total_seconds()}{ShellColors.Off}')
     except KeyboardInterrupt:
         exit(0)
 

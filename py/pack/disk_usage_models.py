@@ -164,7 +164,7 @@ class State:
         self._errors[key].append(path)
 
     def get_relative_path(self, path: Path) -> str:
-        return path.relative_to(self._root).as_posix()
+        return path.relative_to(self._root).as_posix() if path.is_relative_to(self._root) else path.as_posix()
 
     def get_errors(self) -> Dict[str, List[str]]:
         return {k: [self.get_relative_path(p) for p in v] for k, v in self._errors.items()}
