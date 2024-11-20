@@ -1,12 +1,14 @@
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict
 
 import emoji
-from userinput import userinput
 
-from utils import ShellColors, parse_bool
+from utils import ShellColors, Ask
+
+_ask = Ask()
 
 _need_dump_replacements = False
 _char_replacements_changed = False
@@ -14,6 +16,7 @@ _char_replacements_file_loaded = False
 _char_replacements_file = Path.home() / '.double_byte_replacements'
 _char_replacements: Dict[str, str] = {}
 _char_replacements_inverted: Dict[str, str] = {}
+_char_removes = []
 _mark_char = os.environ.get('ZSHCOM_TEXT_HIGHLIGHT')
 
 if _mark_char:
@@ -29,6 +32,22 @@ class Replacement:
     highlighted: str
 
 
+_rx_consecutive_filler_chars: re.Pattern = re.compile(r'([_-])[_-]+')
+_rx_space: re.Pattern = re.compile(r'\s+')
+
+
+def remove_consecutive_filler_chars(string):
+    lv = None
+    cv = string
+
+    while lv != cv:
+        lv = cv
+        cv = re.sub(_rx_space, ' ', cv)
+        cv = re.sub(_rx_consecutive_filler_chars, r'\1', cv)
+
+    return cv
+
+
 def _load_replacements() -> None:
     global _char_replacements_file_loaded
 
@@ -37,13 +56,21 @@ def _load_replacements() -> None:
 
     with _char_replacements_file.open('r') as f:
         for line in f.readlines():
-            replacement = line[0]
-            _char_replacements[replacement] = ''
-            for c in list(line)[1:]:
-                if c == '\r' or c == '\n':
-                    continue
-                _char_replacements[replacement] += c
-                _char_replacements_inverted[c] = replacement
+            if line.startswith('!rm\t'):
+                char_removes = line[4:]
+
+                for c in char_removes:
+                    if c == '\r' or c == '\n':
+                        continue
+                    _char_removes.append(c)
+            else:
+                replacement = line[0]
+                _char_replacements[replacement] = ''
+                for c in list(line)[1:]:
+                    if c == '\r' or c == '\n':
+                        continue
+                    _char_replacements[replacement] += c
+                    _char_replacements_inverted[c] = replacement
 
     _char_replacements_file_loaded = True
 
@@ -60,6 +87,12 @@ def _dump_replacements() -> None:
             _char_replacements_changed = True
 
         contents = ''
+
+        if len(_char_removes) > 0:
+            contents += f'!rm\t'
+
+            for c in _char_removes:
+                contents += f'{c}'
 
         for k in _char_replacements.keys():
             if contents:
@@ -84,25 +117,30 @@ def _replace_dbl_byte_char(char: str, before: str, after: str, keep_emoji: bool)
         repl_char = None
 
         while repl_char is None:
-            resp = userinput('', label='Character to replace it with', cache=False)
+            resp = _ask.char('Character to replace it with', also_valid=['!rm'])
 
             if resp is None:
                 continue
 
-            if len(resp) > 1:
-                print('Too many characters')
-            elif resp == '':
-                print('Cannot replace with empty string')
+            if resp == '!rm':
+                resp2 = _ask.yes_no(f'Remove future instances of {char} perpetually', empty_is_true=True)
+
+                if resp2:
+                    repl_char = ''
             else:
-                resp2 = parse_bool(userinput('', label=f'Replace future instances of {char} with {resp} perpetually', cache=False), also_true=[None])
+                resp2 = _ask.yes_no(f'Replace future instances of {char} with {resp} perpetually', empty_is_true=True)
 
                 if resp2:
                     repl_char = resp
 
-        _char_replacements_inverted[char] = repl_char
-        if repl_char not in _char_replacements:
-            _char_replacements[repl_char] = ''
-        _char_replacements[repl_char] += char
+        if repl_char == '':
+            _char_removes.append(char)
+        else:
+            _char_replacements_inverted[char] = repl_char
+            if repl_char not in _char_replacements:
+                _char_replacements[repl_char] = ''
+            _char_replacements[repl_char] += char
+
         _need_dump_replacements = True
         return repl_char
 

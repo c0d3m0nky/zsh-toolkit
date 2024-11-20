@@ -1,4 +1,4 @@
-from typing import Union, List, Any, TypeVar, Callable
+from typing import Union, List, Any, TypeVar, Callable, Tuple
 
 ZTK_UTV = TypeVar('ZTK_UTV')
 
@@ -34,18 +34,26 @@ def int_safe(v) -> Union[int, None]:
         return None
 
 
+def float_safe(v) -> Union[float, None]:
+    # noinspection PyBroadException
+    try:
+        return float(v)
+    except:
+        return None
+
+
 # noinspection PyDefaultArgument
 def parse_bool(s: str, also_true: List[Union[str, None]] = []) -> Union[bool, None]:
-    if s is str:
+    if type(s) is str:
         s = s.lower()
         if s in ['yes', 'true', 't', 'y', '1']:
             return True
         elif s in ['no', 'false', 'f', 'n', '0']:
-            return s in also_true
+            return False
         else:
-            return s in also_true
-
-    return s in also_true
+            return True if s in also_true else None
+    else:
+        return s in also_true
 
 
 def pretty_size(size: int) -> str:
@@ -121,3 +129,116 @@ def human_int(i: int) -> str:
 
     return res
 
+
+def first(coll: List[ZTK_UTV]) -> Union[ZTK_UTV, None]:
+    if coll and len(coll) > 0:
+        return coll[0]
+    else:
+        return None
+
+
+def last(coll: List[ZTK_UTV]) -> Union[ZTK_UTV, None]:
+    if coll and len(coll) > 0:
+        return coll[len(coll) - 1]
+    else:
+        return None
+
+
+def str_in(value: str, coll: List[str], case_insensitive: bool = True, strip: bool = True) -> bool:
+    def clean(s: str) -> str:
+        if case_insensitive:
+            s = s.lower()
+
+        if strip:
+            s = s.strip()
+
+        return s
+
+    clean_value = clean(value)
+
+    for ci in coll:
+        if clean_value == clean(ci):
+            return True
+
+    return False
+
+
+class Ask:
+
+    def __init__(self):
+        pass
+
+    def int(self, msg: str) -> int:
+        def mutate(resp: str) -> Tuple[bool, int]:
+            resp_int = int_safe(resp)
+
+            # noinspection PyRedundantParentheses
+            return (resp_int is not None, resp_int)
+
+        return self._ask(msg, mutate)
+
+    def float(self, msg: str) -> float:
+        def mutate(resp: str) -> Tuple[bool, float]:
+            resp_float = float_safe(resp)
+
+            # noinspection PyRedundantParentheses
+            return (resp_float is not None, resp_float)
+
+        return self._ask(msg, mutate)
+
+    # noinspection PyDefaultArgument
+    def yes_no(self, msg: str, empty_is_true: bool = False, also_true: List[Union[str, None]] = []) -> bool:
+        if empty_is_true and '' not in also_true:
+            also_true.append('')
+
+        def mutate(resp: str) -> Tuple[bool, bool]:
+            resp_bool = parse_bool(resp, also_true)
+
+            # noinspection PyRedundantParentheses
+            return (resp_bool is not None, resp_bool)
+
+        return self._ask(msg, mutate)
+
+    def char(self, msg: str, also_valid: List[str] = []) -> str:
+        def mutate(resp: str) -> Tuple[bool, str]:
+            # noinspection PyRedundantParentheses
+            return (len(resp) == 1 or str_in(resp, also_valid), resp)
+
+        return self._ask(msg, mutate)
+
+    def choices(self, msg: str, choices: List[str], case_insensitive: bool = False, strip: bool = True) -> str:
+        def mutate(resp: str) -> Tuple[bool, str]:
+            if case_insensitive:
+                resp = resp.lower()
+
+            if strip:
+                resp = resp.strip()
+
+            # noinspection PyRedundantParentheses
+            return (str_in(resp, choices, case_insensitive, strip), resp)
+
+        return self._ask(msg, mutate)
+
+    def ask(self, msg: str, case_insensitive: bool = False, strip: bool = True, default: Union[str, None] = None) -> str:
+        def mutate(resp: str) -> Tuple[bool, str]:
+            resp = default if resp is None or resp == '' else resp
+
+            if case_insensitive:
+                resp = resp.lower()
+
+            if strip:
+                resp = resp.strip()
+
+            # noinspection PyRedundantParentheses
+            return (len(resp) > 0, resp)
+
+        return self._ask(msg, mutate)
+
+    # noinspection PyMethodMayBeStatic
+    def _ask(self, msg: str, mutate: Callable[[str], Tuple[bool, ZTK_UTV]]) -> ZTK_UTV:
+        while True:
+            resp = input(f'{msg}: ')
+            (is_valid, value) = mutate(resp)
+
+            if is_valid:
+                return value

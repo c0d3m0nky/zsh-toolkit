@@ -101,3 +101,9 @@ function touchFiles() {
     find "$root" -maxdepth 1  -type f -exec touch {} +
   fi
 }
+
+function rclsa() {
+  rclone lsd --max-depth 1 $@;
+  echo '---'
+  rclone lsl --max-depth 1 $@;
+}

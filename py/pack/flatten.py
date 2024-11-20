@@ -4,18 +4,19 @@ import os
 import subprocess
 from pathlib import Path
 
-import string_utils
+import string_dbyte_utils
 
 if os.environ.get('ZSHCOM__feat_rclone') != 'true':
     print('rclone not installed')
     exit(1)
 
 import rclone
-from userinput import userinput
-
 from typing import List, Callable, Tuple, TypeVar, Union
 
 from cli_args import BaseTap, RegExArg
+from utils import Ask
+
+_ask = Ask()
 
 
 def _sh(cmd: str):
@@ -27,8 +28,6 @@ T = TypeVar('T')
 R = TypeVar('R')
 
 _rx_leading_posix_path: re.Pattern = re.compile(r'^.?/?')
-_rx_consecutive_filler_chars: re.Pattern = re.compile(r'([_-])[_-]+')
-_rx_space: re.Pattern = re.compile(r'\s+')
 
 
 def int_safe(i: str) -> Union[int, None]:
@@ -69,15 +68,7 @@ class RenameParts:
     def remove_consecutive_filler_chars(self):
         npa = []
         for p in self.parts:
-            lv = None
-            cv = p
-
-            while lv != cv:
-                lv = cv
-                cv = re.sub(_rx_space, ' ', cv)
-                cv = re.sub(_rx_consecutive_filler_chars, r'\1', cv)
-
-            npa.append(cv)
+            npa.append(string_dbyte_utils.remove_consecutive_filler_chars(p))
 
         self.parts = npa
 
@@ -224,8 +215,7 @@ def flatten_path():
                 print(f'\t{cancel_act}: cancel')
 
                 print('\nChoose Action: ')
-                act = userinput('Choose Action', validator='integer')
-                act = int_safe(act)
+                act = _ask.int('Choose Action')
 
                 if act <= pc:
                     # Trim
@@ -236,14 +226,14 @@ def flatten_path():
                         nfn.parts[pi] = nfn.parts[pi][:-1]
                 elif pc < act <= pc * 2:
                     pi = act - 1 - pc
-                    repl = userinput(f'Replace with (~ to cancel input): {nfn.parts[pi]}\n')
+                    repl = _ask.ask(f'Replace with (~ to cancel input): {nfn.parts[pi]}\n')
 
                     if repl.strip() != '~':
                         nfn.parts[pi] = repl
                 elif act == strip_dbyte_act or act == strip_dbyte_keep_emoji_act:
                     for i in range(0, len(nfn.parts)):
                         p = nfn.parts[i]
-                        np = string_utils.replace_dbl_byte_chars(p, act == strip_dbyte_keep_emoji_act)
+                        np = string_dbyte_utils.replace_dbl_byte_chars(p, act == strip_dbyte_keep_emoji_act)
 
                         if np.clean != p:
                             nfn.parts[i] = np.clean
@@ -261,7 +251,7 @@ def flatten_path():
 
         while check_file_name():
             print(f'New file name: {nfn.get_path_str()}')
-            res = (userinput('Enter to accept, r to retry, s to skip, c to cancel', cache=False) or '').strip()
+            res = _ask.choices('Enter to accept, r to retry, s to skip, c to cancel', choices=['', 's', 'c', 'r'], case_insensitive=True)
 
             if res == 's':
                 skip_file = True
