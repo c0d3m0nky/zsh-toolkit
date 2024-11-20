@@ -7,8 +7,8 @@ setup(
     description='ZSH utils I find useful',
     author='c0d3m0nky',
     py_modules=[
-        'file_utils', 'utils', 'magic_files',
-        'update', 'flatten', 'rxmv', 'folder_density', 'decomp', 'disk_usage', 'little_guys', 'dockur'
+        'file_utils', 'utils', 'magic_files', 'logger', 'string_dbyte_utils', 'cli_args', 'disk_usage_models',
+        'update', 'flatten', 'rxmv', 'decomp', 'disk_usage', 'little_guys', 'dockur', 'replace_double_byte_chars', 'git_auto_commit'
     ],
     entry_points={
         'console_scripts': [
@@ -18,13 +18,14 @@ setup(
             'folderDensity=folder_density:main',
             'decomp=decomp:main',
             'duh=disk_usage:main',
-            'fack=little_guys:fack'
+            'fack=little_guys:fack',
+            'repdb=replace_double_byte_chars:main',
+            'git_auto_commit=git_auto_commit:main'
         ],
     },
     install_requires=[
         'typed-argument-parser',
         'python-rclone',
-        'userinput',
         'numpy',
         'emoji',
         'GitPython',
@@ -32,6 +33,7 @@ setup(
         'py7zr',
         'unrar2-cffi',
         'docker',
-        'PyYAML'
+        'PyYAML',
+        'prettytable'
     ]
 )

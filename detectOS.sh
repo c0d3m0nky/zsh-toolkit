@@ -1,4 +1,4 @@
-
+#!/bin/zsh
 
 export ZSHCOM__known_os=''
 export ZSHCOM__pkg_install=''

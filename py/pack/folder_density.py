@@ -4,16 +4,17 @@ import json
 from pathlib import Path
 
 from tqdm import tqdm
-from tap import Tap
 from typing import Dict, Pattern, Callable, List, Union
 
-from utils import pretty_size, arg_to_path
+from utils import pretty_size
+from cli_args import BaseTap
 
 pprint = lambda s: print(json.dumps(s, indent=2, sort_keys=True))
 
 
-class Args(Tap):
-    directory: Path
+# ToDo: deprecated?, migrate additional features to disk_usage
+class Args(BaseTap):
+    root: Path
     file_filter: re.Pattern
     directory_filter: re.Pattern
     path_filter: re.Pattern
@@ -25,17 +26,17 @@ class Args(Tap):
     csv: bool
 
     def configure(self) -> None:
-        self.description = "Print folder size densities"
-        self.add_argument('directory', nargs='?', type=arg_to_path, default='./', help="Directory to scan")
-        self.add_argument("-f", "--file-filter", type=re.Pattern, default=None, help="Regular expression to match on file name")
-        self.add_argument("-d", "--directory-filter", type=re.Pattern, default=None, help="Regular expression to match on directory name")
-        self.add_argument("-p", "--path-filter", type=re.Pattern, default=None, help="Regular expression to match on file path")
-        self.add_argument("--glob", type=str, default=None, help="Glob to use for search")
-        self.add_argument("-v", "--verbose", action='store_true', default=False, help="scan for files containing links to download")
-        self.add_argument("-s", "--sort", action='store_true', default=False, help="sort by max file size")
-        self.add_argument("-sum", "--summary", action='store_true', default=False, help="Prints single line summarizing all children")
-        self.add_argument("-np", "--no-progress", action='store_true', default=False, help="Doesn't report progress")
-        self.add_argument("-csv", "--csv", action='store_true', default=False, help="Prints CSV compatible")
+        self.description = 'Print folder size densities'
+        self.add_root_optional('Directory to scan')
+        self.add_optional('-ff', '--file-filter', help='Regular expression to match on file name', type=re.Pattern)
+        self.add_optional('-df', '--directory-filter', help='Regular expression to match on directory name', type=re.Pattern)
+        self.add_optional('-pf', '--path-filter', help="Regular expression to match on file path", type=re.Pattern)
+        self.add_optional('--glob', help='Glob to use for search')
+        self.add_flag('-s', '--sort', help='sort by max file size')
+        self.add_flag('-sum', '--summary', help='Prints single line summarizing all children')
+        self.add_flag('-np', '--no-progress', help="Don't display progress")
+        self.add_flag('-csv', '--csv', help='Prints CSV compatible')
+        self.add_verbose()
 
 
 _args: Args
@@ -187,7 +188,7 @@ def main():
 
     _args = Args().parse_args()
     _res = get_densities(
-        Path(_args.directory),
+        Path(_args.root),
         _args.glob,
         _rec(_args.file_filter),
         _rec(_args.directory_filter),
@@ -205,17 +206,17 @@ def main():
             print(f'{desc} - {density} | {mx}')
 
     if not _args.summary:
-        sortkey = lambda t: t[1].size
+        sort_key = lambda t: t[1].size
 
         if _args.sort:
-            sortkey = lambda t: t[2]
+            sort_key = lambda t: t[2]
 
-        for r in sorted(map(lambda k: (k, _res[k].files, _res[k].max), _res), key=sortkey, reverse=False):
+        for r in sorted(map(lambda k: (k, _res[k].files, _res[k].max), _res), key=sort_key, reverse=False):
             output(r[0], r[1], pretty_size(r[2]))
     else:
         # print(_res)
         # r = _res[_args.directory]
-        output(_args.directory, _res["files"], pretty_size(_res.max))
+        output(_args.root, _res["files"], pretty_size(_res.max))
 
 
 if __name__ == '__main__':

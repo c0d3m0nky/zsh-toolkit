@@ -20,6 +20,9 @@
     },
     "ack": {
       "os": "ack"
+    },
+    "rclone": {
+      "os": "rclone"
     }
   }
 }

@@ -1,18 +1,22 @@
 import re
 import sys
 import os
-import argparse
 import subprocess
 from pathlib import Path
 
-from tap import Tap
-import rclone
-from userinput import userinput
-import emoji
+import string_dbyte_utils
 
+if os.environ.get('ZSHCOM__feat_rclone') != 'true':
+    print('rclone not installed')
+    exit(1)
+
+import rclone
 from typing import List, Callable, Tuple, TypeVar, Union
 
-from utils import arg_to_re, arg_to_path
+from cli_args import BaseTap, RegExArg
+from utils import Ask
+
+_ask = Ask()
 
 
 def _sh(cmd: str):
@@ -24,8 +28,6 @@ T = TypeVar('T')
 R = TypeVar('R')
 
 _rx_leading_posix_path: re.Pattern = re.compile(r'^.?/?')
-_rx_conseq_filler_chars: re.Pattern = re.compile(r'([_-])[_-]+')
-_rx_space: re.Pattern = re.compile(r'\s+')
 
 
 def int_safe(i: str) -> Union[int, None]:
@@ -66,15 +68,7 @@ class RenameParts:
     def remove_consecutive_filler_chars(self):
         npa = []
         for p in self.parts:
-            lv = None
-            cv = p
-
-            while lv != cv:
-                lv = cv
-                cv = re.sub(_rx_space, ' ', cv)
-                cv = re.sub(_rx_conseq_filler_chars, r'\1', cv)
-
-            npa.append(cv)
+            npa.append(string_dbyte_utils.remove_consecutive_filler_chars(p))
 
         self.parts = npa
 
@@ -130,7 +124,7 @@ class PathPartsRename:
         return RenameParts(file, root, [res.stem], res.suffix, '')
 
 
-class Args(Tap):
+class Args(BaseTap):
     root: Path
     delimiter: str = '_'
     extensions: List[str] = None
@@ -144,17 +138,16 @@ class Args(Tap):
 
     def configure(self) -> None:
         self.description = 'Flatten directory tree'
-        self.add_argument('root', type=arg_to_path, help='Directory path to flatten')
-        self.add_argument("-d", "--delimiter", help="Path part delimiter")
-        self.add_argument("-p", "--plan", action='store_true', help="Don't commit moves")
-        self.add_argument("-e", "--extensions", nargs='+', help="Only include these extensions", required=False)
-        self.add_argument("-ei", "--extensions-inverted", nargs='+', help="Exclude these extensions", required=False)
-        self.add_argument("-pf", "--path-filter", type=arg_to_re, default='.+',
-                          help="Regular expression filter on full path (relative path string is provided without leading . or /)")
-        self.add_argument("-ff", "--file-filter", type=arg_to_re, default='.+', help="Regular expression filter on file name")
-        self.add_argument("-fr", "--file-rename", type=str, default='', help="Regular expression rename on file (relative path string is provided without leading . or /)")
-        self.add_argument("--keep-empty-dirs", type=bool, help="Keep empty dirs", required=False)
-        self.add_argument("-s", "--sorter", help=argparse.SUPPRESS)
+        self.add_root('Directory path to flatten')
+        self.add_plan("Don't commit moves")
+        self.add_optional("-d", "--delimiter", help="Path part delimiter")
+        self.add_list("-e", "--extensions", help="Only include these extensions")
+        self.add_list("-ei", "--extensions-inverted", help="Exclude these extensions")
+        self.add_optional("-pf", "--path-filter", type=RegExArg, default='.+', help="RegEx filter on full path (relative path string is provided without leading . or /)")
+        self.add_optional("-ff", "--file-filter", type=RegExArg, default='.+', help="RegEx filter on file name")
+        self.add_optional("-fr", "--file-rename", type=str, default='', help="RegEx rename on file (relative path string is provided without leading . or /)")
+        self.add_flag("--keep-empty-dirs", help="Keep empty dirs")
+        self.add_hidden("-s", "--sorter")
 
     def process_args(self) -> None:
         if not self.delimiter == '_' and self.file_rename:
@@ -213,8 +206,8 @@ def flatten_path():
                 print('')
                 strip_dbyte_act = (pc * 2) + 1
                 print(f'\t{strip_dbyte_act}: remove double byte chars and consecutive filler chars')
-                strip_emoji_act = (pc * 2) + 2
-                print(f'\t{strip_emoji_act}: remove emoji chars and consecutive filler chars')
+                strip_dbyte_keep_emoji_act = (pc * 2) + 2
+                print(f'\t{strip_dbyte_keep_emoji_act}: but keep emoji')
                 print('')
                 skip_act = (pc * 2) + 3
                 print(f'\t{skip_act}: skip')
@@ -222,8 +215,7 @@ def flatten_path():
                 print(f'\t{cancel_act}: cancel')
 
                 print('\nChoose Action: ')
-                act = userinput('Choose Action', validator='integer')
-                act = int_safe(act)
+                act = _ask.int('Choose Action')
 
                 if act <= pc:
                     # Trim
@@ -234,24 +226,17 @@ def flatten_path():
                         nfn.parts[pi] = nfn.parts[pi][:-1]
                 elif pc < act <= pc * 2:
                     pi = act - 1 - pc
-                    repl = userinput(f'Replace with (~ to cancel input): {nfn.parts[pi]}\n')
+                    repl = _ask.ask(f'Replace with (~ to cancel input): {nfn.parts[pi]}\n')
 
                     if repl.strip() != '~':
                         nfn.parts[pi] = repl
-                elif act == strip_dbyte_act or act == strip_emoji_act:
-                    strip_all = act == strip_dbyte_act
+                elif act == strip_dbyte_act or act == strip_dbyte_keep_emoji_act:
                     for i in range(0, len(nfn.parts)):
                         p = nfn.parts[i]
-                        np = ''
-                        for c in p:
-                            if strip_all:
-                                if len(c.encode('utf-8')) == 1:
-                                    np += c
-                            else:
-                                if not emoji.is_emoji(c):
-                                    np += c
+                        np = string_dbyte_utils.replace_dbl_byte_chars(p, act == strip_dbyte_keep_emoji_act)
 
-                        nfn.parts[i] = np
+                        if np.clean != p:
+                            nfn.parts[i] = np.clean
 
                     nfn.remove_consecutive_filler_chars()
                 elif act == skip_act:
@@ -266,7 +251,7 @@ def flatten_path():
 
         while check_file_name():
             print(f'New file name: {nfn.get_path_str()}')
-            res = (userinput('Enter to accept, r to retry, s to skip, c to cancel', cache=False) or '').strip()
+            res = _ask.choices('Enter to accept, r to retry, s to skip, c to cancel', choices=['', 's', 'c', 'r'], case_insensitive=True)
 
             if res == 's':
                 skip_file = True
@@ -285,11 +270,11 @@ def flatten_path():
 
         nfp = root / nfn.get_path_str()
         rel = f.relative_to(root)
-        nrel = nfp.relative_to(root)
+        n_rel = nfp.relative_to(root)
 
-        print(f'{rel.as_posix()}\n{nrel.as_posix()}\n')
+        print(f'{rel.as_posix()}\n{n_rel.as_posix()}\n')
         if os.path.exists(nfp.as_posix()):
-            print(f'Target file already exists: {nrel}')
+            print(f'Target file already exists: {n_rel}')
         else:
             if not _args.plan:
                 os.rename(f.as_posix(), nfp.as_posix())

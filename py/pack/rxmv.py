@@ -4,13 +4,11 @@ from pathlib import Path
 import re
 import shutil
 
-from tap import Tap
-
-from utils import arg_to_re, arg_to_path
+from cli_args import BaseTap, RegExArg
 
 
-class Args(Tap):
-    source: Path
+class Args(BaseTap):
+    root: Path
     destination: str
     pattern: re.Pattern
     invert_match: bool
@@ -21,18 +19,18 @@ class Args(Tap):
     plan: bool = False
 
     def configure(self) -> None:
-        self.description = 'Move with regular expressions\n'
+        self.description = 'Move with regular expressions'
         self.epilog = r"Example: rxmv -f ./ '!./\1/\2' '^(\d{4})-(\d+).+$'"
 
-        self.add_argument("source", type=arg_to_path, help="Move root")
-        self.add_argument("destination", type=str, help="Folder to move to. Prefix with ! for regex replace")
-        self.add_argument("pattern", type=arg_to_re, help="Regex filter")
-        self.add_argument("-i", "--invert-match", action='store_true', help="Treat pattern as exclude", required=False)
-        self.add_argument("-f", "--files-only", action='store_true', help="Files only", required=False)
-        self.add_argument("-d", "--dirs-only", action='store_true', help="Folders only", required=False)
-        self.add_argument("-eh", "--exclude-hidden", action='store_true', help="Exclude dot files", required=False)
-        self.add_argument("-c", "--do-copy", action='store_true', help="Exclude dot files", required=False)
-        self.add_argument("-p", "--plan", action='store_true', help="Exclude dot files", required=False)
+        self.add_root('Move root')
+        self.add_argument('destination', help='Folder to move to. Prefix with ! for regex replace')
+        self.add_argument('pattern', type=RegExArg, help='Regex filter')
+        self.add_flag('-i', '--invert-match', help='Treat pattern as exclude')
+        self.add_flag('-f', '--files-only', help='Files only')
+        self.add_flag('-d', '--dirs-only', help='Folders only')
+        self.add_flag('-eh', '--exclude-hidden', help='Exclude dot files')
+        self.add_flag('-c', '--do-copy', help='Exclude dot files')
+        self.add_plan("Don't commit moves")
 
 
 @dataclass
@@ -55,7 +53,7 @@ def find_common_path(src: Path, dest: Path) -> tuple[Path, Path]:
 def main():
     args = Args().parse_args()
 
-    src = args.source
+    src = args.root
     rx = args.pattern
 
     actions = []
@@ -90,6 +88,9 @@ def main():
                 np = tgt.resolve()
             else:
                 np = (tgt / p.name).resolve()
+
+            if np == fp:
+                continue
 
             if np.is_relative_to(fp):
                 (rfp, rnp) = find_common_path(fp, np)
@@ -132,7 +133,7 @@ def main():
                 if skip:
                     continue
 
-            np_parent = np if base_renamed else np.parent
+            np_parent = np if base_renamed and not p.is_file() else np.parent
 
             if not np_parent.exists() and np_parent.as_posix() not in mkdirs:
                 mkdirs.append(np_parent.as_posix())
@@ -143,19 +144,19 @@ def main():
     for a in actions:
         if a.mkdir:
             if args.plan:
-                (rsrc, rdest) = find_common_path(a.src, a.dest)
-                print(f'mkdir {rdest}')
+                (rel_src, rel_dest) = find_common_path(a.src, a.dest)
+                print(f'mkdir {rel_dest}')
             else:
                 a.dest.mkdir(parents=True)
         else:
             if args.plan:
                 max_width = os.get_terminal_size().columns
-                (rsrc, rdes) = find_common_path(a.src, a.dest)
-                npn = rdes.as_posix()
+                (rel_src, rel_dest) = find_common_path(a.src, a.dest)
+                npn = rel_dest.as_posix()
                 opr = '+' if args.do_copy else '-'
-                msg = f'{rsrc} {opr}> {npn}'
+                msg = f'{rel_src} {opr}> {npn}'
                 if len(msg) > max_width:
-                    print(f'\n{rsrc}\n↓\n{npn}')
+                    print(f'\n{rel_src}\n↓\n{npn}')
                 else:
                     print(msg)
             else:
