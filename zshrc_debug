@@ -6,14 +6,14 @@ function ztk-debug() {
   echo Vars
   echo ''
 
-  printenv | ack '^(ZSHCOM__(?!mf_)[^=]+)=(.+)$' --output '$1~$2' | sort | column -t -s '~'
+  printenv | ack '^(ZSHCOM__(?!mf_)[^ =]+)=(.+)$' --output '$1~$2' | sort | column -t -s '~'
 
   echo ''
   echo Magic Files
   echo ''
 
   {
-    for mf in $(printenv | ack '^(ZSHCOM__mf_[^=]+)=(.+)$' --output '$1~$2')
+    for mf in $(printenv | ack '^(ZSHCOM__mf_[^ =]+)=(.+)$' --output '$1~$2')
     do
       var=${mf%~*};
       path=${mf#*~};
