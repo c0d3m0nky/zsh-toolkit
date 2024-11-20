@@ -8,7 +8,7 @@ setup(
     author='c0d3m0nky',
     py_modules=[
         'file_utils', 'utils', 'magic_files', 'logger', 'string_dbyte_utils', 'cli_args', 'disk_usage_models',
-        'update', 'flatten', 'rxmv', 'decomp', 'disk_usage', 'little_guys', 'dockur', 'replace_double_byte_chars'
+        'update', 'flatten', 'rxmv', 'decomp', 'disk_usage', 'little_guys', 'dockur', 'replace_double_byte_chars', 'git_auto_commit'
     ],
     entry_points={
         'console_scripts': [
@@ -19,7 +19,8 @@ setup(
             'decomp=decomp:main',
             'duh=disk_usage:main',
             'fack=little_guys:fack',
-            'repdb=replace_double_byte_chars:main'
+            'repdb=replace_double_byte_chars:main',
+            'git_auto_commit=git_auto_commit:main'
         ],
     },
     install_requires=[
