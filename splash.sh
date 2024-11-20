@@ -23,7 +23,10 @@ then
 
   if [[ $ZSHCOM_HIDE_SPLASH_INFO != true ]]
   then
-    echo -e "${zcGreen:?}ztk-update${zcOFF} : Updates zsh-toolkit
-  "
+    {
+      echo -e "  ${zcGreen:?}ztk-update${zcOFF}~Updates zsh-toolkit"
+      echo -e "  ${zcGreen:?}ztk-debug${zcOFF}~Show debug info"
+    }  | column -t -s '~' -R 1 -o ': ';
+    echo ''
   fi
 fi

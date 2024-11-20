@@ -3,15 +3,15 @@
 function ztk-update() {
   _ztk-update "$@"
 
-    if [[ -f "${mf_repo_updated:?}" ]]
+    if [[ -f "${ZSHCOM__mf_repo_updated:?}" ]]
   then
     # Re-sourcing self to apply changes before calling post
     source "${ZSHCOM__basedir:?}/update.sh"
   fi
 
-  if [[ -f "${mf_update_dependencies:?}" ]]
+  if [[ -f "${ZSHCOM__mf_update_dependencies:?}" ]]
   then
-    rm "$mf_update_dependencies"
+    rm "$ZSHCOM__mf_update_dependencies"
     # Re-sourcing self to apply changes before calling post
     echo "Re-sourcing ${mf_init:?}"
     # shellcheck disable=SC1090
@@ -20,7 +20,7 @@ function ztk-update() {
 }
 
 function _post_ztk-update() {
-  rm "$mf_repo_updated"
+  rm "$ZSHCOM__mf_repo_updated"
 
   echo "Re-sourcing $mf_init"
   # shellcheck disable=SC1090
@@ -29,7 +29,7 @@ function _post_ztk-update() {
   touch "${mf_break_init:?}"
 }
 
-if [[ -f "$mf_repo_updated" ]]
+if [[ -f "$ZSHCOM__mf_repo_updated" ]]
 then
   _post_ztk-update
 fi

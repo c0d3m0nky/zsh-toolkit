@@ -130,9 +130,9 @@ then
   if [[ $ZSHCOM_NOPY != true ]]
   then
     $ZSHCOM_PYTHON "$ZSHCOM__basedir/py/dependencies.py"
-    if [[ -f "${mf_trigger_update:?}" ]]
+    if [[ -f "${ZSHCOM__mf_trigger_update:?}" ]]
     then
-      rm "$mf_trigger_update"
+      rm "$ZSHCOM__mf_trigger_update"
       ztk-update
       touch "$mf_break_init"
     fi

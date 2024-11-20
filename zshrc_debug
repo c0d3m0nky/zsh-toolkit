@@ -1,0 +1,36 @@
+
+
+
+function ztk-debug() {
+  echo ''
+  echo Vars
+  echo ''
+
+  printenv | ack '^(ZSHCOM__(?!mf_)[^=]+)=(.+)$' --output '$1~$2' | sort | column -t -s '~'
+
+  echo ''
+  echo Magic Files
+  echo ''
+
+  {
+    for mf in $(printenv | ack '^(ZSHCOM__mf_[^=]+)=(.+)$' --output '$1~$2')
+    do
+      var=${mf%~*};
+      path=${mf#*~};
+
+      if [[ -f "$path" ]]
+      then
+        echo "${var}~${zcGreen:?}✓${zcOFF:?}~${path}"
+      else
+        echo "${var}~${zcRed:?}X${zcOFF}~${path}"
+      fi
+    done
+  } | column -t -s '~';
+
+  echo ''
+  echo pipx list
+  echo ''
+
+  pipx list
+}
+
