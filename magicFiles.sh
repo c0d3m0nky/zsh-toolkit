@@ -3,28 +3,40 @@
 
 mf_transient=''
 
-if [[ ${ZSHCOM__known_os:?} == 'win' ]]
+if [[ -n "${ZSHCOM_transient}" &&  -d $ZSHCOM_transient ]]
 then
-  mf_transient='/tmp/zsh_toolkit'
-  if [[ ! -d $mf_transient ]]
-  then
-    mkdir $mf_transient
-  fi
-elif [[ -d /dev/shm ]]
+  mf_transient=$ZSHCOM_transient
+elif [[ -n "${XDG_RUNTIME_DIR}" &&  -d $XDG_RUNTIME_DIR ]]
 then
-  mf_transient='/dev/shm/zsh_toolkit'
-  if [[ ! -d $mf_transient ]]
+  mf_transient=$XDG_RUNTIME_DIR/zsh_toolkit
+fi
+
+if [[ -z "${mf_transient}" ]]
+then
+  if [[ ${ZSHCOM__known_os:?} == 'win' ]]
   then
-    mkdir $mf_transient
+    mf_transient='/tmp/zsh_toolkit'
+    if [[ ! -d $mf_transient ]]
+    then
+      mkdir $mf_transient
+    fi
+  elif [[ -d /dev/shm ]]
+  then
+    mf_transient='/dev/shm/zsh_toolkit'
+    if [[ ! -d $mf_transient ]]
+    then
+      mkdir $mf_transient
+    fi
   fi
 fi
 
-if [[ -d $mf_transient ]]
-then
-  export ZSHCOM__transient=$mf_transient
-else
-  echo "!!! Transient cache not supported"
-fi
+
+  if [[ -n "${mf_transient}" && -d $mf_transient ]]
+  then
+    export ZSHCOM__transient=$mf_transient
+  else
+    echo "!!! Transient cache not supported"
+  fi
 
 # Shared with python
 mf_dependencies_checked="${ZSHCOM__basedir:?}/.state_dependencies_checked"
