@@ -17,7 +17,7 @@ fi
 
 if [[ -f /etc/os-release ]]
 then
-  rel=$(cat /etc/os-release | grep -Pi '^(id_like)=arch$')
+  rel=$(cat /etc/os-release | grep -Pi '^(id(_like)?)=arch$')
 
   if [[ $rel != '' ]]
   then
@@ -27,7 +27,7 @@ then
 
   if [[ $ZSHCOM__known_os != '' ]]; then return; fi
 
-  rel=$(cat /etc/os-release | grep -Pi '^(id_like)=debian$')
+  rel=$(cat /etc/os-release | grep -Pi '^(id(_like)?)=debian$')
 
   if [[ $rel != '' ]]
   then
@@ -37,7 +37,7 @@ then
 
   if [[ $ZSHCOM__known_os != '' ]]; then return; fi
 
-  rel=$(cat /etc/os-release | grep -Pi '^(id)=slackware$')
+  rel=$(cat /etc/os-release | grep -Pi '^(id(_like)?)=slackware$')
 
   if [[ $rel != '' && -f "/boot/license.txt" ]]
   then
