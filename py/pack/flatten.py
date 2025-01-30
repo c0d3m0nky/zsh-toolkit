@@ -132,6 +132,7 @@ class Args(BaseTap):
     path_filter: re.Pattern
     file_filter: re.Pattern
     file_rename: PathPartsRename
+    replace_dbyte: bool
     plan: bool = False
     keep_empty_dirs = False
     sorter: Callable[[List[T], Callable[[T], R], bool], List[T]] = None
@@ -146,6 +147,7 @@ class Args(BaseTap):
         self.add_optional("-pf", "--path-filter", type=RegExArg, default='.+', help="RegEx filter on full path (relative path string is provided without leading . or /)")
         self.add_optional("-ff", "--file-filter", type=RegExArg, default='.+', help="RegEx filter on file name")
         self.add_optional("-fr", "--file-rename", type=str, default='', help="RegEx rename on file (relative path string is provided without leading . or /)")
+        self.add_flag('-rdp', "--replace-dbyte", help="Replace double byte chars")
         self.add_flag("--keep-empty-dirs", help="Keep empty dirs")
         self.add_hidden("-s", "--sorter")
 
@@ -185,6 +187,16 @@ def flatten_path():
         nfn = _args.file_rename.replace(f, root)
         skip_file = False
 
+        def replace_dbyte(keep_emoji: bool):
+            for i in range(0, len(nfn.parts)):
+                p = nfn.parts[i]
+                np = string_dbyte_utils.replace_dbl_byte_chars(p, keep_emoji)
+
+                if np.clean != p:
+                    nfn.parts[i] = np.clean
+
+            nfn.remove_consecutive_filler_chars()
+
         def check_file_name():
             # noinspection PyGlobalUndefined
             global skip_file
@@ -192,26 +204,38 @@ def flatten_path():
 
             while nfn.get_byte_length() > _max_length:
                 altered = True
+                option_number = 1
                 pc = len(nfn.parts)
                 print(f'File name too long: {nfn.get_path_str()}')
 
                 print('\nTrim (will also remove consecutive filler chars in entire string)')
                 for i in range(0, pc):
                     print(f'\t{i + 1}: {nfn.parts[i]}')
+                    option_number += 1
 
                 print('\nReplace')
                 for i in range(0, pc):
                     print(f'\t{i + 1 + pc}: {nfn.parts[i]}')
+                    option_number += 1
+
+                if not _args.replace_dbyte:
+                    print('')
+                    strip_dbyte_act = option_number
+                    option_number += 1
+                    print(f'\t{strip_dbyte_act}: remove double byte chars and consecutive filler chars')
+                    strip_dbyte_keep_emoji_act = option_number
+                    option_number += 1
+                    print(f'\t{strip_dbyte_keep_emoji_act}: but keep emoji')
+                else:
+                    strip_dbyte_act = -1
+                    strip_dbyte_keep_emoji_act = -2
 
                 print('')
-                strip_dbyte_act = (pc * 2) + 1
-                print(f'\t{strip_dbyte_act}: remove double byte chars and consecutive filler chars')
-                strip_dbyte_keep_emoji_act = (pc * 2) + 2
-                print(f'\t{strip_dbyte_keep_emoji_act}: but keep emoji')
-                print('')
-                skip_act = (pc * 2) + 3
+                skip_act = option_number
+                option_number += 1
                 print(f'\t{skip_act}: skip')
-                cancel_act = (pc * 2) + 4
+                cancel_act = option_number
+                option_number += 1
                 print(f'\t{cancel_act}: cancel')
 
                 print('\nChoose Action: ')
@@ -231,14 +255,7 @@ def flatten_path():
                     if repl.strip() != '~':
                         nfn.parts[pi] = repl
                 elif act == strip_dbyte_act or act == strip_dbyte_keep_emoji_act:
-                    for i in range(0, len(nfn.parts)):
-                        p = nfn.parts[i]
-                        np = string_dbyte_utils.replace_dbl_byte_chars(p, act == strip_dbyte_keep_emoji_act)
-
-                        if np.clean != p:
-                            nfn.parts[i] = np.clean
-
-                    nfn.remove_consecutive_filler_chars()
+                    replace_dbyte(act == strip_dbyte_keep_emoji_act)
                 elif act == skip_act:
                     skip_file = True
                     return False
@@ -248,6 +265,9 @@ def flatten_path():
                     print(f'invalid option')
 
             return altered
+
+        if _args.replace_dbyte:
+            replace_dbyte(False)
 
         while check_file_name():
             print(f'New file name: {nfn.get_path_str()}')
