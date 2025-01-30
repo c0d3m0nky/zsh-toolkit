@@ -37,7 +37,7 @@ then
 
   if [[ $ZSHCOM__known_os != '' ]]; then return; fi
 
-  rel=$(cat /etc/os-release | grep -Pi '^(id(_like)?)=slackware$')
+  rel=$(cat /etc/os-release | grep -Pi '^(id(_like)?)="?slackware')
 
   if [[ $rel != '' && -f "/boot/license.txt" ]]
   then
