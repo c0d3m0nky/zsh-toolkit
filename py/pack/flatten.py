@@ -68,7 +68,7 @@ class RenameParts:
     def remove_consecutive_filler_chars(self):
         npa = []
         for p in self.parts:
-            npa.append(string_dbyte_utils.remove_consecutive_filler_chars(p))
+            npa.append(string_dbyte_utils.remove_consecutive_filler_chars(p, rstrip=True))
 
         self.parts = npa
 

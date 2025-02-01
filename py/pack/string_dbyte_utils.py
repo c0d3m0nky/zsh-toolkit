@@ -32,11 +32,12 @@ class Replacement:
     highlighted: str
 
 
+_filler_chars = '_-'
 _rx_consecutive_filler_chars: re.Pattern = re.compile(r'([_-])[_-]+')
 _rx_space: re.Pattern = re.compile(r'\s+')
 
 
-def remove_consecutive_filler_chars(string):
+def remove_consecutive_filler_chars(string: str, lstrip: bool = False, rstrip: bool = False) -> str:
     lv = None
     cv = string
 
@@ -44,6 +45,10 @@ def remove_consecutive_filler_chars(string):
         lv = cv
         cv = re.sub(_rx_space, ' ', cv)
         cv = re.sub(_rx_consecutive_filler_chars, r'\1', cv)
+        if rstrip:
+            cv = cv.rstrip(_filler_chars + ' ')
+        if lstrip:
+            cv = cv.lstrip(_filler_chars + ' ')
 
     return cv
 
