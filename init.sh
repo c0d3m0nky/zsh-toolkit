@@ -70,7 +70,7 @@ then
   _updateVar ZSHCOM__known_os
   _updateVar ZSHCOM__known_hw
 
-  if [[ -z "$ZSHCOM__known_os" && -z "$ZSHCOM__known_hw" ]]
+  if [[ -z "$ZSHCOM__known_os" || -z "$ZSHCOM__known_hw" ]]
   then
     source "$ZSHCOM__basedir/detectOS.sh"
   fi
