@@ -117,12 +117,12 @@ if [[ -z $(which "$ZSHCOM_PYTHON") ]]
 then
   # shellcheck disable=SC2028
   echo "Python command not found, install python 3.12+ and/or set ZSHCOM_PYTHON to it's command"
-  touch "${mf_break_init:?}"
+  touch "${ZSHCOM__mf_break_init:?}"
 else
   source "$ZSHCOM__basedir/update.sh"
 fi
 
-if [[ ! -f "$mf_break_init" ]]
+if [[ ! -f "$ZSHCOM__mf_break_init" ]]
 then
   if [[ -n $(which rclone) ]]
   then
@@ -140,11 +140,11 @@ then
     then
       rm "$ZSHCOM__mf_trigger_update"
       ztk-update
-      touch "$mf_break_init"
+      touch "$ZSHCOM__mf_break_init"
     fi
   fi
 
-  if [[ ! -f "$mf_break_init" ]]
+  if [[ ! -f "$ZSHCOM__mf_break_init" ]]
   then
     if [[ -d $ZSHCOM_POSTLOAD ]]
     then
@@ -166,7 +166,7 @@ then
   fi
 fi
 
-if [[ -f "$mf_break_init" ]]
+if [[ -f "$ZSHCOM__mf_break_init" ]]
 then
-  rm "$mf_break_init"
+  rm "$ZSHCOM__mf_break_init"
 fi
