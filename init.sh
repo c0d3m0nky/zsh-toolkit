@@ -119,7 +119,22 @@ fi
 
 if [[ -z "$ZSHCOM_PYTHON" ]]
 then
-  ZSHCOM_PYTHON='python3'
+  ZSHCOM_PYTHON=$(which python3.12)
+
+  if [[ -z "$ZSHCOM_PYTHON" ]]
+  then
+    pylibloc="$(dirname "$(which python3)")"
+    pyvers=$(find $pylibloc/python*.* -type f -exec basename {} \; | ack '^python\d\.\d+$' --output '$1' | sort -Vr)
+
+    for p in $pyvers
+    do
+      ZSHCOM_PYTHON=$(which python$p)
+      if [[ -n $ZSHCOM_PYTHON ]]
+      then
+        break
+      fi
+    done
+  fi
 fi
 
 if [[ -z $(which "$ZSHCOM_PYTHON") ]]
@@ -128,6 +143,7 @@ then
   echo "Python command not found, install python 3.12+ and/or set ZSHCOM_PYTHON to it's command"
   touch "${ZSHCOM__mf_break_init:?}"
 else
+  export ZSHCOM_PYTHON="$ZSHCOM_PYTHON"
   source "$ZSHCOM__basedir/update.sh"
 fi
 
