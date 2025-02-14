@@ -14,6 +14,7 @@ from pack.utils import parse_bool
 
 import pack.magic_files as mf
 
+ZSHCOM_PYTHON=os.environ.get("ZSHCOM_PYTHON")
 
 def set_parent_var(var: str, value: str):
     with open(mf.ztk_base_dir / f'.var_{var}', 'w') as text_file:
@@ -114,9 +115,9 @@ def _pip_upgrade_pipx(pkg: str, local: Path = None):
 def _pip_install_pipx(pkg: str, local: Path = None):
     print(f'installing {pkg}')
     if local:
-        _sh(f'pipx install -e "{local.as_posix()}"', check=True)
+        _sh(f'pipx install -e "{local.as_posix()}" --python="{ZSHCOM_PYTHON}"', check=True)
     else:
-        _sh(f'pipx install {pkg}', check=True)
+        _sh(f'pipx install {pkg} --python="{ZSHCOM_PYTHON}"m', check=True)
 
 
 _pip_list_re = re.compile(r'^([^\s]+)\s+(.+)$')
