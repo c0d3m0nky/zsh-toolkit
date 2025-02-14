@@ -65,7 +65,7 @@ function _loadSource() {
   done
 }
 
-if [[ -z "$ZSHCOM__known_os" && -z "$ZSHCOM__known_hw" ]]
+if [[ -z "$ZSHCOM__known_os" || -z "$ZSHCOM__known_hw" ]]
 then
   _updateVar ZSHCOM__known_os
   _updateVar ZSHCOM__known_hw
@@ -75,8 +75,17 @@ then
     source "$ZSHCOM__basedir/detectOS.sh"
   fi
 
-  _setVarCache ZSHCOM__known_os
-  _setVarCache ZSHCOM__known_hw
+  if [[ -n $ZSHCOM__known_os ]]
+  then
+    _setVarCache ZSHCOM__known_os
+  fi
+
+  if [[ -n $ZSHCOM__known_hw ]]
+  then
+    _setVarCache ZSHCOM__known_hw
+  fi
+
+
 fi
 
 # ToDo: Hopefully one day shellcheck will use this directive to check for assignment and avoid SC2154 everywhere https://github.com/koalaman/shellcheck/issues/2956

@@ -5,7 +5,7 @@ export ZSHCOM__pkg_install=''
 
 rel=$(cat /proc/cpuinfo | grep -Pi 'model\s+:\s+raspberry')
 
-if [[ $rel != '' ]]
+if [[ -n $rel ]]
 then
   export ZSHCOM__known_hw='pi'
 fi
@@ -19,7 +19,7 @@ if [[ -f /etc/os-release ]]
 then
   rel=$(cat /etc/os-release | grep -Pi '^(id(_like)?)=arch$')
 
-  if [[ $rel != '' ]]
+  if [[ -n $rel ]]
   then
     export ZSHCOM__known_os='arch'
     export ZSHCOM__pkg_install='pacman -S'
@@ -37,9 +37,19 @@ then
 
   if [[ $ZSHCOM__known_os != '' ]]; then return; fi
 
-  rel=$(cat /etc/os-release | grep -Pi '^(id(_like)?)=debian$')
+  rel=$(cat /etc/os-release | grep -Pi '^id=pop')
 
-  if [[ $rel != '' ]]
+  if [[ -n $rel ]]
+  then
+    export ZSHCOM__known_os='pop'
+    export ZSHCOM__pkg_install='apt install'
+  fi
+
+  if [[ $ZSHCOM__known_os != '' ]]; then return; fi
+
+  rel=$(cat /etc/os-release | grep -Pi '^(id(_like)?)=.*?debian.*?')
+
+  if [[ -n $rel ]]
   then
     export ZSHCOM__known_os='debian'
     export ZSHCOM__pkg_install='apt install'
