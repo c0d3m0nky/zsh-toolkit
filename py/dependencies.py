@@ -5,6 +5,7 @@ import os
 import platform
 import json
 import subprocess
+import shutil
 
 from typing import Union, Dict, List
 
@@ -197,11 +198,14 @@ def _pkg_check_pacman(pkg: str) -> bool:
 
 def init():
     if not mf.repo_update_checked.exists() or datetime.fromtimestamp(mf.repo_update_checked.stat().st_mtime) < (datetime.now() - timedelta(days=7)):
-        resp = input(f'You have not checked for zsh-toolkit updates in over a week, would you like to check now: ').strip()
+        if shutil.which('_ztk-update') is None:
+            print('ztk updater seems to be missing')
+        else:
+            resp = input(f'You have not checked for zsh-toolkit updates in over a week, would you like to check now: ').strip()
 
-        if resp.lower() == 'y':
-            mf.trigger_update.touch()
-            return
+            if resp.lower() == 'y':
+                mf.trigger_update.touch()
+                return
 
     if (mf.dependencies_checked.exists()
             and datetime.fromtimestamp(mf.dependencies_checked.stat().st_mtime) > (datetime.now() - timedelta(hours=24))
