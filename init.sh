@@ -83,18 +83,24 @@ fi
 # shellcheck source=magicFiles.sh
 source "$ZSHCOM__basedir/magicFiles.sh"
 
-if [[ ${ZSHCOM__known_os:?} == 'win' ]]
+if [[ -z "$ZSHCOM__cpu_cores" ]]
 then
-  ZSHCOM__cpu_cores=$(wmic cpu get numberofcores | ack '^\d+')
-  export ZSHCOM__cpu_cores="$ZSHCOM__cpu_cores"
-else
-  # shellcheck disable=SC2016
-  cpuInfo=$(lscpu | ack '((Core[^:]+ per socket|Socket[^:]+): +(\d+))' --output '$1')
-  # shellcheck disable=SC2016
-  coresPerSocket=$(echo "$cpuInfo" | ack 'Core[^:]+ per socket: +(\d+)' --output '$1')
-  # shellcheck disable=SC2016
-  sockets=$(echo "$cpuInfo" | ack 'Socket[^:]+: +(\d+)' --output '$1')
-  export ZSHCOM__cpu_cores=$((coresPerSocket * sockets))
+  if [[ ${ZSHCOM__known_os:?} == 'win' ]]
+  then
+    ZSHCOM__cpu_cores=$(wmic cpu get numberofcores | ack '^\d+')
+    export ZSHCOM__cpu_cores="$ZSHCOM__cpu_cores"
+  elif [[ ! $(command -v lscpu 2>&1 >/dev/null) ]]
+  then
+    # shellcheck disable=SC2016
+    cpuInfo=$(lscpu | ack '((Core[^:]+ per socket|Socket[^:]+): +(\d+))' --output '$1')
+    # shellcheck disable=SC2016
+    coresPerSocket=$(echo "$cpuInfo" | ack 'Core[^:]+ per socket: +(\d+)' --output '$1')
+    # shellcheck disable=SC2016
+    sockets=$(echo "$cpuInfo" | ack 'Socket[^:]+: +(\d+)' --output '$1')
+    export ZSHCOM__cpu_cores=$((coresPerSocket * sockets))
+  else
+    echo Unable to determine cpu core count
+  fi
 fi
 
 if [[ -d $ZSHCOM_PRELOAD ]]
