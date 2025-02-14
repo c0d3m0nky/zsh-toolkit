@@ -27,6 +27,16 @@ then
 
   if [[ $ZSHCOM__known_os != '' ]]; then return; fi
 
+  rel=$(cat /etc/os-release | grep -Pi '^(id(_like)?)=alpine$')
+
+  if [[ $rel != '' ]]
+  then
+    export ZSHCOM__known_os='alpine'
+    export ZSHCOM__pkg_install='apk add'
+  fi
+
+  if [[ $ZSHCOM__known_os != '' ]]; then return; fi
+
   rel=$(cat /etc/os-release | grep -Pi '^(id(_like)?)=debian$')
 
   if [[ $rel != '' ]]
