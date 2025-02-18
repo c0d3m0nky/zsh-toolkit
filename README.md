@@ -25,3 +25,5 @@ A collection of bash & python scripts I use as helpers in zsh
   * Check for ack
   * Check/install oh-my-zsh
   * Ask for needed customizations
+  * Setup https://github.com/romkatv/powerlevel10k
+  
