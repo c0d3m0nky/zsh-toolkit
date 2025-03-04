@@ -14,10 +14,6 @@
       "pipx_local": "./py/pack",
       "required": true
     },
-    "emoji": {
-      "pip": "emoji",
-      "pacman": "python-emoji"
-    },
     "ack": {
       "os": "ack"
     },
