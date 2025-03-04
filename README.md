@@ -5,6 +5,7 @@ A collection of bash & python scripts I use as helpers in zsh
 ```zsh -c "$(curl -fsSL https://raw.githubusercontent.com/c0d3m0nky/zsh-toolkit/main/install.sh)"```
 
 # ToDo
+* Remove global pip dependencies as an option
 * Include extra scripts
   * Test shell includes
   * Figure out how to handle python includes and document it
