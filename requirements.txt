@@ -8,6 +8,7 @@ docker==7.1.0
 docstring_parser==0.16
 EasyProcess==1.1
 emoji==2.12.1
+english-words==2.0.1
 entrypoint2==1.1
 environments_utils==1.0.13
 executing==2.0.1

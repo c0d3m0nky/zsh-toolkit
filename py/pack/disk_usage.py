@@ -47,7 +47,7 @@ class Args(BaseTap):
     def configure(self) -> None:
         self.description = "A beefed up du"
         self.add_root_optional('Path to scan')
-        self.add_multi('-f', '--fields', help="Fields to output", choices=_field_choices, default=None)
+        self.add_multi_choice('-f', '--fields', help="Fields to output", choices=_field_choices, default=None)
         self.add_optional('-s', '--sort', help='Sort by field', choices=list(_fields.keys()), default='size')
         self.add_flag('-r', '--sort-reversed', help='Reversed sort')
         self.add_argument("-th", "--threads", help="Max threads", type=int)
