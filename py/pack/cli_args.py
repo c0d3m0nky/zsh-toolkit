@@ -5,6 +5,8 @@ from typing import Any, Callable, Union, List
 
 from tap import Tap
 
+TypeFunc = Callable[[Any], Any]
+
 
 # noinspection PyPep8Naming
 def RegExArg(pattern: str) -> re.Pattern:
@@ -32,7 +34,10 @@ class BaseTap(Tap):
             type = str.lower
         self.add_argument(*name_or_flags, type=type, help=help, choices=choices, default=default, required=False)
 
-    def add_multi(self, *name_or_flags: str, help: str, choices: List[str], default: Any = None) -> None:
+    def add_multi(self, *name_or_flags: str, help: str, type: TypeFunc = str.lower, default: Any = None, required=False) -> None:
+        self.add_argument(*name_or_flags, nargs='+', type=type, help=help, default=default, required=required)
+
+    def add_multi_choice(self, *name_or_flags: str, help: str, choices: List[str], default: Any = None) -> None:
         self.add_argument(*name_or_flags, nargs='+', choices=choices, type=str.lower, help=help, default=default, required=False)
 
     def add_flag(self, *name_or_flags: str, help: str, default: bool = False) -> None:
