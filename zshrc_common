@@ -23,6 +23,20 @@ alias popout='upd=$(dirname "$(pwd)"); while [[ ! -d "$upd" ]]; do upd=$(dirname
 # shellcheck disable=SC2154
 alias ztk-varCache="for f in \$(find \$ZSHCOM/.var*); do echo \$(basename \$f) | ack '^\.var_(.+)$' --output '\$1'; cat \$f; done"
 
+# shellcheck disable=SC2142
+alias dockerStop='$HOME/scripts/dockerStop.sh $@'
+alias rmrf='rm -rf'
+
+function dockerPorts() {
+  docker container ls --format 'json' | \
+    jq --slurp \
+      'def trimWS: gsub("^\\s+";"") | gsub("\\s+$";""); def remPref: gsub("^:+";"") | gsub("^0.0.0.0:";""); def filterPorts: select( ( . | contains("->") ) ); def safeToNum: if test("^\\d+$") then tonumber else . end; def mapPorts:      map( (match("^([\\d-]+)->([\\d-]+)(/(tcp))?$") // null) as $m |      if $m then     {       host: $m.captures[0].string | safeToNum,       container: $m.captures[1].string | safeToNum,       protocol: ($m.captures[3].string // "both")     } else . end); def arrToDic:       sort_by(.names|ascii_downcase) |        map({     (.names|tostring): .ports     }) | add;  map({    names: .Names,    ports: (       (.Ports | split(",")) |         map( . | trimWS | filterPorts | remPref ) | unique | mapPorts    )  } | select( (.ports | length) > 0 ) )  | arrToDic'
+}
+
+function dockerPortsHost() {
+  dockerPorts | jq 'to_entries | map(.value) | flatten | map(.host) | unique | sort[]'
+}
+
 if ! command -v json_pp &> /dev/null
 then
   alias json_pp='python3 -m json.tool'
