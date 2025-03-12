@@ -3,7 +3,7 @@ from tap import Tap
 from pathlib import Path
 from datetime import datetime
 
-from utils import arg_to_path
+from cli_args import PathArg
 
 
 class Args(Tap):
@@ -11,7 +11,7 @@ class Args(Tap):
 
     def configure(self) -> None:
         self.description = 'Auto-Commit Git Repository'
-        self.add_argument('repository', type=arg_to_path, nargs='?', help='Repo path')
+        self.add_argument('repository', type=PathArg, nargs='?', help='Repo path')
 
 
 _args = Args().parse_args()

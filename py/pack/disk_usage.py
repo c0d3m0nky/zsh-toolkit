@@ -157,6 +157,7 @@ def process_files(files: List[Path], task_state: State, args: Args) -> Tuple[Sta
 
 
 def process_root_fso(fso: Path, task_state: State, log: Logger, args: Args) -> State:
+    # noinspection PyBroadException
     try:
         log.trace(f'Processing {fso.as_posix()}')
         if fso.is_dir() and not exclude_dir(fso, args):
@@ -180,7 +181,7 @@ def process_root_fso(fso: Path, task_state: State, log: Logger, args: Args) -> S
         elif e.errno != errno.ESTALE:
             task_state.error(f'OSERROR ({e.errno})', fso)
     except Exception as e:
-        task_state.error('Unhandled Exception', fso)
+        task_state.error(f'Unhandled Exception: {e}', fso)
 
     log.trace(f'Completed  {fso.as_posix()}')
     return task_state

@@ -199,7 +199,10 @@ class Ask:
 
         return self._ask(msg, mutate)
 
-    def char(self, msg: str, also_valid: List[str] = []) -> str:
+    def char(self, msg: str, also_valid: List[str] = None) -> str:
+        # noinspection PyUnusedLocal
+        also_valid = also_valid or []
+        
         def mutate(resp: str) -> Tuple[bool, str]:
             # noinspection PyRedundantParentheses
             return (len(resp) == 1 or str_in(resp, also_valid), resp)
