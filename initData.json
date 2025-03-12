@@ -1,10 +1,7 @@
 {
   "pkg": {
-    "setuptools": {
-      "pacman": "python-setuptools",
-      "required": true
-    },
     "pipx": {
+      "pipx": "pipx",
       "pacman": "python-pipx",
       "required": true
     },
