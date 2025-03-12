@@ -4,6 +4,7 @@ import inspect
 from enum import Enum
 from typing import List, Dict, Generator, Callable
 from random import uniform
+from secrets import randbelow
 
 from cli_args import BaseTap, RegExArg
 
@@ -14,11 +15,16 @@ def _uniform(a: int, b: int) -> int:
     return int(uniform(a, b))
 
 
+_get_zero_to_n: Callable[[int], int] = lambda n: _uniform(0, n)
+
+
 class CommandArgs(BaseTap):
     n: int
+    crypto_secure: bool
 
     def _add_global_args(self) -> None:
         self.add_argument('n', help='Number of results', type=int)
+        self.add_flag('-c', '--crypto-secure', help='Use cryptographic secure system entropy')
 
 
 class Advantage(Enum):
@@ -42,11 +48,14 @@ class DieArgs(CommandArgs):
 def roll_die(n: int, sides: int, advantage: Advantage = Advantage.none) -> Generator[int, None, None]:
     i = 0
 
+    def roll() -> int:
+        return _get_zero_to_n(sides) + 1
+
     while i < n:
-        r = _uniform(1, sides)
+        r = roll()
 
         if advantage != Advantage.none:
-            ra = _uniform(1, sides)
+            ra = roll()
 
             if advantage == Advantage.advantage:
                 r = max(r, ra)
@@ -64,7 +73,7 @@ class ForceCase(Enum):
 
 
 class WordArgs(CommandArgs):
-    case: ForceCase
+    force_case: ForceCase
     alpha: bool
     test: List[re.Pattern]
 
@@ -73,7 +82,7 @@ class WordArgs(CommandArgs):
 
         super()._add_global_args()
         self.add_multi('-t', '--test', help='Regex patterns that must match', type=RegExArg, default=[])
-        self.add_argument('-c', '--case', help='Force case', type=ForceCase, choices=[e for e in ForceCase], default=ForceCase.none, required=False)
+        self.add_argument('-fc', '--force-case', help='Force case', type=ForceCase, choices=[e for e in ForceCase], default=ForceCase.none, required=False)
         self.add_flag('-a', '--alpha', help='Strip non-alphanumeric characters')
 
 
@@ -116,7 +125,13 @@ class Args(BaseTap):
 
 
 def _main():
-    args: BaseTap = Args().parse_args()
+    global _get_zero_to_n
+
+    # noinspection PyTypeChecker
+    args: CommandArgs = Args().parse_args()
+
+    if args.crypto_secure:
+        _get_zero_to_n = randbelow
 
     # noinspection PyUnresolvedReferences
     if args.cmd == 'words':
@@ -125,7 +140,7 @@ def _main():
 
         tests = [(lambda s: bool(t.match(s))) for t in args.test]
 
-        for w in generate_words(args.n, tests, args.case, args.alpha):
+        for w in generate_words(args.n, tests, args.force_case, args.alpha):
             print(w)
     elif args.cmd == 'd':
         # noinspection PyTypeChecker
