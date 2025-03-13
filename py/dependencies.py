@@ -93,10 +93,10 @@ def init():
         if not pkg_info.installed and _os_pm and _os_pm.name() in pkg.fields:
             pkg_info = _os_pm.get_info(pkg.fields[_os_pm.name()])
 
-        if not pkg_info.installed and pkg.os:
+        if _os_pm and not pkg_info.installed and pkg.os:
             pkg_info = _os_pm.get_info(pkg.os)
 
-        if not pkg_info.installed and pkg.os:
+        if _os_pm and not pkg_info.installed and pkg.os:
             pkg_info = _os_pm.get_info(pkg.os)
 
         if not pkg_info.installed and pkg.which:

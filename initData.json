@@ -9,9 +9,6 @@
       "pipx_local": "./py/pack",
       "required": true
     },
-    "dictionary":{
-      "os": "gnome-dictionary"
-    },
     "ack": {
       "os": "ack",
       "which": "ack",
