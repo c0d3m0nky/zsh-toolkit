@@ -100,9 +100,9 @@ def exclude_dir(d: Path, args: Args) -> bool:
     return (args.exclude_hidden and d.name.startswith('.')) or d.resolve() in args.exclude_folders or d.is_mount() or d.is_symlink()
 
 
-def walk_dir(wdir: Path, state: State, log: Logger, args: Args) -> Iterator[Tuple[Path, List[Path]]]:
-    log.trace(f'Walking {wdir.as_posix()}')
-    dirs_left: List[Path] = [wdir]
+def walk_dir(tgt_dir: Path, state: State, log: Logger, args: Args) -> Iterator[Tuple[Path, List[Path]]]:
+    log.trace(f'Walking {tgt_dir.as_posix()}')
+    dirs_left: List[Path] = [tgt_dir]
 
     while len(dirs_left) > 0:
         cd = dirs_left.pop(0)

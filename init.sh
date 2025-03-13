@@ -65,6 +65,26 @@ function _loadSource() {
   done
 }
 
+if [[ -z "$ZSHCOM_PYTHON" ]]
+then
+  ZSHCOM_PYTHON=$(which python3.12)
+
+  if [[ -z "$ZSHCOM_PYTHON" ]]
+  then
+    pylibloc="$(dirname "$(which python3)")"
+    pyvers=$(find $pylibloc/python*.* -type f -exec basename {} \; | ack '^python\d\.\d+$' --output '$1' | sort -Vr)
+
+    for p in $pyvers
+    do
+      ZSHCOM_PYTHON=$(which python$p)
+      if [[ -n $ZSHCOM_PYTHON ]]
+      then
+        break
+      fi
+    done
+  fi
+fi
+
 if [[ -z "$ZSHCOM__known_os" || -z "$ZSHCOM__known_hw" ]]
 then
   _updateVar ZSHCOM__known_os
@@ -72,7 +92,7 @@ then
 
   if [[ -z "$ZSHCOM__known_os" || -z "$ZSHCOM__known_hw" ]]
   then
-    source "$ZSHCOM__basedir/detectOS.sh"
+    source "$ZSHCOM__basedir/detectOS/detectOS.sh"
   fi
 
   if [[ -n $ZSHCOM__known_os ]]
@@ -115,26 +135,6 @@ fi
 if [[ -d $ZSHCOM_PRELOAD ]]
 then
   _loadSource "$ZSHCOM_PRELOAD"
-fi
-
-if [[ -z "$ZSHCOM_PYTHON" ]]
-then
-  ZSHCOM_PYTHON=$(which python3.12)
-
-  if [[ -z "$ZSHCOM_PYTHON" ]]
-  then
-    pylibloc="$(dirname "$(which python3)")"
-    pyvers=$(find $pylibloc/python*.* -type f -exec basename {} \; | ack '^python\d\.\d+$' --output '$1' | sort -Vr)
-
-    for p in $pyvers
-    do
-      ZSHCOM_PYTHON=$(which python$p)
-      if [[ -n $ZSHCOM_PYTHON ]]
-      then
-        break
-      fi
-    done
-  fi
 fi
 
 if [[ -z $(which "$ZSHCOM_PYTHON") ]]

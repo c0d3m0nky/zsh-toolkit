@@ -32,5 +32,38 @@ function ztk-debug() {
   echo ''
 
   pipx list
+
+  possibleIssues=()
+
+  if [[ -z $ZSHCOM__known_os || -z $ZSHCOM__pkg_man ]]; then
+    msg='OS detection failure'
+
+    if [[ -z $ZSHCOM__known_os ]]; then
+      msg="$msg\n\tZSHCOM__known_os not set"
+    fi
+
+    if [[ -z $ZSHCOM__pkg_man ]]; then
+      msg="$msg\n\tZSHCOM__pkg_man not set"
+    fi
+
+    possibleIssues+="$msg"
+  fi
+
+  if (( ${#possibleIssues[@]} > 0 )); then
+
+    echo ''
+    echo "${zcRed}!!!!! Possible Issues !!!!!${zcOFF}"
+    echo ''
+
+    for e in $possibleIssues; do
+      echo "$e"
+    done
+
+    echo ''
+    echo "${zcRed}!!!!!${zcOFF}"
+    echo ''
+  fi
 }
+
+
 

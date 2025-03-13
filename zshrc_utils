@@ -48,7 +48,7 @@ function set_title() {
   echo -e "\033]0;$1\007";
 }
 
-if [[ ${ZSHCOM__known_os:?} == 'win' ]]
+if [[ -n $ZSHCOM__known_os && $ZSHCOM__known_os == 'win' ]]
 then
   function psack () {
     # shellcheck disable=SC2086

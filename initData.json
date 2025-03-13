@@ -2,18 +2,24 @@
   "pkg": {
     "pipx": {
       "pipx": "pipx",
-      "pacman": "python-pipx",
+      "os": "python-pipx",
       "required": true
     },
     "zsh_toolkit_py": {
       "pipx_local": "./py/pack",
       "required": true
     },
+    "dictionary":{
+      "os": "gnome-dictionary"
+    },
     "ack": {
-      "os": "ack"
+      "os": "ack",
+      "which": "ack",
+      "required": true
     },
     "rclone": {
-      "os": "rclone"
+      "os": "rclone",
+      "which": "rclone"
     }
   }
 }
