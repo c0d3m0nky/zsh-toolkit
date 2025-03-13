@@ -1,3 +1,9 @@
+
+if command -v neofetch >/dev/null 2>&1; then
+  neofetch -L
+  exit 0
+fi
+
 # http://patorjk.com/software/taag/#p=display&f=BlurVision%20ASCII&t=ZSH-Toolkit
 # shellcheck disable=SC2154
 echo -e "${zcRed}

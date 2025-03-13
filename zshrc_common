@@ -23,6 +23,11 @@ alias popout='upd=$(dirname "$(pwd)"); while [[ ! -d "$upd" ]]; do upd=$(dirname
 # shellcheck disable=SC2154
 alias ztk-varCache="for f in \$(find \$ZSHCOM/.var*); do echo \$(basename \$f) | ack '^\.var_(.+)$' --output '\$1'; cat \$f; done"
 
+# shellcheck disable=SC2142
+alias dockerStop='$HOME/scripts/dockerStop.sh $@'
+alias rmrf='rm -rf'
+alias view='nano -Sv'
+
 if ! command -v json_pp &> /dev/null
 then
   alias json_pp='python3 -m json.tool'

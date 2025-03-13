@@ -65,36 +65,51 @@ function _loadSource() {
   done
 }
 
-if [[ -z "$ZSHCOM__known_os" && -z "$ZSHCOM__known_hw" ]]
+if [[ -z "$ZSHCOM__known_os" || -z "$ZSHCOM__known_hw" ]]
 then
   _updateVar ZSHCOM__known_os
   _updateVar ZSHCOM__known_hw
 
-  if [[ -z "$ZSHCOM__known_os" && -z "$ZSHCOM__known_hw" ]]
+  if [[ -z "$ZSHCOM__known_os" || -z "$ZSHCOM__known_hw" ]]
   then
     source "$ZSHCOM__basedir/detectOS.sh"
   fi
 
-  _setVarCache ZSHCOM__known_os
-  _setVarCache ZSHCOM__known_hw
+  if [[ -n $ZSHCOM__known_os ]]
+  then
+    _setVarCache ZSHCOM__known_os
+  fi
+
+  if [[ -n $ZSHCOM__known_hw ]]
+  then
+    _setVarCache ZSHCOM__known_hw
+  fi
+
+
 fi
 
 # ToDo: Hopefully one day shellcheck will use this directive to check for assignment and avoid SC2154 everywhere https://github.com/koalaman/shellcheck/issues/2956
 # shellcheck source=magicFiles.sh
 source "$ZSHCOM__basedir/magicFiles.sh"
 
-if [[ ${ZSHCOM__known_os:?} == 'win' ]]
+if [[ -z "$ZSHCOM__cpu_cores" ]]
 then
-  ZSHCOM__cpu_cores=$(wmic cpu get numberofcores | ack '^\d+')
-  export ZSHCOM__cpu_cores="$ZSHCOM__cpu_cores"
-else
-  # shellcheck disable=SC2016
-  cpuInfo=$(lscpu | ack '((Core[^:]+ per socket|Socket[^:]+): +(\d+))' --output '$1')
-  # shellcheck disable=SC2016
-  coresPerSocket=$(echo "$cpuInfo" | ack 'Core[^:]+ per socket: +(\d+)' --output '$1')
-  # shellcheck disable=SC2016
-  sockets=$(echo "$cpuInfo" | ack 'Socket[^:]+: +(\d+)' --output '$1')
-  export ZSHCOM__cpu_cores=$((coresPerSocket * sockets))
+  if [[ ${ZSHCOM__known_os:?} == 'win' ]]
+  then
+    ZSHCOM__cpu_cores=$(wmic cpu get numberofcores | ack '^\d+')
+    export ZSHCOM__cpu_cores="$ZSHCOM__cpu_cores"
+  elif [[ ! $(command -v lscpu 2>&1 >/dev/null) ]]
+  then
+    # shellcheck disable=SC2016
+    cpuInfo=$(lscpu | ack '((Core[^:]+ per socket|Socket[^:]+): +(\d+))' --output '$1')
+    # shellcheck disable=SC2016
+    coresPerSocket=$(echo "$cpuInfo" | ack 'Core[^:]+ per socket: +(\d+)' --output '$1')
+    # shellcheck disable=SC2016
+    sockets=$(echo "$cpuInfo" | ack 'Socket[^:]+: +(\d+)' --output '$1')
+    export ZSHCOM__cpu_cores=$((coresPerSocket * sockets))
+  else
+    echo Unable to determine cpu core count
+  fi
 fi
 
 if [[ -d $ZSHCOM_PRELOAD ]]
@@ -104,19 +119,35 @@ fi
 
 if [[ -z "$ZSHCOM_PYTHON" ]]
 then
-  ZSHCOM_PYTHON='python3'
+  ZSHCOM_PYTHON=$(which python3.12)
+
+  if [[ -z "$ZSHCOM_PYTHON" ]]
+  then
+    pylibloc="$(dirname "$(which python3)")"
+    pyvers=$(find $pylibloc/python*.* -type f -exec basename {} \; | ack '^python\d\.\d+$' --output '$1' | sort -Vr)
+
+    for p in $pyvers
+    do
+      ZSHCOM_PYTHON=$(which python$p)
+      if [[ -n $ZSHCOM_PYTHON ]]
+      then
+        break
+      fi
+    done
+  fi
 fi
 
 if [[ -z $(which "$ZSHCOM_PYTHON") ]]
 then
   # shellcheck disable=SC2028
   echo "Python command not found, install python 3.12+ and/or set ZSHCOM_PYTHON to it's command"
-  touch "${mf_break_init:?}"
+  touch "${ZSHCOM__mf_break_init:?}"
 else
+  export ZSHCOM_PYTHON="$ZSHCOM_PYTHON"
   source "$ZSHCOM__basedir/update.sh"
 fi
 
-if [[ ! -f "$mf_break_init" ]]
+if [[ ! -f "$ZSHCOM__mf_break_init" ]]
 then
   if [[ -n $(which rclone) ]]
   then
@@ -134,11 +165,11 @@ then
     then
       rm "$ZSHCOM__mf_trigger_update"
       ztk-update
-      touch "$mf_break_init"
+      touch "$ZSHCOM__mf_break_init"
     fi
   fi
 
-  if [[ ! -f "$mf_break_init" ]]
+  if [[ ! -f "$ZSHCOM__mf_break_init" ]]
   then
     if [[ -d $ZSHCOM_POSTLOAD ]]
     then
@@ -160,7 +191,7 @@ then
   fi
 fi
 
-if [[ -f "$mf_break_init" ]]
+if [[ -f "$ZSHCOM__mf_break_init" ]]
 then
-  rm "$mf_break_init"
+  rm "$ZSHCOM__mf_break_init"
 fi

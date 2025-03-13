@@ -54,6 +54,10 @@ def main():
     args = Args().parse_args()
 
     src = args.root
+
+    if not src.exists():
+        return
+
     rx = args.pattern
 
     actions = []

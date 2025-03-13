@@ -10,6 +10,16 @@ dockerShell() {
 	fi
 }
 
+function dockerPorts() {
+  docker container ls --format 'json' | \
+    jq --slurp \
+      'def trimWS: gsub("^\\s+";"") | gsub("\\s+$";""); def remPref: gsub("^:+";"") | gsub("^0.0.0.0:";""); def filterPorts: select( ( . | contains("->") ) ); def safeToNum: if test("^\\d+$") then tonumber else . end; def mapPorts:      map( (match("^([\\d-]+)->([\\d-]+)(/(tcp))?$") // null) as $m |      if $m then     {       host: $m.captures[0].string | safeToNum,       container: $m.captures[1].string | safeToNum,       protocol: ($m.captures[3].string // "both")     } else . end); def arrToDic:       sort_by(.names|ascii_downcase) |        map({     (.names|tostring): .ports     }) | add;  map({    names: .Names,    ports: (       (.Ports | split(",")) |         map( . | trimWS | filterPorts | remPref ) | unique | mapPorts    )  } | select( (.ports | length) > 0 ) )  | arrToDic'
+}
+
+function dockerPortsHost() {
+  dockerPorts | jq 'to_entries | map(.value) | flatten | map(.host) | unique | sort[]'
+}
+
 perfwatch() {
 	# shellcheck disable=SC2016
 	sensors | ack -i '^(CPU|MB) Temp:\s+([\+\-\d.]+°[CF])' --output '$1:\t$2'
@@ -17,6 +27,13 @@ perfwatch() {
 	echo ''
 	# shellcheck disable=SC2016
 	(cat /proc/cpuinfo | ack "^([c]pu MHz|processor)\s+:\s(.+)$" --output '$2') | ack '(\d+) (\d)(\d+)\.\d+ (\d+) (\d)(\d+)\.\d+ ' --output '$1\t$2.$3  $5.$6\t$4'
+}
+
+function shellColors() {
+  for i in {0..255};
+  do
+    print -Pn "%K{$i}  %k%F{$i}${(l:3::0:)i}%f " ${${(M)$((i%6)):#3}:+$'\n'};
+  done
 }
 
 dockerZsh() {

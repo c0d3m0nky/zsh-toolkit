@@ -2,16 +2,18 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import re
 import os
-import platform
 import json
 import subprocess
+import shutil
 
-from typing import Union, Dict, List
+from typing import Union, Dict
 
 from pack.constants import zsh_toolkit_version
 from pack.utils import parse_bool
 
 import pack.magic_files as mf
+
+ZSHCOM_PYTHON = os.environ.get("ZSHCOM_PYTHON")
 
 
 def set_parent_var(var: str, value: str):
@@ -19,8 +21,7 @@ def set_parent_var(var: str, value: str):
         text_file.write(value)
 
 
-class PipPkg:
-    pip: str = None
+class Pkg:
     pipx: str = None
     pipx_local: str = None
     pacman: str = None
@@ -29,8 +30,7 @@ class PipPkg:
     os: bool
 
     # noinspection PyShadowingNames
-    def __init__(self, pip: str = None, pipx: str = None, pipx_local: str = None, pacman: str = None, required: bool = False, os: bool = False) -> None:
-        self.pip = pip
+    def __init__(self, pipx: str = None, pipx_local: str = None, pacman: str = None, required: bool = False, os: bool = False) -> None:
         self.pipx = pipx
         self.pipx_local = pipx_local
         self.pacman = pacman
@@ -40,8 +40,6 @@ class PipPkg:
     def __str__(self) -> str:
         op = []
 
-        if self.pip:
-            op.append(f'pip: {self.pip}')
         if self.pacman:
             op.append(f'pacman: {self.pacman}')
         if self.pipx_local:
@@ -53,24 +51,11 @@ class PipPkg:
 
 
 class InitData:
-    pkg: Dict[str, PipPkg] = {}
+    pkg: Dict[str, Pkg] = {}
 
     def __init__(self, pkg: Dict[str, Dict[str, str]] = None) -> None:
         for pk in pkg:
-            self.pkg[pk] = PipPkg(**pkg[pk])
-
-
-_pip_arch = parse_bool(os.environ.get('ZSHCOM_PIP_ARCH'))
-_pip_install_user: bool = parse_bool(os.environ.get('ZSHCOM_PIP_INSTALL_USER')) or True
-
-if _pip_arch is None and platform.system() == 'Linux':
-    os_release = getattr(platform, "freedesktop_os_release", None)
-    if callable(os_release):
-        _pip_arch = 'ID_LIKE' in platform.freedesktop_os_release() and platform.freedesktop_os_release()['ID_LIKE'] == 'arch'
-    else:
-        _pip_arch = False
-else:
-    _pip_arch = False
+            self.pkg[pk] = Pkg(**pkg[pk])
 
 
 def _sh(cmd: str, check=False, suppress_error=False) -> str:
@@ -82,15 +67,7 @@ def _sh(cmd: str, check=False, suppress_error=False) -> str:
     return res.stdout.decode('utf-8').strip()
 
 
-def _pip_install_pip(pkg: str):
-    print(f'installing {pkg}')
-    if _pip_install_user:
-        _sh(f'pip3 install --user {pkg}', check=True)
-    else:
-        _sh(f'pip3 install {pkg}', check=True)
-
-
-def _pip_install_pacman(pkg: str):
+def _pkg_install_pacman(pkg: str):
     print(f'installing {pkg} (requires sudo)')
 
     cmd = ['sudo', 'pacman', "--noconfirm", '-S', pkg]
@@ -102,7 +79,7 @@ def _pip_install_pacman(pkg: str):
         raise Exception("Failed to install: {0}".format(data["stderr"]))
 
 
-def _pip_upgrade_pipx(pkg: str, local: Path = None):
+def _pkg_upgrade_pipx(pkg: str, local: Path = None):
     print(f'Upgrading {pkg}')
     if local:
         _sh(f'pipx upgrade {pkg}', check=True)
@@ -110,48 +87,20 @@ def _pip_upgrade_pipx(pkg: str, local: Path = None):
         _sh(f'pipx upgrade {pkg}', check=True)
 
 
-def _pip_install_pipx(pkg: str, local: Path = None):
+def _pkg_install_pipx(pkg: str, local: Path = None):
     print(f'installing {pkg}')
     if local:
-        _sh(f'pipx install -e "{local.as_posix()}"', check=True)
+        _sh(f'pipx install -e "{local.as_posix()}" --python="{ZSHCOM_PYTHON}"', check=True)
     else:
-        _sh(f'pipx install {pkg}', check=True)
+        _sh(f'pipx install {pkg} --python="{ZSHCOM_PYTHON}"m', check=True)
 
 
-_pip_list_re = re.compile(r'^([^\s]+)\s+(.+)$')
-_pip_packages: Union[List[str], None] = None
+_pipx_list_re = re.compile(r'^([^\s]+)\s+(.+)$')
 _pipx_packages: Union[Dict[str, str], None] = None
 
 
 def _pkg_check_os() -> bool:
     return True
-
-
-def _pkg_check_pip(pkg: str) -> bool:
-    global _pip_packages
-
-    if _pip_packages is None:
-        res = _sh('pip list')
-
-        for ln in res.splitlines():
-            if ln.startswith('Package') or ln.startswith('---'):
-                continue
-
-            m: re.Match = re.search(_pip_list_re, ln)
-
-            if m:
-                if _pip_packages is None:
-                    _pip_packages = []
-
-                _pip_packages.append(m.group(1))
-            else:
-                print(f'pip list: Failed to parse line {ln}')
-
-    if _pip_packages is None:
-        print('No pip packages found')
-        return False
-
-    return pkg in _pip_packages
 
 
 def _pkg_check_pipx(pkg: str) -> str:
@@ -161,7 +110,7 @@ def _pkg_check_pipx(pkg: str) -> str:
         res = _sh('pipx list --short')
 
         for ln in res.splitlines():
-            m: re.Match = re.search(_pip_list_re, ln)
+            m: re.Match = re.search(_pipx_list_re, ln)
 
             if m:
                 if _pipx_packages is None:
@@ -195,13 +144,20 @@ def _pkg_check_pacman(pkg: str) -> bool:
     return r.endswith('good')
 
 
+# ToDo: Get rid of this
+_os_arch = parse_bool(os.environ.get('ZSHCOM_PIP_ARCH'))
+
+
 def init():
     if not mf.repo_update_checked.exists() or datetime.fromtimestamp(mf.repo_update_checked.stat().st_mtime) < (datetime.now() - timedelta(days=7)):
-        resp = input(f'You have not checked for zsh-toolkit updates in over a week, would you like to check now: ').strip()
+        if shutil.which('_ztk-update') is None:
+            print('ztk updater seems to be missing')
+        else:
+            resp = input(f'You have not checked for zsh-toolkit updates in over a week, would you like to check now: ').strip()
 
-        if resp.lower() == 'y':
-            mf.trigger_update.touch()
-            return
+            if resp.lower() == 'y':
+                mf.trigger_update.touch()
+                return
 
     if (mf.dependencies_checked.exists()
             and datetime.fromtimestamp(mf.dependencies_checked.stat().st_mtime) > (datetime.now() - timedelta(hours=24))
@@ -222,9 +178,7 @@ def init():
         satisfied = False
         pipx_local_action = None
 
-        if _pkg_check_pip(pkg.pip):
-            satisfied = True
-        elif pkg.pacman and _pkg_check_pacman(pkg.pacman):
+        if pkg.pacman and _pkg_check_pacman(pkg.pacman):
             satisfied = True
         elif pkg.pipx and _pkg_check_pipx(pk) != 'install':
             satisfied = True
@@ -236,18 +190,9 @@ def init():
             satisfied = True
 
         if not satisfied:
-            if pkg.pip and not _pip_arch:
-                # noinspection PyBroadException
+            if pkg.pacman and _os_arch:
                 try:
-                    _pip_install_pip(pkg.pip)
-                    satisfied = True
-                except:
-                    print('')
-                    print(f'Failed to install {pk} with pip')
-                    satisfied = False
-            elif pkg.pacman and _pip_arch:
-                try:
-                    _pip_install_pacman(pkg.pacman)
+                    _pkg_install_pacman(pkg.pacman)
                     satisfied = True
                 except Exception as e:
                     print('')
@@ -262,9 +207,9 @@ def init():
                         spec_path = Path(mf.ztk_base_dir / pkg.pipx_local).resolve()
 
                     if pipx_local_action == 'install':
-                        _pip_install_pipx(pk, local=spec_path)
+                        _pkg_install_pipx(pk, local=spec_path)
                     else:
-                        _pip_upgrade_pipx(pk, local=spec_path)
+                        _pkg_upgrade_pipx(pk, local=spec_path)
                     satisfied = True
                 except:
                     print('')
@@ -273,7 +218,7 @@ def init():
             elif pkg.pipx:
                 # noinspection PyBroadException
                 try:
-                    _pip_install_pipx(pkg.pipx)
+                    _pkg_install_pipx(pkg.pipx)
                     satisfied = True
                 except:
                     print('')
