@@ -24,7 +24,7 @@ A collection of bash & python scripts I use as helpers in zsh
   * Ask for needed customizations
   * Setup https://github.com/romkatv/powerlevel10k
     * ask to install
-    * make it a script that can be run afterwards
+    * make it a script that can be run afterward
     * install fonts locally
     * set default .p10k.zsh
     * swap out theme and add source to .zshrc

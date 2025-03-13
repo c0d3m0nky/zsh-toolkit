@@ -12,7 +12,7 @@ alias listDirs="find ./ -type d"
 alias whatsmyip="host myip.opendns.com resolver1.opendns.com | ack 'myip.opendns.com has address ([\d.]+)' --output '\$1'"
 alias whatsmyip-curl="curl checkip.amazonaws.com"
 
-if [[ ${ZSHCOM__known_os:?} == 'win' ]]; then  alias clip="tee /dev/clipboard";
+if [[ -n $ZSHCOM__known_os && $ZSHCOM__known_os == 'win' ]]; then  alias clip="tee /dev/clipboard";
 else alias clip="tee >(xclip -r -selection clipboard)"; fi
 
 # shellcheck disable=SC2154

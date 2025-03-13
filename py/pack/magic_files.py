@@ -7,8 +7,9 @@ ztk_base_dir = Path(os.environ.get('ZSHCOM__basedir')).resolve()
 
 _transient_env: str = os.environ.get('ZSHCOM__transient')
 
+# ToDo: Stop doing this
 if not _transient_env:
-    raise Exception('!!! Transient files not supported, set ZSHCOM_TRANSIENT in .zshrc')
+    raise Exception('!!! Transient files not supported, set ZSHCOM__transient in .zshrc')
 
 ztk_transient: Path = Path(_transient_env).resolve()
 
