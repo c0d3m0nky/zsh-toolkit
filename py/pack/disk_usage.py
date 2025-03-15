@@ -88,7 +88,7 @@ class Args(BaseTap):
                     if line:
                         lp = Path(line.strip())
                         if lp.is_dir():
-                            self.exclude_folders.append(lp.resolve())
+                            self.exclude_folders.append(lp.expanduser().resolve())
 
 
 _args: Args
@@ -97,7 +97,7 @@ _name_min_width = 17
 
 
 def exclude_dir(d: Path, args: Args) -> bool:
-    return (args.exclude_hidden and d.name.startswith('.')) or d.resolve() in args.exclude_folders or d.is_mount() or d.is_symlink()
+    return (args.exclude_hidden and d.name.startswith('.')) or d.expanduser().resolve() in args.exclude_folders or d.is_mount() or d.is_symlink()
 
 
 def walk_dir(tgt_dir: Path, state: State, log: Logger, args: Args) -> Iterator[Tuple[Path, List[Path]]]:
@@ -367,7 +367,7 @@ def main():
 
     try:
         _args = Args().parse_args()
-        state = State(_args.root.resolve(), BareStat('./'), BareStat('Total'))
+        state = State(_args.root.expanduser().resolve(), BareStat('./'), BareStat('Total'))
 
         sorter: Callable[[Stat], Any]
 

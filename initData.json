@@ -9,6 +9,9 @@
       "pipx_local": "./py/pack",
       "required": true
     },
+    "yq": {
+      "pipx": "yq"
+    },
     "ack": {
       "os": "ack",
       "which": "ack",
@@ -17,6 +20,18 @@
     "rclone": {
       "os": "rclone",
       "which": "rclone"
+    },
+    "7z": {
+      "os": "p7zip-full",
+      "which": "7z"
+    },
+    "rar": {
+      "os": "rar",
+      "which": "rar"
+    },
+    "unrar": {
+      "os": "unrar",
+      "which": "unrar"
     }
   }
 }

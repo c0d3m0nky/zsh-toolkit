@@ -19,7 +19,7 @@ _branch_prefix = 'auto_commit'
 
 
 def main() -> None:
-    repo_path = _args.repository.resolve()
+    repo_path = _args.repository.expanduser().resolve()
     repo = Repo(repo_path)
 
     print(f'Fetching repo at {repo_path.as_posix()}')

@@ -12,6 +12,7 @@ from pkgmgr.models import InitData
 
 import pack.magic_files as mf
 from pkgmgr.installers import PipX, PackageManager, PackageInfo, PipXLocal, package_manager_factory
+from pack.utils import shell
 
 ZSHCOM_PYTHON = os.environ.get("ZSHCOM_PYTHON")
 
@@ -19,15 +20,6 @@ ZSHCOM_PYTHON = os.environ.get("ZSHCOM_PYTHON")
 def set_parent_var(var: str, value: str):
     with open(mf.ztk_base_dir / f'.var_{var}', 'w') as text_file:
         text_file.write(value)
-
-
-def _sh(cmd: str, check=False, suppress_error=False) -> str:
-    if suppress_error:
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, check=check)
-    else:
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True, check=check)
-
-    return res.stdout.decode('utf-8').strip()
 
 
 def _pkg_check_os() -> bool:
@@ -100,7 +92,7 @@ def init():
             pkg_info = _os_pm.get_info(pkg.os)
 
         if not pkg_info.installed and pkg.which:
-            if _sh(f'which {pkg.which}'):
+            if shell(f'which {pkg.which}'):
                 pkg_info = PackageInfo('', '', True, False)
 
         satisfied = False
@@ -116,7 +108,7 @@ def init():
                     if not p.is_absolute():
                         p = mf.ztk_base_dir / p
 
-                    _pipx_local.install_local(pk, p.resolve())
+                    _pipx_local.install_local(pk, p.expanduser().resolve())
                     satisfied = True
                 elif _os_pm.name() in pkg.fields:
                     _os_pm.install(pkg.fields[_os_pm.name()])
@@ -129,7 +121,7 @@ def init():
                 print(f'Failed to install {pk} with {pkg_info.package_manager} ({pkg_info.name}): {e}')
                 satisfied = False
         elif pkg_info.has_update and pkg_info.package_manager in _package_managers:
-            # ToDo: Make this work for more than just pipx local
+            # ToDo: Make this work for more than just pipx local, and ask in those cases
             pm = _package_managers[pkg_info.package_manager]
 
             if pm.can_update():

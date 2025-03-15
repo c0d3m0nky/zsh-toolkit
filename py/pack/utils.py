@@ -1,3 +1,4 @@
+import subprocess
 from typing import Union, List, Any, TypeVar, Callable, Tuple
 
 ZTK_UTV = TypeVar('ZTK_UTV')
@@ -163,6 +164,15 @@ def str_in(value: str, coll: List[str], case_insensitive: bool = True, strip: bo
     return False
 
 
+def shell(cmd: str, check=False, suppress_error=False) -> str:
+    if suppress_error:
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, check=check)
+    else:
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True, check=check)
+
+    return res.stdout.decode('utf-8').strip()
+
+
 class Ask:
 
     def __init__(self):
@@ -202,7 +212,7 @@ class Ask:
     def char(self, msg: str, also_valid: List[str] = None) -> str:
         # noinspection PyUnusedLocal
         also_valid = also_valid or []
-        
+
         def mutate(resp: str) -> Tuple[bool, str]:
             # noinspection PyRedundantParentheses
             return (len(resp) == 1 or str_in(resp, also_valid), resp)

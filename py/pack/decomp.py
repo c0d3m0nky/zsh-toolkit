@@ -231,8 +231,8 @@ def friendly_name(path: Path, root: Path) -> str:
 
 def main() -> None:
     archive_cnt: int = 0
-    root = _args.root.resolve()
-    output = _args.output.resolve()
+    root = _args.root.expanduser().resolve()
+    output = _args.output.expanduser().resolve()
 
     for f in root.glob(_args.glob):
         if f.is_file() and f.suffix.strip('.') in _libs:

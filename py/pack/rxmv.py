@@ -86,12 +86,12 @@ def main():
                 print('Cannot target root directory')
                 exit(1)
 
-            fp = p.resolve()
+            fp = p.expanduser().resolve()
 
             if base_renamed:
-                np = tgt.resolve()
+                np = tgt.expanduser().resolve()
             else:
-                np = (tgt / p.name).resolve()
+                np = (tgt / p.name).expanduser().resolve()
 
             if np == fp:
                 continue
