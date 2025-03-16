@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import os
 import json
-import subprocess
 import shutil
 
 from typing import Union, Dict

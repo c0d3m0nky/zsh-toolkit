@@ -1,16 +1,14 @@
-import argparse
 import json
 import os
 import platform
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Any, Dict
+from typing import Callable, Any, Dict, Generator
 
+# noinspection PyUnresolvedReferences
 from pack.utils import parse_bool, shell
 
-_zshcom = None
-_transient = None
 _ztk_file_config_path = Path('~/.ztk.json').expanduser().resolve()
 _ztk_file_config: dict | None = None
 
@@ -32,22 +30,66 @@ _ExportValMutator = Callable[[Any], str]
 
 
 @dataclass()
-class _Exporter:
+class Exporter:
     func: Callable
     mutate: _ExportValMutator
 
 
-_exports: Dict[str, _Exporter] = {}
+_exports: Dict[str, Exporter] = {}
 
 
 def _export(name, mutator: _ExportValMutator):
     def wrapper(func):
-        _exports[name] = _Exporter(func, mutator)
+        _exports[name] = Exporter(func, mutator)
+        return func
 
     return wrapper
 
 
+def detect_transient_candidates() -> Generator[Path, None, None]:
+    if platform.system() == 'Windows':
+        yield Path('/tmp/zsh_toolkit')
+    else:
+        dfr = shell('df').split('\n')
+        rx = re.compile(r'^tmpfs.+(/dev/shm|/run/user)')
+        mounts = []
+
+        for ln in dfr:
+            m = rx.match(ln)
+
+            if m and m.group(1):
+                mounts.append(m.group(1))
+
+        runusr = Path(f'/run/user/{os.getuid()}')
+
+        if '/run/user' in mounts and runusr.is_dir():
+            yield runusr / 'ztk'
+
+        devshm = '/dev/shm'
+
+        if devshm in mounts:
+            yield Path(devshm) / 'ztk'
+
+
+_zshcom: Path | None = None
+
+
 class Config:
+
+    def __init__(self, zshcom: Path = None):
+        global _zshcom
+
+        if zshcom:
+            _zshcom = zshcom
+        elif _zshcom is None:
+            _zshcom = Config._get_path(_CP(None, 'ZSHCOM__basedir'), False)
+
+        if _zshcom is None or not _zshcom.exists():
+            raise Exception('Unable to get zsh-toolkit dir')
+
+    @staticmethod
+    def _get_export_funcs() -> Dict[str, Exporter]:
+        return _exports
 
     @staticmethod
     def _get_str(k: _CP, fail_if_missing=True) -> str:
@@ -95,6 +137,7 @@ class Config:
             raise Exception(f'{k.env_key} {rv} is invalid bool. Export environment variable')
 
     @_export('ZSHCOM__basedir', lambda v: v.as_posix())
+    @property
     def base_dir(self) -> Path:
         if _zshcom is not None:
             return _zshcom
@@ -102,25 +145,39 @@ class Config:
         return self._get_path(_CP(None, 'ZSHCOM__basedir'))
 
     @_export('ZSHCOM_PYTHON', lambda v: v.as_posix())
+    @property
     def python_bin(self) -> Path:
         return self._get_path(_CP('python', 'ZSHCOM_PYTHON'))
 
     @_export('ZSHCOM__transient', lambda v: v.as_posix())
+    @property
     def transient(self) -> Path:
-        k = _CP('transient', 'ZSHCOM_TRANSIENT')
+        k = _CP('transient', 'ZSHCOM__transient')
         r = self._get_path(k, False)
 
         if r is None:
-            r = _transient
+            for t in detect_transient_candidates():
+                if t.exists():
+                    r = t
+                    break
+                else:
+                    # noinspection PyBroadException
+                    try:
+                        t.mkdir(parents=True)
+                        r = t
+                        break
+                    except:
+                        pass
 
         if r is None:
-            raise Exception(f'.{k.file_key} is missing. Export in .ztk.json or {k.env_key} environment variable')
+            print(f'.{k.file_key} is missing. Export in .ztk.json or {k.env_key} environment variable')
         elif not r.exists():
-            raise Exception(f'.{k.file_key} path {r.as_posix()} is missing. Export in .ztk.json or {k.env_key} environment variable')
+            print(f'.{k.file_key} path {r.as_posix()} is missing. Export in .ztk.json or {k.env_key} environment variable')
 
         return r
 
     @_export('ZSHCOM__cache', lambda v: v.as_posix())
+    @property
     def cache(self) -> Path:
         k = _CP('cache', 'ZSHCOM_CACHE')
         r = self._get_path(k, False)
@@ -138,82 +195,19 @@ class Config:
         return r
 
     @_export('ZSHCOM__banner', lambda v: v.as_posix())
+    @property
     def banner(self) -> Path:
         return self._get_path(_CP('banner', 'ZSHCOM_BANNER'), False)
 
     @_export('ZSHCOM_HIDE_SPLASH', str)
+    @property
     def hide_splash(self) -> bool:
         return self._get_bool(_CP('hideSplash', 'ZSHCOM_HIDE_SPLASH'), False)
 
+    @property
+    def os(self):
+        return self._get_str(_CP(None, 'ZSHCOM__known_os'), False)
 
-def find_transient() -> Path | None:
-    if platform.system() == 'Windows':
-        return Path('/tmp/zsh_toolkit')
-    else:
-        dfr = shell('df').split('\n')
-        rx = re.compile(r'^tmpfs.+(/dev/shm|/run/user)')
-        mounts = []
-
-        for l in dfr:
-            m = rx.match(l)
-
-            if m and m.group(1):
-                mounts.append(m.group(1))
-
-        runusr = Path(f'/run/user/{os.getuid()}')
-
-        if '/run/user' in mounts and runusr.is_dir():
-            r = runusr / 'ztk'
-
-            if not r.exists():
-                # noinspection PyBroadException
-                try:
-                    r.mkdir()
-                except:
-                    pass
-
-            return r
-
-        devshm = '/dev/shm'
-
-        if devshm in mounts:
-            r = Path(devshm) / 'ztk'
-
-            if not r.exists():
-                # noinspection PyBroadException
-                try:
-                    r.mkdir()
-                except:
-                    pass
-
-            return r
-
-    return None
-
-
-def _dump_exports(args):
-    c = Config()
-
-    if args.source:
-        for k, e in _exports.items():
-            v = e.func(c)
-            if v is not None:
-                v = e.mutate(v)
-            if v is not None:
-                print(f'export {k}={v}')
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('zshcom', type=str, help='ZSHCOM environment variable')
-    parser.add_argument('--source', action='store_true', help='Print out for zsh sourcing')
-    _args = parser.parse_args()
-
-    _zshcom = Path(_args.zshcom)
-
-    if not _zshcom.exists():
-        raise Exception(f'ZSHCOM dir doesn\'t exist')
-
-    if _args.source:
-        _transient = find_transient()
-        _dump_exports(_args)
+    @property
+    def hw(self):
+        return self._get_str(_CP(None, 'ZSHCOM__known_hw'), False)

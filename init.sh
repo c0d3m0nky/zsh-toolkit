@@ -18,26 +18,6 @@ function _trace() {
   fi
 }
 
-# ToDo deprecate this
-function _updateVar() {
-  varFile="$ZSHCOM__basedir/.var_$1"
-  varVal=$(cat "$varFile" 2>/dev/null || echo '~!~')
-
-  if [[ "$varVal" != '~!~' ]]
-  then
-    # shellcheck disable=SC2086
-    eval $1="$varVal"
-    rm "$varFile"
-  fi
-}
-
-# ToDo deprecate this
-function _setVarCache() {
-  varFile="$ZSHCOM__basedir/.var_$1"
-
-  eval "echo \$$1" > "$varFile"
-}
-
 _trace "Loading zsh-toolkit"
 
 function _loadSource() {
@@ -61,10 +41,10 @@ if [[ -n "$ZSHCOM" ]]; then
 
     if [[ -z "$ZSHCOM_PYTHON" ]]
     then
-      pylibloc="$(dirname "$(which python3)")"
-      pyvers=$(find $pylibloc/python*.* -type f -exec basename {} \; | ack '^python\d\.\d+$' --output '$1' | sort -Vr)
+      pyLibLoc="$(dirname "$(which python3)")"
+      pyVers=$(find $pyLibLoc/python*.* -type f -exec basename {} \; | ack '^python\d\.\d+$' --output '$1' | sort -Vr)
 
-      for p in $pyvers
+      for p in $pyVers
       do
         ZSHCOM_PYTHON=$(which python$p)
         if [[ -n $ZSHCOM_PYTHON ]]
@@ -97,57 +77,14 @@ if [[ -n "$ZSHCOM" ]]; then
         # shellcheck disable=SC2086
         eval export $k="$v"
         _trace "$k=$v"
-      fi
-    done < <("${ZSHCOM_PYTHON:?}" "${ZSHCOM:?}/py/config.py" "$ZSHCOM" --source)
-
-    # ToDo: move to config.py
-    if [[ -z "$ZSHCOM__known_os" || -z "$ZSHCOM__known_hw" ]]
-    then
-      # ToDo: handle this in python
-      _updateVar ZSHCOM__known_os
-      _updateVar ZSHCOM__known_hw
-
-      if [[ -z "$ZSHCOM__known_os" || -z "$ZSHCOM__known_hw" ]]
-      then
-        source "$ZSHCOM__basedir/detectOS/detectOS.sh"
-      fi
-
-      if [[ -n $ZSHCOM__known_os ]]
-      then
-        _setVarCache ZSHCOM__known_os
-      fi
-
-      if [[ -n $ZSHCOM__known_hw ]]
-      then
-        _setVarCache ZSHCOM__known_hw
-      fi
-    fi
-
-    # ToDo: move to config.py
-    # ToDo: Hopefully one day shellcheck will use this directive to check for assignment and avoid SC2154 everywhere https://github.com/koalaman/shellcheck/issues/2956
-    # shellcheck source=magicFiles.sh
-    source "$ZSHCOM__basedir/magicFiles.sh"
-
-    # ToDo: move to config.py
-    if [[ -z "$ZSHCOM__cpu_cores" ]]
-    then
-      if [[ ${ZSHCOM__known_os:?} == 'win' ]]
-      then
-        ZSHCOM__cpu_cores=$(wmic cpu get numberofcores | ack '^\d+')
-        export ZSHCOM__cpu_cores="$ZSHCOM__cpu_cores"
-      elif [[ ! $(command -v lscpu 2>&1 >/dev/null) ]]
-      then
-        # shellcheck disable=SC2016
-        cpuInfo=$(lscpu | ack '((Core[^:]+ per socket|Socket[^:]+): +(\d+))' --output '$1')
-        # shellcheck disable=SC2016
-        coresPerSocket=$(echo "$cpuInfo" | ack 'Core[^:]+ per socket: +(\d+)' --output '$1')
-        # shellcheck disable=SC2016
-        sockets=$(echo "$cpuInfo" | ack 'Socket[^:]+: +(\d+)' --output '$1')
-        export ZSHCOM__cpu_cores=$((coresPerSocket * sockets))
       else
-        echo Unable to determine cpu core count
+        echo "$e"
       fi
-    fi
+    done < <("${ZSHCOM_PYTHON:?}" "${ZSHCOM:?}/py/init.py" "$ZSHCOM" --source)
+
+    # ToDo: Hopefully one day shellcheck will use this directive to check for assignment and avoid SC2154 everywhere https://github.com/koalaman/shellcheck/issues/2956
+    # shellcheck source=cleanup.sh
+    source "${ZSHCOM__basedir:?}/cleanup.sh"
 
     if [[ -d $ZSHCOM_PRELOAD ]]
     then
@@ -166,6 +103,7 @@ if [[ -n "$ZSHCOM" ]]; then
       _loadSource "$ZSHCOM__basedir"
       source "$ZSHCOM__basedir/update.sh"
 
+      _trace dependencies.py
       $ZSHCOM_PYTHON "$ZSHCOM__basedir/py/dependencies.py"
       if [[ -f "${ZSHCOM__mf_trigger_update:?}" ]]
       then
@@ -185,8 +123,13 @@ if [[ -n "$ZSHCOM" ]]; then
         # choose banner
 
         if [[ -z "$ZSHCOM__banner" ]]; then
-          if [[ $ZSHCOM__known_hw == 'pi' || $ZSHCOM__known_hw == 'docker' ]]; then ZSHCOM__banner=$ZSHCOM__known_hw; fi
-          if [[ $ZSHCOM__known_os == 'unraid' || $ZSHCOM__known_os == 'debian' || $ZSHCOM__known_os == 'win' ]]; then ZSHCOM__banner=$ZSHCOM__known_os; fi
+          if [[ -n $ZSHCOM__known_hw ]]; then
+            if [[ $ZSHCOM__known_hw == 'pi' || $ZSHCOM__known_hw == 'docker' ]]; then ZSHCOM__banner=$ZSHCOM__known_hw; fi
+          fi
+
+          if [[ -n $ZSHCOM__known_os ]]; then
+            if [[ $ZSHCOM__known_os == 'unraid' || $ZSHCOM__known_os == 'debian' || $ZSHCOM__known_os == 'win' ]]; then ZSHCOM__banner=$ZSHCOM__known_os; fi
+          fi
 
           if [[ -z "$ZSHCOM__banner" ]]; then ZSHCOM__banner="default"; fi
         fi
