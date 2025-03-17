@@ -7,7 +7,7 @@ from zsh_toolkit_py.shared.cli_args import PathArg
 
 
 class Args(Tap):
-    repository: Path = Path('../pack/')
+    repository: Path
 
     def configure(self) -> None:
         self.description = 'Auto-Commit Git Repository'

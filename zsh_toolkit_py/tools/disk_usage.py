@@ -32,7 +32,7 @@ _field_choices = [f for f in _fields.keys() if f != 'size']
 
 
 class Args(BaseTap):
-    root: Path = Path('../pack/')
+    root: Path
     fields: List[str]
     sort: str
     sort_reversed: bool

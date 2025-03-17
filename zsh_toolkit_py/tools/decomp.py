@@ -65,9 +65,9 @@ OpenArchive = Callable[[Path], Archive]
 
 
 class Args(BaseTap):
-    root: Path = Path('../pack/')
+    root: Path
     glob: str = '*.*'
-    output: Path = Path('../pack/')
+    output: Path
     force_root: bool = False
 
     def configure(self) -> None:
