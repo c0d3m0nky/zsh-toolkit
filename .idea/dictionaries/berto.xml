@@ -15,6 +15,7 @@
       <w>lstrip</w>
       <w>mins</w>
       <w>noconfirm</w>
+      <w>nopep</w>
       <w>noreload</w>
       <w>oserror</w>
       <w>psack</w>

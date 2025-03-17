@@ -7,8 +7,8 @@ from typing import Tuple, List
 
 sys.path.append(Path(__file__).parent.parent.resolve().as_posix())
 
-import shared.config as config
-from init_models import SystemInfo, marshal_system_info
+import shared.config as config  # nopep8
+from init_models import SystemInfo, marshal_system_info  # nopep8
 
 
 def _print_export(k: str, v: str | int):
@@ -81,7 +81,7 @@ def system_info(cfg: config.Config):
             json.dump(s, f, default=vars)
 
 
-def _dump_exports(args, zshcom: Path):
+def _dump_exports():
     c = config.Config()
 
     config_exports(c)
@@ -90,14 +90,8 @@ def _dump_exports(args, zshcom: Path):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('zshcom', type=str, help='ZSHCOM environment variable')
 parser.add_argument('--source', action='store_true', help='Print out for zsh sourcing')
 _args = parser.parse_args()
 
-_zshcom = Path(_args.zshcom).expanduser().resolve()
-
-if not _zshcom.exists():
-    raise Exception(f"ZSHCOM dir doesn't exist")
-
 if _args.source:
-    _dump_exports(_args, _zshcom)
+    _dump_exports()
