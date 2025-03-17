@@ -1,15 +1,5 @@
 #!/bin/zsh
 
-if [[ -z "$ZSHCOM" ]]
-then
-  echo "ZSHCOM is not set"
-  exit 1
-fi
-
-ZSHCOM__basedir=$ZSHCOM
-export ZSHCOM__basedir
-export ZSHCOM__banner="default"
-
 # https://codehs.com/tutorial/ryan/add-color-with-ansi-in-javascript
 export zcRed="\033[91m"
 export zcOrange="\u001b[38;5;202m"
@@ -28,27 +18,7 @@ function _trace() {
   fi
 }
 
-function _updateVar() {
-  varFile="$ZSHCOM__basedir/.var_$1"
-  varVal=$(cat "$varFile" 2>/dev/null || echo '~!~')
-
-  if [[ "$varVal" != '~!~' ]]
-  then
-    # shellcheck disable=SC2086
-    eval $1="$varVal"
-    rm "$varFile"
-  fi
-}
-
-function _setVarCache() {
-  varFile="$ZSHCOM__basedir/.var_$1"
-
-  eval "echo \$$1" > "$varFile"
-}
-
-self=$(basename "$0")
-
-_trace "Loading self: $self"
+_trace "Loading zsh-toolkit"
 
 function _loadSource() {
   d=$1
@@ -65,133 +35,114 @@ function _loadSource() {
   done
 }
 
-if [[ -z "$ZSHCOM_PYTHON" ]]
-then
-  ZSHCOM_PYTHON=$(which python3.12)
+if [[ -n "$ZSHCOM" ]]; then
+  if [[ -z "$ZSHCOM_PYTHON" ]]; then
+    ZSHCOM_PYTHON=$(which python3.12)
 
-  if [[ -z "$ZSHCOM_PYTHON" ]]
+    if [[ -z "$ZSHCOM_PYTHON" ]]
+    then
+      pyLibLoc="$(dirname "$(which python3)")"
+      pyVers=$(find $pyLibLoc/python*.* -type f -exec basename {} \; | ack '^python\d\.\d+$' --output '$1' | sort -Vr)
+
+      for p in $pyVers
+      do
+        ZSHCOM_PYTHON=$(which python$p)
+        if [[ -n $ZSHCOM_PYTHON ]]
+        then
+          break
+        fi
+      done
+    fi
+
+    _trace "ZSHCOM_PYTHON=$ZSHCOM_PYTHON"
+  fi
+
+  if [[ -z $(which "$ZSHCOM_PYTHON") ]]
   then
-    pylibloc="$(dirname "$(which python3)")"
-    pyvers=$(find $pylibloc/python*.* -type f -exec basename {} \; | ack '^python\d\.\d+$' --output '$1' | sort -Vr)
+    # shellcheck disable=SC2028
+    echo "Python command not found, install python 3.12+ and/or set ZSHCOM_PYTHON to it's command"
+    touch "${ZSHCOM__mf_break_init:?}"
+  else
+    export ZSHCOM_PYTHON="$ZSHCOM_PYTHON"
+  fi
 
-    for p in $pyvers
-    do
-      ZSHCOM_PYTHON=$(which python$p)
-      if [[ -n $ZSHCOM_PYTHON ]]
-      then
-        break
+  if [[ -n "$ZSHCOM_PYTHON" ]]; then
+    # Load config
+    _trace "config.py"
+    while read -r e; do
+    if [[ "$e" =~ 'export '* ]]; then
+        k=$(echo "$e" | sed -E 's/^export ([^=]+)=(.+)$/\1/' )
+        v=$(echo "$e" | sed -E 's/^export ([^=]+)=(.+)$/\2/' )
+
+        # shellcheck disable=SC2086
+        eval export $k="$v"
+        _trace "$k=$v"
+      else
+        echo "$e"
       fi
-    done
+    done < <("${ZSHCOM_PYTHON:?}" "${ZSHCOM:?}/zsh_toolkit_py/init.py" "$ZSHCOM" --source)
+
+    # ToDo: Hopefully one day shellcheck will use this directive to check for assignment and avoid SC2154 everywhere https://github.com/koalaman/shellcheck/issues/2956
+    # shellcheck source=cleanup.sh
+    source "${ZSHCOM__basedir:?}/cleanup.sh"
+
+    if [[ -d $ZSHCOM_PRELOAD ]]
+    then
+      _loadSource "$ZSHCOM_PRELOAD"
+    fi
+
+    if [[ ! -f "$ZSHCOM__mf_break_init" ]]
+    then
+      if [[ -n $(which rclone) ]]
+      then
+        export ZSHCOM__feat_rclone=true
+      else
+        export ZSHCOM__feat_rclone=false
+      fi
+
+      _loadSource "$ZSHCOM__basedir"
+      source "$ZSHCOM__basedir/update.sh"
+
+      _trace dependencies.py
+      $ZSHCOM_PYTHON "$ZSHCOM__basedir/zsh_toolkit_py/dependencies.py"
+      if [[ -f "${ZSHCOM__mf_trigger_update:?}" ]]
+      then
+        rm "$ZSHCOM__mf_trigger_update"
+        ztk-update
+        touch "$ZSHCOM__mf_break_init"
+      fi
+
+      if [[ ! -f "$ZSHCOM__mf_break_init" ]]
+      then
+        if [[ -d $ZSHCOM_POSTLOAD ]]
+        then
+          _loadSource "$ZSHCOM_POSTLOAD"
+          # ToDo: handle python
+        fi
+
+        # choose banner
+
+        if [[ -z "$ZSHCOM__banner" ]]; then
+          if [[ -n $ZSHCOM__known_hw ]]; then
+            if [[ $ZSHCOM__known_hw == 'pi' || $ZSHCOM__known_hw == 'docker' ]]; then ZSHCOM__banner=$ZSHCOM__known_hw; fi
+          fi
+
+          if [[ -n $ZSHCOM__known_os ]]; then
+            if [[ $ZSHCOM__known_os == 'unraid' || $ZSHCOM__known_os == 'debian' || $ZSHCOM__known_os == 'win' ]]; then ZSHCOM__banner=$ZSHCOM__known_os; fi
+          fi
+
+          if [[ -z "$ZSHCOM__banner" ]]; then ZSHCOM__banner="default"; fi
+        fi
+
+        source "$ZSHCOM__basedir/splash.sh"
+      fi
+    fi
+
+    if [[ -f "$ZSHCOM__mf_break_init" ]]
+    then
+      rm "$ZSHCOM__mf_break_init"
+    fi
   fi
-fi
-
-if [[ -z "$ZSHCOM__known_os" || -z "$ZSHCOM__known_hw" ]]
-then
-  _updateVar ZSHCOM__known_os
-  _updateVar ZSHCOM__known_hw
-
-  if [[ -z "$ZSHCOM__known_os" || -z "$ZSHCOM__known_hw" ]]
-  then
-    source "$ZSHCOM__basedir/detectOS/detectOS.sh"
-  fi
-
-  if [[ -n $ZSHCOM__known_os ]]
-  then
-    _setVarCache ZSHCOM__known_os
-  fi
-
-  if [[ -n $ZSHCOM__known_hw ]]
-  then
-    _setVarCache ZSHCOM__known_hw
-  fi
-
-
-fi
-
-# ToDo: Hopefully one day shellcheck will use this directive to check for assignment and avoid SC2154 everywhere https://github.com/koalaman/shellcheck/issues/2956
-# shellcheck source=magicFiles.sh
-source "$ZSHCOM__basedir/magicFiles.sh"
-
-if [[ -z "$ZSHCOM__cpu_cores" ]]
-then
-  if [[ ${ZSHCOM__known_os:?} == 'win' ]]
-  then
-    ZSHCOM__cpu_cores=$(wmic cpu get numberofcores | ack '^\d+')
-    export ZSHCOM__cpu_cores="$ZSHCOM__cpu_cores"
-  elif [[ ! $(command -v lscpu 2>&1 >/dev/null) ]]
-  then
-    # shellcheck disable=SC2016
-    cpuInfo=$(lscpu | ack '((Core[^:]+ per socket|Socket[^:]+): +(\d+))' --output '$1')
-    # shellcheck disable=SC2016
-    coresPerSocket=$(echo "$cpuInfo" | ack 'Core[^:]+ per socket: +(\d+)' --output '$1')
-    # shellcheck disable=SC2016
-    sockets=$(echo "$cpuInfo" | ack 'Socket[^:]+: +(\d+)' --output '$1')
-    export ZSHCOM__cpu_cores=$((coresPerSocket * sockets))
-  else
-    echo Unable to determine cpu core count
-  fi
-fi
-
-if [[ -d $ZSHCOM_PRELOAD ]]
-then
-  _loadSource "$ZSHCOM_PRELOAD"
-fi
-
-if [[ -z $(which "$ZSHCOM_PYTHON") ]]
-then
-  # shellcheck disable=SC2028
-  echo "Python command not found, install python 3.12+ and/or set ZSHCOM_PYTHON to it's command"
-  touch "${ZSHCOM__mf_break_init:?}"
 else
-  export ZSHCOM_PYTHON="$ZSHCOM_PYTHON"
-  source "$ZSHCOM__basedir/update.sh"
-fi
-
-if [[ ! -f "$ZSHCOM__mf_break_init" ]]
-then
-  if [[ -n $(which rclone) ]]
-  then
-    export ZSHCOM__feat_rclone=true
-  else
-    export ZSHCOM__feat_rclone=false
-  fi
-
-  _loadSource "$ZSHCOM__basedir"
-
-  if [[ $ZSHCOM_NOPY != true ]]
-  then
-    $ZSHCOM_PYTHON "$ZSHCOM__basedir/py/dependencies.py"
-    if [[ -f "${ZSHCOM__mf_trigger_update:?}" ]]
-    then
-      rm "$ZSHCOM__mf_trigger_update"
-      ztk-update
-      touch "$ZSHCOM__mf_break_init"
-    fi
-  fi
-
-  if [[ ! -f "$ZSHCOM__mf_break_init" ]]
-  then
-    if [[ -d $ZSHCOM_POSTLOAD ]]
-    then
-      _loadSource "$ZSHCOM_POSTLOAD"
-      # ToDo: handle python
-    fi
-
-    # choose banner
-
-    if [[ -n "$ZSHCOM_BANNER" ]]
-    then
-      ZSHCOM__banner=$ZSHCOM_BANNER
-    else
-      if [[ $ZSHCOM__known_hw == 'pi' || $ZSHCOM__known_hw == 'docker' ]]; then ZSHCOM__banner=$ZSHCOM__known_hw; fi
-      if [[ $ZSHCOM__known_os == 'unraid' || $ZSHCOM__known_os == 'debian' || $ZSHCOM__known_os == 'win' ]]; then ZSHCOM__banner=$ZSHCOM__known_os; fi
-    fi
-
-    source "$ZSHCOM__basedir/splash.sh"
-  fi
-fi
-
-if [[ -f "$ZSHCOM__mf_break_init" ]]
-then
-  rm "$ZSHCOM__mf_break_init"
+  echo "[zsh-toolkit] ZSHCOM not set"
 fi

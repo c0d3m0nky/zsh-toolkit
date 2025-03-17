@@ -3,7 +3,7 @@ import sys
 
 from pathlib import Path
 
-from cli_args import BaseTap, RegExArg
+from zsh_toolkit_py.shared.cli_args import BaseTap, RegExArg
 
 
 def fack():

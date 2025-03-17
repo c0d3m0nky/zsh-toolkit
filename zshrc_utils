@@ -34,6 +34,15 @@ function shellColors() {
   do
     print -Pn "%K{$i}  %k%F{$i}${(l:3::0:)i}%f " ${${(M)$((i%6)):#3}:+$'\n'};
   done
+
+  echo ''
+  echo ''
+  echo 'zsh-toolkit tokens'
+  echo ''
+
+  for zc in $(printenv | grep -P 'zc[A-Z][a-z]+=' | grep -Po 'zc[A-Z][a-z]+'); do
+    eval echo -e "\$$zc" $zc "\$zcOFF";
+  done
 }
 
 dockerZsh() {

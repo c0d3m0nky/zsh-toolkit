@@ -3,10 +3,13 @@
     <words>
       <w>cpuinfo</w>
       <w>dbyte</w>
+      <w>devshm</w>
       <w>dockerenv</w>
+      <w>dockur</w>
       <w>exts</w>
       <w>mins</w>
       <w>oserror</w>
+      <w>runusr</w>
       <w>suff</w>
       <w>unraid</w>
     </words>

@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from cli_args import BaseTap
-from utils import Ask
-import string_dbyte_utils
+from zsh_toolkit_py.shared.cli_args import BaseTap
+from zsh_toolkit_py.shared.utils import Ask
+import zsh_toolkit_py.shared.string_dbyte_utils as string_dbyte_utils
 
 _ask = Ask()
 

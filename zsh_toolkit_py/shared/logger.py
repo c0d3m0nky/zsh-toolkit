@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Union
 
-from utils import ShellColors
+from zsh_toolkit_py.shared.utils import ShellColors
 
 
 @dataclass

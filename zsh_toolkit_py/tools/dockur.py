@@ -4,10 +4,10 @@ from typing import Dict, Callable, List, Union
 
 from docker import from_env as docker_from_env
 
-from cli_args import BaseTap
-from logger import Logger
+from zsh_toolkit_py.shared.cli_args import BaseTap
+from zsh_toolkit_py.shared.logger import Logger
 
-from dockur_models import DockerConnection
+from zsh_toolkit_py.models.dockur import DockerConnection
 
 _log: Logger
 

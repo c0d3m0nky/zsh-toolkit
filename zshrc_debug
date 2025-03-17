@@ -35,15 +35,15 @@ function ztk-debug() {
 
   possibleIssues=()
 
-  if [[ -z $ZSHCOM__known_os || -z $ZSHCOM__pkg_man ]]; then
+  if [[ -z $ZSHCOM__known_os || -z $ZSHCOM__pkg_mgr ]]; then
     msg='OS detection failure'
 
     if [[ -z $ZSHCOM__known_os ]]; then
       msg="$msg\n\tZSHCOM__known_os not set"
     fi
 
-    if [[ -z $ZSHCOM__pkg_man ]]; then
-      msg="$msg\n\tZSHCOM__pkg_man not set"
+    if [[ -z $ZSHCOM__pkg_mgr ]]; then
+      msg="$msg\n\ZSHCOM__pkg_mgr not set"
     fi
 
     possibleIssues+="$msg"

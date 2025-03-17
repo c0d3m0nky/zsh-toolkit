@@ -1,19 +1,22 @@
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-import os
 import json
-import subprocess
 import shutil
-
 from typing import Union, Dict
 
-from pack.constants import zsh_toolkit_version
+sys.path.append(Path(__file__).parent.parent.resolve().as_posix())
+
+from shared.config import Config
+
+from shared.constants import zsh_toolkit_version
 from pkgmgr.models import InitData
 
-import pack.magic_files as mf
+import shared.magic_files as mf
 from pkgmgr.installers import PipX, PackageManager, PackageInfo, PipXLocal, package_manager_factory
+from shared.utils import shell
 
-ZSHCOM_PYTHON = os.environ.get("ZSHCOM_PYTHON")
+_cfg = Config()
 
 
 def set_parent_var(var: str, value: str):
@@ -21,25 +24,12 @@ def set_parent_var(var: str, value: str):
         text_file.write(value)
 
 
-def _sh(cmd: str, check=False, suppress_error=False) -> str:
-    if suppress_error:
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, check=check)
-    else:
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True, check=check)
-
-    return res.stdout.decode('utf-8').strip()
-
-
 def _pkg_check_os() -> bool:
     return True
 
 
-# ToDo: Get rid of this
-_os = os.environ.get('ZSHCOM__known_os')
-_package_manager = os.environ.get('ZSHCOM__pkg_man')
-
-_pipx = PipX(zsh_toolkit_version, ZSHCOM_PYTHON)
-_pipx_local = PipXLocal(zsh_toolkit_version, ZSHCOM_PYTHON)
+_pipx = PipX(zsh_toolkit_version, _cfg.python_bin.as_posix())
+_pipx_local = PipXLocal(zsh_toolkit_version, _cfg.python_bin.as_posix())
 _os_pm: Union[PackageManager, None] = None
 
 _package_managers: Dict[str, PackageManager] = {
@@ -47,8 +37,8 @@ _package_managers: Dict[str, PackageManager] = {
     _pipx_local.name(): _pipx_local
 }
 
-if _package_manager:
-    _os_pm = package_manager_factory(_package_manager)
+if _cfg.pkg_mgr:
+    _os_pm = package_manager_factory(_cfg.pkg_mgr)
 
     if _os_pm is not None:
         _package_managers[_os_pm.name()] = _os_pm
@@ -100,7 +90,7 @@ def init():
             pkg_info = _os_pm.get_info(pkg.os)
 
         if not pkg_info.installed and pkg.which:
-            if _sh(f'which {pkg.which}'):
+            if shell(f'which {pkg.which}'):
                 pkg_info = PackageInfo('', '', True, False)
 
         satisfied = False
@@ -116,7 +106,7 @@ def init():
                     if not p.is_absolute():
                         p = mf.ztk_base_dir / p
 
-                    _pipx_local.install_local(pk, p.resolve())
+                    _pipx_local.install_local(pk, p.expanduser().resolve())
                     satisfied = True
                 elif _os_pm.name() in pkg.fields:
                     _os_pm.install(pkg.fields[_os_pm.name()])
@@ -129,7 +119,7 @@ def init():
                 print(f'Failed to install {pk} with {pkg_info.package_manager} ({pkg_info.name}): {e}')
                 satisfied = False
         elif pkg_info.has_update and pkg_info.package_manager in _package_managers:
-            # ToDo: Make this work for more than just pipx local
+            # ToDo: Make this work for more than just pipx local, and ask in those cases
             pm = _package_managers[pkg_info.package_manager]
 
             if pm.can_update():
@@ -157,7 +147,7 @@ def init():
             if mp.required:
                 any_required = True
 
-            details = mp.details(_package_manager).replace("\t", "\n\t\t")
+            details = mp.details(_cfg.pkg_mgr).replace("\t", "\n\t\t")
             print(f'\t{pk}:\t{"REQUIRED" if mp.required else ""}\n\t\t{details}')
 
         if any_required:

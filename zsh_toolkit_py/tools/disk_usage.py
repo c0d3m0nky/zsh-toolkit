@@ -8,12 +8,12 @@ from multiprocessing import Pool
 from typing import List, Tuple, Iterator, Dict, Any, Callable
 from prettytable import PrettyTable, PLAIN_COLUMNS
 
-from cli_args import BaseTap
+from zsh_toolkit_py.shared.cli_args import BaseTap
 
-from utils import pretty_size, int_safe, ShellColors, truncate, distinct, human_int
-from logger import Logger
+from zsh_toolkit_py.shared.utils import pretty_size, int_safe, ShellColors, truncate, distinct, human_int
+from zsh_toolkit_py.shared.logger import Logger
 
-from disk_usage_models import Dir, State, Field, Grid, BareStat, Stat
+from zsh_toolkit_py.models.disk_usage import Dir, State, Field, Grid, BareStat, Stat
 
 
 def get_term_cols():
@@ -32,7 +32,7 @@ _field_choices = [f for f in _fields.keys() if f != 'size']
 
 
 class Args(BaseTap):
-    root: Path = Path('./')
+    root: Path
     fields: List[str]
     sort: str
     sort_reversed: bool
@@ -88,7 +88,7 @@ class Args(BaseTap):
                     if line:
                         lp = Path(line.strip())
                         if lp.is_dir():
-                            self.exclude_folders.append(lp.resolve())
+                            self.exclude_folders.append(lp.expanduser().resolve())
 
 
 _args: Args
@@ -97,7 +97,7 @@ _name_min_width = 17
 
 
 def exclude_dir(d: Path, args: Args) -> bool:
-    return (args.exclude_hidden and d.name.startswith('.')) or d.resolve() in args.exclude_folders or d.is_mount() or d.is_symlink()
+    return (args.exclude_hidden and d.name.startswith('.')) or d.expanduser().resolve() in args.exclude_folders or d.is_mount() or d.is_symlink()
 
 
 def walk_dir(tgt_dir: Path, state: State, log: Logger, args: Args) -> Iterator[Tuple[Path, List[Path]]]:
@@ -367,7 +367,7 @@ def main():
 
     try:
         _args = Args().parse_args()
-        state = State(_args.root.resolve(), BareStat('./'), BareStat('Total'))
+        state = State(_args.root.expanduser().resolve(), BareStat('./'), BareStat('Total'))
 
         sorter: Callable[[Stat], Any]
 

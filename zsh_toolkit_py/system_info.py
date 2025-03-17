@@ -4,10 +4,12 @@ import re
 from pathlib import Path
 from typing import Union, Dict, List, Generator, Tuple
 
+from init_models import SystemInfo
+
 
 # region bootstrapping
 
-def read_lines(file_path: Path) -> Generator[str, None, None]:
+def _read_lines(file_path: Path) -> Generator[str, None, None]:
     if file_path.exists():
         with file_path.open('r') as f:
             for l in f:
@@ -82,7 +84,7 @@ class OsRelease:
     def __init__(self):
         self.fields = {}
 
-        for l in read_lines(Path('/etc/os-release')):
+        for l in _read_lines(Path('/etc/os-release')):
             m = self._re.match(l)
 
             if m:
@@ -112,7 +114,7 @@ class CpuInfo:
         self.model = InfoFileField()
         self.cpu_count = None
 
-        for l in read_lines(Path('/proc/cpuinfo')):
+        for l in _read_lines(Path('/proc/cpuinfo')):
             m = self._re.match(l)
 
             if m:
@@ -131,7 +133,7 @@ class CpuInfo:
 
 # endregion
 
-exports: Dict[str, Union[str, int]] = {}
+
 basic_distro_checks: Dict[str, Tuple[str, str, Union[str, None]]] = {
     'arch': ('=', 'arch', 'pacman'),
     'alpine': ('=', 'alpine', 'apk'),
@@ -142,19 +144,21 @@ basic_distro_checks: Dict[str, Tuple[str, str, Union[str, None]]] = {
 }
 
 
-def get_info():
+def get_system_info() -> SystemInfo:
+    r = SystemInfo()
+
     if platform.system() == 'Linux':
         osr = OsRelease()
         cpu = CpuInfo()
 
         if cpu.cpu_count:
-            exports['ZSHCOM__cpu_cores'] = cpu.cpu_count
+            r.hardware.cpu_cores = cpu.cpu_count
 
         if cpu.model and cpu.model.is_match(r'model\s+:\s+raspberry'):
-            exports['ZSHCOM__known_hw'] = 'pi'
+            r.hardware.code = 'pi'
 
         if Path('/.dockerenv').exists():
-            exports['ZSHCOM__known_hw'] = 'docker'
+            r.hardware.code = 'docker'
 
         def check_distro() -> bool:
             for kk in basic_distro_checks:
@@ -162,15 +166,15 @@ def get_info():
 
                 if d[0] == '=':
                     if kk == osr.id or kk == osr.like:
-                        exports['ZSHCOM__known_os'] = d[1]
+                        r.os.code = d[1]
                         if d[2] is not None:
-                            exports['ZSHCOM__pkg_man'] = d[2]
+                            r.os.pkg_mgr = d[2]
                         return True
                 elif d[0] == '*':
                     if kk in osr.id or kk in osr.like:
-                        exports['ZSHCOM__known_os'] = d[1]
+                        r.os.code = d[1]
                         if d[2] is not None:
-                            exports['ZSHCOM__pkg_man'] = d[2]
+                            r.os.pkg_mgr = d[2]
                         return True
 
             return False
@@ -180,12 +184,8 @@ def get_info():
             pass
 
     elif platform.system() == 'Windows':
-        exports['ZSHCOM__known_os'] = 'win'
+        r.os.code = 'win'
     elif platform.system() == 'Darwin':
-        exports['ZSHCOM__known_os'] = 'osx'
+        r.os.code = 'osx'
 
-    for k, v in exports.items():
-        print(f'export {k}={v}')
-
-
-get_info()
+    return r
