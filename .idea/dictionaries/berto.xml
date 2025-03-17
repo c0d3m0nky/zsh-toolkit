@@ -1,17 +1,36 @@
 <component name="ProjectDictionaryState">
   <dictionary name="berto">
     <words>
+      <w>amazonaws</w>
+      <w>bimg</w>
       <w>cpuinfo</w>
       <w>dbyte</w>
+      <w>decomp</w>
       <w>devshm</w>
       <w>dockerenv</w>
       <w>dockur</w>
+      <w>downcase</w>
       <w>exts</w>
+      <w>fack</w>
+      <w>lstrip</w>
       <w>mins</w>
+      <w>noconfirm</w>
+      <w>noreload</w>
       <w>oserror</w>
+      <w>psack</w>
+      <w>rclsa</w>
+      <w>repdb</w>
+      <w>rmrf</w>
+      <w>robbyrussell</w>
+      <w>rstrip</w>
       <w>runusr</w>
+      <w>rxmv</w>
+      <w>sevz</w>
       <w>suff</w>
+      <w>tonumber</w>
       <w>unraid</w>
+      <w>usezsh</w>
+      <w>xmllint</w>
     </words>
   </dictionary>
 </component>

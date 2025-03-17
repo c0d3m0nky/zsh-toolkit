@@ -1,21 +1,19 @@
 import re
 import subprocess
-from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Union
+from typing import Dict, Union, List, Tuple
 
-ShellCall = Callable[[str], str]
+from zsh_toolkit_py.shared.utils import shell
 
 
-def _sh(cmd: str, check=False, suppress_error=False) -> str:
-    if suppress_error:
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, check=check)
-    else:
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True, check=check)
+def _sudo(cmd: List[str]) -> Tuple[int, str, str]:
+    cmd = ['sudo'] + cmd
+    p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    data = p.communicate()
 
-    return res.stdout.decode('utf-8').strip()
+    return (p.returncode, data[0].decode(), data[1].rstrip(b'\n').decode())
 
 
 class PackageManagers(Enum):
@@ -66,16 +64,13 @@ class Pacman(PackageManager):
     def install(self, pkg_name: str) -> None:
         self.log(f'installing {pkg_name} (requires sudo)')
 
-        cmd = ['sudo', 'pacman', "--noconfirm", '-S', pkg_name]
-        p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        data = p.communicate()
-        data = {"code": p.returncode, "stdout": data[0].decode(), "stderr": data[1].rstrip(b'\n').decode()}
+        r = _sudo(['pacman', "--noconfirm", '-S', pkg_name])
 
-        if data["code"] != 0:
-            raise Exception("Failed to install: {0}".format(data["stderr"]))
+        if r[0] != 0:
+            raise Exception(f'Failed to install: {r[2]}')
 
     def get_info(self, pkg_name: str) -> PackageInfo:
-        r = _sh(f'pacman -Q {pkg_name} && echo good', suppress_error=True)
+        r = shell(f'pacman -Q {pkg_name} && echo good', suppress_error=True)
 
         if r.endswith('good'):
             return PackageInfo(self.name(), pkg_name, True, False)
@@ -95,16 +90,13 @@ class Apt(PackageManager):
     def install(self, pkg_name: str) -> None:
         self.log(f'installing {pkg_name} (requires sudo)')
 
-        cmd = ['sudo', 'apt', 'install', '-y', pkg_name]
-        p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        data = p.communicate()
-        data = {"code": p.returncode, "stdout": data[0].decode(), "stderr": data[1].rstrip(b'\n').decode()}
+        r = _sudo(['apt', 'install', '-y', pkg_name])
 
-        if data["code"] != 0:
-            raise Exception("Failed to install: {0}".format(data["stderr"]))
+        if r[0] != 0:
+            raise Exception(f'Failed to install: {r[2]}')
 
     def get_info(self, pkg_name: str) -> PackageInfo:
-        r = _sh(f'apt list {pkg_name}', suppress_error=True)
+        r = shell(f'apt list {pkg_name}', suppress_error=True)
 
         if self._installed_rx.findall(r):
             return PackageInfo(self.name(), pkg_name, True, False)
@@ -112,7 +104,7 @@ class Apt(PackageManager):
             return PackageInfo(self.name(), pkg_name, False, False)
 
 
-_pipx_list_re = re.compile(r'^([^\s]+)\s+(.+)$')
+_pipx_list_re = re.compile(r'^(\S+)\s+(.+)$')
 
 
 class PipX(PackageManager):
@@ -132,7 +124,7 @@ class PipX(PackageManager):
     def install(self, pkg_name: str) -> None:
         self.log(f'installing {pkg_name}')
 
-        _sh(f'pipx install {pkg_name} --python="{self._python_bin}"m')
+        shell(f'pipx install {pkg_name} --python="{self._python_bin}"m')
 
     def can_update(self) -> bool:
         return True
@@ -140,11 +132,11 @@ class PipX(PackageManager):
     def update(self, pkg_name: str) -> None:
         self.log(f'Upgrading {pkg_name}')
 
-        _sh(f'pipx upgrade {pkg_name}')
+        shell(f'pipx upgrade {pkg_name}')
 
     def get_info(self, pkg_name: str) -> PackageInfo:
         if self._pipx_packages is None:
-            res = _sh('pipx list --short')
+            res = shell('pipx list --short')
 
             for ln in res.splitlines():
                 m: re.Match = re.search(_pipx_list_re, ln)
@@ -185,11 +177,11 @@ class PipXLocal(PipX):
         return PackageManagers.pipx_local.value
 
     def install(self, pkg_name: str) -> None:
-        raise 'PipXLocal doesn\'t support this functionality'
+        raise "PipXLocal doesn't support this functionality"
 
     def install_local(self, pkg_name: str, path: Path) -> None:
         self.log(f'installing {pkg_name}')
-        _sh(f'pipx install -e "{path.as_posix()}" --python="{self._python_bin}"')
+        shell(f'pipx install -e "{path.as_posix()}" --python="{self._python_bin}"')
 
 
 _constructors = {

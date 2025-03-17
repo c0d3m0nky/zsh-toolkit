@@ -163,14 +163,14 @@ def get_densities(root: Path,
 
     if _args.summary:
         files = []
-        fmax = 0
+        f_max = 0
 
         for k in res:
             files += res[k].files
-            if fmax < res[k].max:
-                fmax = res[k].max
+            if f_max < res[k].max:
+                f_max = res[k].max
 
-        return Result(fmax, avg_sizes(files))
+        return Result(f_max, avg_sizes(files))
     else:
         for k in res:
             res[k].files = avg_sizes(res[k].files)

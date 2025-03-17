@@ -11,7 +11,6 @@ A collection of bash & python scripts I use as helpers in zsh
 * Prevent changes to pack from being committed without updating version
 * Expand magicFiles.sh to all
 * Write tests
-  * magicfiles.sh and magic_files.py are in sync
   * Each py pack applet
 * Add to install script
   * Check for zsh

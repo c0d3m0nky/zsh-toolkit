@@ -6,6 +6,7 @@ function ztk-debug() {
   echo Vars
   echo ''
 
+  # shellcheck disable=SC2016
   printenv | ack '^(ZSHCOM__(?!mf_)[^ =]+)=(.+)$' --output '$1~$2' | sort | column -t -s '~'
 
   echo ''
@@ -13,6 +14,7 @@ function ztk-debug() {
   echo ''
 
   {
+    # shellcheck disable=SC2016
     for mf in $(printenv | ack '^(ZSHCOM__mf_[^ =]+)=(.+)$' --output '$1~$2')
     do
       var=${mf%~*};
@@ -46,7 +48,7 @@ function ztk-debug() {
       msg="$msg\n\ZSHCOM__pkg_mgr not set"
     fi
 
-    possibleIssues+="$msg"
+    possibleIssues+=("$msg")
   fi
 
   if (( ${#possibleIssues[@]} > 0 )); then
@@ -55,6 +57,7 @@ function ztk-debug() {
     echo "${zcRed}!!!!! Possible Issues !!!!!${zcOFF}"
     echo ''
 
+    # shellcheck disable=SC2128
     for e in $possibleIssues; do
       echo "$e"
     done

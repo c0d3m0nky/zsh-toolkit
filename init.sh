@@ -42,10 +42,13 @@ if [[ -n "$ZSHCOM" ]]; then
     if [[ -z "$ZSHCOM_PYTHON" ]]
     then
       pyLibLoc="$(dirname "$(which python3)")"
+      # shellcheck disable=SC2086
+      # shellcheck disable=SC2016
       pyVers=$(find $pyLibLoc/python*.* -type f -exec basename {} \; | ack '^python\d\.\d+$' --output '$1' | sort -Vr)
 
       for p in $pyVers
       do
+        # shellcheck disable=SC2086
         ZSHCOM_PYTHON=$(which python$p)
         if [[ -n $ZSHCOM_PYTHON ]]
         then

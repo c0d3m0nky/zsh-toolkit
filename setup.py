@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages, find_namespace_packages
+from setuptools import setup, find_namespace_packages
 from zsh_toolkit_py.shared.constants import zsh_toolkit_version
 
 setup(
@@ -9,12 +9,14 @@ setup(
     packages=find_namespace_packages(),
     py_modules=[
         # shared
-        'zsh_toolkit_py.shared.file_utils', 'zsh_toolkit_py.shared.utils', 'zsh_toolkit_py.shared.magic_files', 'zsh_toolkit_py.shared.logger', 'zsh_toolkit_py.shared.string_dbyte_utils', 'zsh_toolkit_py.shared.cli_args',
+        'zsh_toolkit_py.shared.file_utils', 'zsh_toolkit_py.shared.utils', 'zsh_toolkit_py.shared.magic_files', 'zsh_toolkit_py.shared.logger',
+        'zsh_toolkit_py.shared.string_dbyte_utils', 'zsh_toolkit_py.shared.cli_args',
         # models
-        'zsh_toolkit_py.models.disk_usage_models', 'zsh_toolkit_py.models.dockur',
+        'zsh_toolkit_py.models.disk_usage', 'zsh_toolkit_py.models.dockur',
         # tools
-        'zsh_toolkit_py.tools.update', 'zsh_toolkit_py.tools.flatten', 'zsh_toolkit_py.tools.rxmv', 'zsh_toolkit_py.tools.decomp', 'zsh_toolkit_py.tools.disk_usage', 'zsh_toolkit_py.tools.little_guys', 'zsh_toolkit_py.tools.dockur',
-        'zsh_toolkit_py.tools.replace_double_byte_chars', 'zsh_toolkit_py.tools.git_auto_commit', 'zsh_toolkit_py.tools.disorder'
+        'zsh_toolkit_py.tools.update', 'zsh_toolkit_py.tools.flatten', 'zsh_toolkit_py.tools.rxmv', 'zsh_toolkit_py.tools.decomp',
+        'zsh_toolkit_py.tools.disk_usage', 'zsh_toolkit_py.tools.little_guys', 'zsh_toolkit_py.tools.dockur', 'zsh_toolkit_py.tools.replace_double_byte_chars',
+        'zsh_toolkit_py.tools.git_auto_commit', 'zsh_toolkit_py.tools.disorder'
     ],
     entry_points={
         'console_scripts': [

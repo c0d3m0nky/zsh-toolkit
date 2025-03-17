@@ -2,7 +2,7 @@
 
 if [[ -z $ZSHCOM_DSH_USEZSH ]]; then ZSHCOM_DSH_USEZSH=''; fi
 
-dockerShell() {
+function dockerShell() {
 	if [[ $ZSHCOM_DSH_USEZSH == *${1}* ]]; then
 		dockerZsh "$1"
 	else
@@ -32,6 +32,8 @@ perfwatch() {
 function shellColors() {
   for i in {0..255};
   do
+    # shellcheck disable=SC2296
+    # shellcheck disable=SC2298
     print -Pn "%K{$i}  %k%F{$i}${(l:3::0:)i}%f " ${${(M)$((i%6)):#3}:+$'\n'};
   done
 
@@ -41,6 +43,7 @@ function shellColors() {
   echo ''
 
   for zc in $(printenv | grep -P 'zc[A-Z][a-z]+=' | grep -Po 'zc[A-Z][a-z]+'); do
+    # shellcheck disable=SC2086
     eval echo -e "\$$zc" $zc "\$zcOFF";
   done
 }
@@ -129,7 +132,7 @@ function touchFiles() {
 }
 
 function rclsa() {
-  rclone lsd --max-depth 1 $@;
+  rclone lsd --max-depth 1 "$@";
   echo '---'
-  rclone lsl --max-depth 1 $@;
+  rclone lsl --max-depth 1 "$@";
 }

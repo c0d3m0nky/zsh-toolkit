@@ -9,7 +9,6 @@ import tempfile
 from zsh_toolkit_py.shared.cli_args import BaseTap, PathArg
 
 _warned = False
-
 _feat_sevz = False
 
 # noinspection PyBroadException
