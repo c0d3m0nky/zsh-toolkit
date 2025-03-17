@@ -6,7 +6,7 @@ from pathlib import Path
 from zipfile import ZipFile
 import tempfile
 
-from cli_args import BaseTap, PathArg
+from zsh_toolkit_py.shared.cli_args import BaseTap, PathArg
 
 _warned = False
 
@@ -65,9 +65,9 @@ OpenArchive = Callable[[Path], Archive]
 
 
 class Args(BaseTap):
-    root: Path = Path('./')
+    root: Path = Path('../pack/')
     glob: str = '*.*'
-    output: Path = Path('./')
+    output: Path = Path('../pack/')
     force_root: bool = False
 
     def configure(self) -> None:

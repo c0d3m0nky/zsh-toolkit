@@ -6,8 +6,8 @@ from pathlib import Path
 from tqdm import tqdm
 from typing import Dict, Pattern, Callable, List, Union
 
-from utils import pretty_size
-from cli_args import BaseTap
+from zsh_toolkit_py.shared.utils import pretty_size
+from zsh_toolkit_py.shared.cli_args import BaseTap
 
 pprint = lambda s: print(json.dumps(s, indent=2, sort_keys=True))
 

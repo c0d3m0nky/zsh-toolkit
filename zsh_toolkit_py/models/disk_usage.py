@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import List, Iterator, Dict, Self, Union, Callable
 
-from utils import ShellColors, is_in
+from zsh_toolkit_py.shared.utils import ShellColors, is_in
 
 
 class Stat:

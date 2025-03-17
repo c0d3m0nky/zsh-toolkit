@@ -1,19 +1,22 @@
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-import os
 import json
 import shutil
-
 from typing import Union, Dict
 
-from pack.constants import zsh_toolkit_version
+sys.path.append(Path(__file__).parent.parent.resolve().as_posix())
+
+from shared.config import Config
+
+from shared.constants import zsh_toolkit_version
 from pkgmgr.models import InitData
 
-import pack.magic_files as mf
+import shared.magic_files as mf
 from pkgmgr.installers import PipX, PackageManager, PackageInfo, PipXLocal, package_manager_factory
-from pack.utils import shell
+from shared.utils import shell
 
-ZSHCOM_PYTHON = os.environ.get("ZSHCOM_PYTHON")
+_cfg = Config()
 
 
 def set_parent_var(var: str, value: str):
@@ -25,12 +28,8 @@ def _pkg_check_os() -> bool:
     return True
 
 
-# ToDo: Get rid of this
-_os = os.environ.get('ZSHCOM__known_os')
-_package_manager = os.environ.get('ZSHCOM__pkg_man')
-
-_pipx = PipX(zsh_toolkit_version, ZSHCOM_PYTHON)
-_pipx_local = PipXLocal(zsh_toolkit_version, ZSHCOM_PYTHON)
+_pipx = PipX(zsh_toolkit_version, _cfg.python_bin.as_posix())
+_pipx_local = PipXLocal(zsh_toolkit_version, _cfg.python_bin.as_posix())
 _os_pm: Union[PackageManager, None] = None
 
 _package_managers: Dict[str, PackageManager] = {
@@ -38,8 +37,8 @@ _package_managers: Dict[str, PackageManager] = {
     _pipx_local.name(): _pipx_local
 }
 
-if _package_manager:
-    _os_pm = package_manager_factory(_package_manager)
+if _cfg.pkg_mgr:
+    _os_pm = package_manager_factory(_cfg.pkg_mgr)
 
     if _os_pm is not None:
         _package_managers[_os_pm.name()] = _os_pm
@@ -148,7 +147,7 @@ def init():
             if mp.required:
                 any_required = True
 
-            details = mp.details(_package_manager).replace("\t", "\n\t\t")
+            details = mp.details(_cfg.pkg_mgr).replace("\t", "\n\t\t")
             print(f'\t{pk}:\t{"REQUIRED" if mp.required else ""}\n\t\t{details}')
 
         if any_required:

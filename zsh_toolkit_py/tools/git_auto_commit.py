@@ -3,11 +3,11 @@ from tap import Tap
 from pathlib import Path
 from datetime import datetime
 
-from cli_args import PathArg
+from zsh_toolkit_py.shared.cli_args import PathArg
 
 
 class Args(Tap):
-    repository: Path = Path('./')
+    repository: Path = Path('../pack/')
 
     def configure(self) -> None:
         self.description = 'Auto-Commit Git Repository'

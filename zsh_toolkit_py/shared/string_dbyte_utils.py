@@ -6,7 +6,7 @@ from typing import Dict
 
 import emoji
 
-from utils import ShellColors, Ask
+from zsh_toolkit_py.shared.utils import ShellColors, Ask
 
 _ask = Ask()
 

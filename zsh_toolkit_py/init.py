@@ -1,18 +1,21 @@
 import argparse
 import json
 import shutil
+import sys
 from pathlib import Path
 from typing import Tuple, List
 
-from pack.config import Config
-from models import SystemInfo, marshal_system_info
+sys.path.append(Path(__file__).parent.parent.resolve().as_posix())
+
+import shared.config as config
+from init_models import SystemInfo, marshal_system_info
 
 
 def _print_export(k: str, v: str | int):
     print(f'export {k}={v}')
 
 
-def config_exports(c: Config):
+def config_exports(c: config.Config):
     # noinspection PyProtectedMember
     for k, e in c._get_export_funcs().items():
         if type(e.func) is property:
@@ -29,15 +32,15 @@ def config_exports(c: Config):
 
 
 def magic_files():
-    import pack.magic_files as mf
+    import shared.magic_files as mf
 
-    mfs: List[Tuple[str, Path]] = [t for t in [(a, getattr(mf, a)) for a in dir(mf) if not a.startswith('_')] if isinstance(t[1], Path)]
+    mfs: List[Tuple[str, Path]] = [t for t in [(a, getattr(mf, a)) for a in dir(mf) if not a.startswith('_') and not a.startswith('ztk_')] if isinstance(t[1], Path)]
 
     for t in mfs:
         _print_export(f'ZSHCOM__mf_{t[0]}', t[1].as_posix())
 
 
-def system_info(cfg: Config):
+def system_info(cfg: config.Config):
     cache = cfg.cache / 'system.json'
     update_cache = False
     s: SystemInfo | None = None
@@ -79,7 +82,7 @@ def system_info(cfg: Config):
 
 
 def _dump_exports(args, zshcom: Path):
-    c = Config(_zshcom)
+    c = config.Config()
 
     config_exports(c)
     magic_files()

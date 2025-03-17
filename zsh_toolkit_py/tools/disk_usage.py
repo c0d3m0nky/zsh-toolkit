@@ -8,12 +8,12 @@ from multiprocessing import Pool
 from typing import List, Tuple, Iterator, Dict, Any, Callable
 from prettytable import PrettyTable, PLAIN_COLUMNS
 
-from cli_args import BaseTap
+from zsh_toolkit_py.shared.cli_args import BaseTap
 
-from utils import pretty_size, int_safe, ShellColors, truncate, distinct, human_int
-from logger import Logger
+from zsh_toolkit_py.shared.utils import pretty_size, int_safe, ShellColors, truncate, distinct, human_int
+from zsh_toolkit_py.shared.logger import Logger
 
-from disk_usage_models import Dir, State, Field, Grid, BareStat, Stat
+from zsh_toolkit_py.models.disk_usage import Dir, State, Field, Grid, BareStat, Stat
 
 
 def get_term_cols():
@@ -32,7 +32,7 @@ _field_choices = [f for f in _fields.keys() if f != 'size']
 
 
 class Args(BaseTap):
-    root: Path = Path('./')
+    root: Path = Path('../pack/')
     fields: List[str]
     sort: str
     sort_reversed: bool

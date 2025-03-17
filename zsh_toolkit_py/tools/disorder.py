@@ -6,7 +6,7 @@ from typing import List, Dict, Generator, Callable
 from random import uniform
 from secrets import randbelow
 
-from cli_args import BaseTap, RegExArg
+from zsh_toolkit_py.shared.cli_args import BaseTap, RegExArg
 
 _commands: List[str] = []
 

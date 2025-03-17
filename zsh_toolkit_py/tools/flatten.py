@@ -4,7 +4,7 @@ import os
 import subprocess
 from pathlib import Path
 
-import string_dbyte_utils
+import zsh_toolkit_py.shared.string_dbyte_utils as string_dbyte_utils
 
 if os.environ.get('ZSHCOM__feat_rclone') != 'true':
     print('rclone not installed')
@@ -13,8 +13,8 @@ if os.environ.get('ZSHCOM__feat_rclone') != 'true':
 import rclone
 from typing import List, Callable, Tuple, TypeVar, Union
 
-from cli_args import BaseTap, RegExArg
-from utils import Ask
+from zsh_toolkit_py.shared.cli_args import BaseTap, RegExArg
+from zsh_toolkit_py.shared.utils import Ask
 
 _ask = Ask()
 

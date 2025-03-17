@@ -4,7 +4,7 @@ from pathlib import Path
 import re
 import shutil
 
-from cli_args import BaseTap, RegExArg
+from zsh_toolkit_py.shared.cli_args import BaseTap, RegExArg
 
 
 class Args(BaseTap):

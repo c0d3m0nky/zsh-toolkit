@@ -80,7 +80,7 @@ if [[ -n "$ZSHCOM" ]]; then
       else
         echo "$e"
       fi
-    done < <("${ZSHCOM_PYTHON:?}" "${ZSHCOM:?}/py/init.py" "$ZSHCOM" --source)
+    done < <("${ZSHCOM_PYTHON:?}" "${ZSHCOM:?}/zsh_toolkit_py/init.py" "$ZSHCOM" --source)
 
     # ToDo: Hopefully one day shellcheck will use this directive to check for assignment and avoid SC2154 everywhere https://github.com/koalaman/shellcheck/issues/2956
     # shellcheck source=cleanup.sh
@@ -104,7 +104,7 @@ if [[ -n "$ZSHCOM" ]]; then
       source "$ZSHCOM__basedir/update.sh"
 
       _trace dependencies.py
-      $ZSHCOM_PYTHON "$ZSHCOM__basedir/py/dependencies.py"
+      $ZSHCOM_PYTHON "$ZSHCOM__basedir/zsh_toolkit_py/dependencies.py"
       if [[ -f "${ZSHCOM__mf_trigger_update:?}" ]]
       then
         rm "$ZSHCOM__mf_trigger_update"

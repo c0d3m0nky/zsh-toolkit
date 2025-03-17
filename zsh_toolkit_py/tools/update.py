@@ -4,9 +4,9 @@ import re
 
 from git import Repo
 
-from utils import parse_bool, ShellColors
-from cli_args import BaseTap
-import magic_files as mf
+from zsh_toolkit_py.shared.utils import parse_bool, ShellColors
+from zsh_toolkit_py.shared.cli_args import BaseTap
+import zsh_toolkit_py.shared.magic_files as mf
 
 
 class Args(BaseTap):

@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 from typing import Union, Dict, List, Generator, Tuple
 
-from models import SystemInfo
+from init_models import SystemInfo
 
 
 # region bootstrapping

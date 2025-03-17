@@ -6,7 +6,7 @@
       "required": true
     },
     "zsh_toolkit_py": {
-      "pipx_local": "./py/pack",
+      "pipx_local": "./",
       "required": true
     },
     "yq": {

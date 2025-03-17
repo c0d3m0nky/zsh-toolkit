@@ -2,12 +2,14 @@ from typing import List
 from itertools import chain
 
 # noinspection PyUnresolvedReferences
-from pack.config import Config
+import zsh_toolkit_py.shared.config as config
 
-_config = Config()
+_config = config.Config()
 
 if not _config.transient or not _config.transient.exists():
     raise Exception('Could not determine transient dir location')
+
+ztk_base_dir = _config.base_dir
 
 dependencies_checked = _config.transient / '.state_dependencies_checked'
 update_dependencies = _config.transient / '.state_update_dependencies'
