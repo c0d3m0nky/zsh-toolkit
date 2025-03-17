@@ -10,9 +10,8 @@ class Pkg:
     which: str
     required: bool
 
-    # noinspection PyShadowingNames
-    def __init__(self, id: str, fields: Dict[str, str]) -> None:
-        self.id = id
+    def __init__(self, pkg_id: str, fields: Dict[str, str]) -> None:
+        self.id = pkg_id
         self.required = fields['required'] if 'required' in fields else False
         self.os = fields['os'] if 'os' in fields else None
         self.pipx = fields['pipx'] if 'pipx' in fields else None

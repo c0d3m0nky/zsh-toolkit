@@ -18,10 +18,7 @@ def _get_image_digest_hash(data: Union[Image, RegistryData]) -> str:
     if isinstance(data, Image):
         digest = data.attrs.get("RepoDigests")
 
-        if digest:
-            return digest[0].split('@')[1]
-        else:
-            ''
+        return digest[0].split('@')[1] if digest else None
     else:
         return data.attrs['Descriptor']['digest']
 

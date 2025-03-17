@@ -19,10 +19,17 @@ if _ztk_file_config is None:
         _ztk_file_config = {}
 
 
-@dataclass
 class _CP:
     file_key: str | None
     env_keys: List[str] | None
+
+    def __init__(self, file_key: str | None, env_keys: List[str] | str) -> None:
+        self.file_key = file_key
+
+        if type(env_keys) is str:
+            self.env_keys = [env_keys]
+        else:
+            self.env_keys = env_keys
 
 
 _ExportValMutator = Callable[[Any], str]

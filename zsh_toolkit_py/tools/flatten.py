@@ -159,6 +159,7 @@ class Args(BaseTap):
             self.delimiter = '_'
 
         self.file_rename: str
+        # noinspection PyTypeChecker
         self.file_rename = PathPartsRename(self.file_rename, self.delimiter, None)
 
     def error(self, message):

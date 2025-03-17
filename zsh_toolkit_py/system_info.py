@@ -12,8 +12,8 @@ from init_models import SystemInfo
 def _read_lines(file_path: Path) -> Generator[str, None, None]:
     if file_path.exists():
         with file_path.open('r') as f:
-            for l in f:
-                yield l.strip()
+            for ln in f:
+                yield ln.strip()
 
 
 class InfoFileField:
@@ -84,8 +84,8 @@ class OsRelease:
     def __init__(self):
         self.fields = {}
 
-        for l in _read_lines(Path('/etc/os-release')):
-            m = self._re.match(l)
+        for ln in _read_lines(Path('/etc/os-release')):
+            m = self._re.match(ln)
 
             if m:
                 self.fields[m.group(1).lower()] = m.group(2).strip()
@@ -114,8 +114,8 @@ class CpuInfo:
         self.model = InfoFileField()
         self.cpu_count = None
 
-        for l in _read_lines(Path('/proc/cpuinfo')):
-            m = self._re.match(l)
+        for ln in _read_lines(Path('/proc/cpuinfo')):
+            m = self._re.match(ln)
 
             if m:
                 k = m.group(1).lower()

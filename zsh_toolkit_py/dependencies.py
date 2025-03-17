@@ -7,14 +7,14 @@ from typing import Union, Dict
 
 sys.path.append(Path(__file__).parent.parent.resolve().as_posix())
 
-from shared.config import Config
+from shared.config import Config  # nopep8
 
-from shared.constants import zsh_toolkit_version
-from pkgmgr.models import InitData
+from shared.constants import zsh_toolkit_version  # nopep8
+from pkgmgr.models import InitData  # nopep8
 
-import shared.magic_files as mf
-from pkgmgr.installers import PipX, PackageManager, PackageInfo, PipXLocal, package_manager_factory
-from shared.utils import shell
+import shared.magic_files as mf  # nopep8
+from pkgmgr.installers import PipX, PackageManager, PackageInfo, PipXLocal, package_manager_factory  # nopep8
+from shared.utils import shell  # nopep8
 
 _cfg = Config()
 

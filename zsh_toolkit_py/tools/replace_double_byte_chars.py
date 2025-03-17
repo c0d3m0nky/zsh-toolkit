@@ -36,8 +36,7 @@ def main():
         repl = string_dbyte_utils.replace_dbl_byte_chars(fso.name)
 
         if _args.remove_filler_chars:
-            # ToDo: this is prob broken
-            repl = string_dbyte_utils.remove_consecutive_filler_chars(repl)
+            repl = string_dbyte_utils.remove_consecutive_filler_chars(repl.clean)
 
         if repl.clean != fso.name:
             nf = fso.parent / repl.clean
