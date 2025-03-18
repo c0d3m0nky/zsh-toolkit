@@ -83,7 +83,7 @@ if [[ -n "$ZSHCOM" ]]; then
       else
         echo "$e"
       fi
-    done < <("${ZSHCOM_PYTHON:?}" "${ZSHCOM:?}/zsh_toolkit_py/init.py" "$ZSHCOM" --source)
+    done < <("${ZSHCOM_PYTHON:?}" "${ZSHCOM:?}/zsh_toolkit_py/init.py" --source)
 
     # ToDo: Hopefully one day shellcheck will use this directive to check for assignment and avoid SC2154 everywhere https://github.com/koalaman/shellcheck/issues/2956
     # shellcheck source=cleanup.sh
