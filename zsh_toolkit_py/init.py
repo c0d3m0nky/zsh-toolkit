@@ -82,7 +82,7 @@ def system_info(cfg: config.Config):
 
 
 def _dump_exports():
-    c = config.Config()
+    c = config.Config(True)
 
     config_exports(c)
     magic_files()

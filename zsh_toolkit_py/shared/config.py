@@ -78,6 +78,10 @@ def detect_transient_candidates() -> Generator[Path, None, None]:
 
 
 class Config:
+    _sourced: bool
+
+    def __init__(self, sourced: bool = False) -> None:
+        self._sourced = sourced
 
     @staticmethod
     def _get_export_funcs() -> Dict[str, Exporter]:
@@ -135,7 +139,13 @@ class Config:
     @_export('ZSHCOM__basedir', lambda v: v.as_posix())
     @property
     def base_dir(self) -> Path:
-        return (Path(__file__).expanduser().resolve().parent / '../../').resolve()
+        if self._sourced:
+            base_dir = (Path(__file__).expanduser().resolve().parent / '../../').resolve()
+            os.environ['ZSHCOM__basedir'] = base_dir.as_posix()
+
+            return base_dir
+        else:
+            return self._get_path(_CP(None, 'ZSHCOM__basedir'))
 
     @_export('ZSHCOM_PYTHON', lambda v: v.as_posix())
     @property
