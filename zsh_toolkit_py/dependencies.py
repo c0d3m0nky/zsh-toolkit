@@ -55,7 +55,6 @@ def init():
 
             if resp.lower() == 'y':
                 mf.trigger_update.touch()
-                mf.trigger_re_source.touch()
                 return
 
     if (mf.dependencies_checked.exists()

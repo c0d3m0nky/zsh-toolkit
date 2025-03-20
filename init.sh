@@ -112,7 +112,11 @@ if [[ -n "$ZSHCOM" ]]; then
       then
         rm "$ZSHCOM__mf_trigger_update"
         ztk-update
-        touch "$ZSHCOM__mf_break_init"
+        if [[ -f "${ZSHCOM__mf_repo_updated:?}" ]]
+        then
+          # sourcing again to trigger _post_ztk-update
+          source "$ZSHCOM__basedir/update.sh"
+        fi
       fi
 
       if [[ ! -f "$ZSHCOM__mf_break_init" ]]

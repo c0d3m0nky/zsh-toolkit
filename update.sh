@@ -25,8 +25,6 @@ function _post_ztk-update() {
   echo "Re-sourcing $ZSHCOM__mf_init"
   # shellcheck disable=SC1090
   source "$ZSHCOM__mf_init"
-
-  touch "${ZSHCOM__mf_break_init:?}"
 }
 
 if [[ -f "$ZSHCOM__mf_repo_updated" ]]
