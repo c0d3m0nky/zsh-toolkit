@@ -16,7 +16,7 @@ setup(
         # tools
         'zsh_toolkit_py.tools.update', 'zsh_toolkit_py.tools.flatten', 'zsh_toolkit_py.tools.rxmv', 'zsh_toolkit_py.tools.decomp',
         'zsh_toolkit_py.tools.disk_usage', 'zsh_toolkit_py.tools.little_guys', 'zsh_toolkit_py.tools.dockur', 'zsh_toolkit_py.tools.replace_double_byte_chars',
-        'zsh_toolkit_py.tools.git_auto_commit', 'zsh_toolkit_py.tools.disorder'
+        'zsh_toolkit_py.tools.git_auto_commit', 'zsh_toolkit_py.tools.disorder', 'zsh_toolkit_py.tools.group_files'
     ],
     entry_points={
         'console_scripts': [
@@ -29,7 +29,8 @@ setup(
             'fack=zsh_toolkit_py.tools.little_guys:fack',
             'repdb=zsh_toolkit_py.tools.replace_double_byte_chars:main',
             'git_auto_commit=zsh_toolkit_py.tools.git_auto_commit:main',
-            'random=zsh_toolkit_py.tools.disorder:_main'
+            'random=zsh_toolkit_py.tools.disorder:_main',
+            'group=zsh_toolkit_py.tools.group_files:main'
         ],
     },
     install_requires=[

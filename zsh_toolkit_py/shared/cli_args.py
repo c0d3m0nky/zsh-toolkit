@@ -7,6 +7,18 @@ from tap import Tap
 
 TypeFunc = Callable[[Any], Any]
 
+RegExPartialBlurb = '(partial patterns will add "^.+" and/or ".+$")'
+
+
+# noinspection PyPep8Naming
+def RegExPartialArg(pattern: str) -> re.Pattern:
+    if not pattern.startswith('^'):
+        pattern = f'^.+{pattern}'
+    if not pattern.endswith('$'):
+        pattern = f'{pattern}.+$'
+
+    return re.compile(pattern, re.IGNORECASE)
+
 
 # noinspection PyPep8Naming
 def RegExArg(pattern: str) -> re.Pattern:

@@ -24,6 +24,7 @@ class Args(BaseTap):
 
         self.add_root('Move root')
         self.add_argument('destination', help='Folder to move to. Prefix with ! for regex replace')
+        # ToDo: Use RegExPartialArg?
         self.add_argument('pattern', type=RegExArg, help='Regex filter')
         self.add_flag('-i', '--invert-match', help='Treat pattern as exclude')
         self.add_flag('-f', '--files-only', help='Files only')
