@@ -57,7 +57,7 @@ def init():
                 return
 
     # sys.argv check for dev
-    force_update_dependencies = mf.update_dependencies.exists() or sys.argv[1] == 'force_update_dependencies'
+    force_update_dependencies = mf.update_dependencies.exists() or (len(sys.argv) > 1 and sys.argv[1] == 'force_update_dependencies')
 
     if (
             mf.dependencies_checked.exists()
