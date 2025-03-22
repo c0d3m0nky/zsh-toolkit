@@ -45,8 +45,7 @@ if _cfg.pkg_mgr:
 
 
 def init():
-    if not mf.repo_update_checked.exists() or datetime.fromtimestamp(mf.repo_update_checked.stat().st_mtime) < (
-            datetime.now() - timedelta(days=7)):
+    if not mf.repo_update_checked.exists() or datetime.fromtimestamp(mf.repo_update_checked.stat().st_mtime) < (datetime.now() - timedelta(days=7)):
         if shutil.which('_ztk-update') is None:
             print('ztk updater seems to be missing')
         else:
@@ -57,9 +56,14 @@ def init():
                 mf.trigger_update.touch()
                 return
 
-    if (mf.dependencies_checked.exists()
+    # sys.argv check for dev
+    force_update_dependencies = mf.update_dependencies.exists() or sys.argv[1] == 'force_update_dependencies'
+
+    if (
+            mf.dependencies_checked.exists()
             and datetime.fromtimestamp(mf.dependencies_checked.stat().st_mtime) > (datetime.now() - timedelta(hours=24))
-            and not mf.update_dependencies.exists()):
+            and not force_update_dependencies
+    ):
         return
 
     print('Checking dependencies...')
@@ -67,7 +71,7 @@ def init():
     with open(mf.init_data) as jf:
         mp = json.load(jf)
 
-    init_data: InitData = InitData(**mp)
+    init_data: InitData = InitData(mp, _cfg.base_dir)
 
     missing_packages = {}
 
@@ -78,7 +82,7 @@ def init():
         if pkg.pipx:
             pkg_info = _pipx.get_info(pkg.pipx)
         elif pkg.pipx_local:
-            pkg_info = _pipx_local.get_info(pkg.pipx)
+            pkg_info = _pipx_local.get_info(pk)
 
         if not pkg_info.installed and _os_pm and _os_pm.name() in pkg.fields:
             pkg_info = _os_pm.get_info(pkg.fields[_os_pm.name()])
