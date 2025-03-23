@@ -124,12 +124,12 @@ class Config:
             raise Exception(f'{k.env_keys} path {v.as_posix()} is missing. Export environment variable')
 
     @staticmethod
-    def _get_bool(k: _CP, fail_if_missing=True) -> bool | None:
+    def _get_bool(k: _CP, fail_if_missing=True, default=None) -> bool | None:
         rv = Config._get_str(k, fail_if_missing)
         v = parse_bool(rv)
 
         if not fail_if_missing or v is not None:
-            return v
+            return v if v is not None else default
 
         if k.file_key:
             raise Exception(f'.{k.file_key} {rv} is invalid bool. Export in .ztk.json or {k.env_keys} environment variable')
@@ -206,6 +206,10 @@ class Config:
     @property
     def hide_splash(self) -> bool:
         return self._get_bool(_CP('hideSplash', 'ZSHCOM_HIDE_SPLASH'), False)
+
+    @property
+    def ignore_optional_dependencies(self) -> bool:
+        return self._get_bool(_CP('ignoreOptionalDependencies', 'ZSHCOM_IGNORE_OPTIONAL_DEPS'), False, default=False)
 
     @property
     def os(self):

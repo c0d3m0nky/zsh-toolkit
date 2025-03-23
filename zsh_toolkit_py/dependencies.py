@@ -150,6 +150,8 @@ def init():
 
             if mp.required:
                 any_required = True
+            elif _cfg.ignore_optional_dependencies:
+                continue
 
             details = mp.details(_cfg.pkg_mgr).replace("\t", "\n\t\t")
             print(f'\t{pk}:\t{"REQUIRED" if mp.required else ""}\n\t\t{details}')
