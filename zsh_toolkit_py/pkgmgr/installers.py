@@ -124,14 +124,18 @@ class PipX(PackageManager):
     def install(self, pkg_name: str) -> None:
         self.log(f'installing {pkg_name}')
 
-        shell(f'pipx install {pkg_name} --python="{self._python_bin}"m')
+        res = shell(f'pipx install {pkg_name} --python="{self._python_bin}"')
+        find = re.findall(r'installed package ' + pkg_name, res)
+
+        if len(find) == 0:
+            raise Exception(res)
 
     def can_update(self) -> bool:
         return True
 
     def update(self, pkg_name: str) -> None:
         self.log(f'Upgrading {pkg_name}')
-
+        # ToDo: detect error
         shell(f'pipx upgrade {pkg_name}')
 
     def get_info(self, pkg_name: str) -> PackageInfo:
@@ -153,6 +157,7 @@ class PipX(PackageManager):
             self.log('No pipx packages found')
             return PackageInfo(self.name(), pkg_name, False, False)
 
+        # ToDo: Why is this still here
         if pkg_name == 'zsh_toolkit_py':
             if pkg_name not in self._pipx_packages:
                 return PackageInfo(self.name(), pkg_name, False, False)
@@ -176,11 +181,15 @@ class PipXLocal(PipX):
     def name(self) -> str:
         return PackageManagers.pipx_local.value
 
+    def update(self, pkg_name: str) -> None:
+        raise "PipXLocal doesn't support this functionality"
+
     def install(self, pkg_name: str) -> None:
         raise "PipXLocal doesn't support this functionality"
 
     def install_local(self, pkg_name: str, path: Path) -> None:
         self.log(f'installing {pkg_name}')
+        # ToDo: detect error
         shell(f'pipx install -e "{path.as_posix()}" --python="{self._python_bin}"')
 
 
