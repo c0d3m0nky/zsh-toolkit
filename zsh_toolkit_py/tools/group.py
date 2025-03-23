@@ -11,24 +11,26 @@ from zsh_toolkit_py.shared.utils import int_safe
 class Args(BaseTap):
     pattern: re.Pattern
     folder: str
-    min_files: int
-    plan: bool = False
+    dirs: bool
+    min_items: int
+    plan: bool
 
     def configure(self) -> None:
         self.description = 'Group files into folders'
         self.add_argument('pattern', type=RegExPartialArg, help=f'Regex pattern {RegExPartialBlurb}')
         self.add_argument('folder', help='Group number to use for folder or prefix with ! for substitution')
-        self.add_optional('-m', '--min-files', type=int, help='Minimum number of files', default=2)
+        self.add_optional('-m', '--min-items', type=int, help='Minimum number of items', default=2)
+        self.add_flag('-d', '--dirs', help='Group folders')
         self.add_plan("Don't commit moves")
 
 
-class FileGroup:
+class Group:
     name: str
-    files: List[Path]
+    items: List[Path]
 
-    def __init__(self, name: str, files: List[str] = None) -> None:
+    def __init__(self, name: str, items: List[str] = None) -> None:
         self.name = name
-        self.files = files or []
+        self.items = items or []
 
 
 def main() -> None:
@@ -44,8 +46,12 @@ def main() -> None:
         print(f'Case sensitive filesystem check failed: {fs_cs}', file=sys.stderr)
         exit(1)
 
-    files: List[Path] = [f for f in root.iterdir() if f.is_file()]
-    move_files: Dict[str, FileGroup] = {}
+    if args.dirs:
+        items: List[Path] = [f for f in root.iterdir() if f.is_dir()]
+    else:
+        items: List[Path] = [f for f in root.iterdir() if f.is_file()]
+
+    move_items: Dict[str, Group] = {}
 
     get_fn: Callable[[re.Match[str], str, Any], str]
 
@@ -68,12 +74,12 @@ def main() -> None:
         print('Invalid folder argument', file=sys.stderr)
         exit(1)
 
-    for f in files:
-        m = args.pattern.match(f.name)
+    for item in items:
+        m = args.pattern.match(item.name)
 
         if m:
             try:
-                fn = get_fn(m, f.name, get_fn_var)
+                fn = get_fn(m, item.name, get_fn_var)
             except IndexError as e:
                 if 'no such group' in str(e):
                     print('folder group out of bounds', file=sys.stderr)
@@ -87,35 +93,35 @@ def main() -> None:
                 else:
                     fnk = fn
 
-                if fnk not in move_files:
-                    move_files[fnk] = FileGroup(fn)
+                if fnk not in move_items:
+                    move_items[fnk] = Group(fn)
 
-                move_files[fnk].files.append(f)
+                move_items[fnk].items.append(item)
 
-    if args.min_files > 1:
-        for k in list(move_files.keys()):
-            if len(move_files[k].files) < args.min_files:
-                move_files.pop(k, None)
+    if args.min_items > 1:
+        for k in list(move_items.keys()):
+            if len(move_items[k].items) < args.min_items:
+                move_items.pop(k, None)
 
-    for mvk in sorted(move_files.keys(), key=lambda sk: sk.lower()):
-        g = move_files[mvk]
+    for mvk in sorted(move_items.keys(), key=lambda sk: sk.lower()):
+        g = move_items[mvk]
         print(g.name)
         i = 1
 
-        for f in sorted(g.files, key=lambda sk: sk.name.lower()):
-            bracket = '╟' if i < len(files) else '╙'
-            print(f'{bracket} {f.name}')
+        for item in sorted(g.items, key=lambda sk: sk.name.lower()):
+            bracket = '╟' if i < len(items) else '╙'
+            print(f'{bracket} {item.name}')
             if not args.plan:
                 d = root / g.name
 
                 if not d.exists():
                     d.mkdir()
 
-                nf = d / f.name
+                nf = d / item.name
                 if nf.exists():
-                    print('\t  file exists')
+                    print(f'\t  {"folder" if args.dirs else "file"} exists')
                 else:
-                    f.rename(nf)
+                    item.rename(nf)
 
             i += 1
 

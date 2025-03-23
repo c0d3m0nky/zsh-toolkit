@@ -59,7 +59,7 @@ class BaseTap(Tap):
         self.add_argument(*name_or_flags, nargs='+', help=help, default=default, required=False)
 
     def add_plan(self, help: str) -> None:
-        self.add_argument("-p", "--plan", action='store_true', help=help)
+        self.add_argument("-p", "--plan", action='store_true', help=help, default=False)
 
     def add_trace(self) -> None:
         self.add_argument('-t', '--trace', action='store_true', help='Trace logging', required=False)
