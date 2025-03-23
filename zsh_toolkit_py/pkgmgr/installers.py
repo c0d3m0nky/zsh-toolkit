@@ -182,10 +182,12 @@ class PipXLocal(PipX):
         return PackageManagers.pipx_local.value
 
     def update(self, pkg_name: str) -> None:
-        raise "PipXLocal doesn't support this functionality"
+        self.log(f'upgrading {pkg_name}')
+        # ToDo: detect error
+        shell(f'pipx upgrade {pkg_name}')
 
     def install(self, pkg_name: str) -> None:
-        raise "PipXLocal doesn't support this functionality"
+        raise Exception("PipXLocal doesn't support this functionality")
 
     def install_local(self, pkg_name: str, path: Path) -> None:
         self.log(f'installing {pkg_name}')
