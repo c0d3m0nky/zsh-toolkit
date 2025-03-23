@@ -94,7 +94,7 @@ def init():
             pkg_info = _os_pm.get_info(pkg.os)
 
         if not pkg_info.installed and pkg.which:
-            if shell(f'which {pkg.which}'):
+            if shell(f'which {pkg.which}', suppress_error=True):
                 pkg_info = PackageInfo('', '', True, False)
 
         satisfied = False
