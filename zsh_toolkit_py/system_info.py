@@ -62,6 +62,9 @@ class InfoFileField:
             return False
 
     def __eq__(self, other) -> bool:
+        if self.value is None:
+            return other is None
+
         if isinstance(other, InfoFileField):
             return self.value == other.value
 
