@@ -1,28 +1,56 @@
 from pathlib import Path
 import re
 import argparse
+from string import ascii_lowercase, ascii_uppercase
 from typing import Any, Callable, Union, List
 
 from tap import Tap
 
 TypeFunc = Callable[[Any], Any]
 
-RegExPartialBlurb = '(partial patterns will add "^.+" and/or ".+$")'
+RegExPartialBlurb = '(partial patterns will add "^.*?" and/or ".*?$")'
+
+
+def _pattern_ignore_case(pattern: str) -> bool:
+    i = 0
+    has_lower = False
+    has_upper = False
+
+    while i < len(pattern) and (not has_lower or not has_upper):
+        c = pattern[i]
+
+        if c == '\\':
+            i += 2
+            continue
+
+        if not has_lower and c in ascii_lowercase:
+            has_lower = True
+
+        if not has_upper and c in ascii_uppercase:
+            has_upper = True
+
+        i += 1
+
+    return has_lower == has_upper
 
 
 # noinspection PyPep8Naming
 def RegExPartialArg(pattern: str) -> re.Pattern:
     if not pattern.startswith('^'):
-        pattern = f'^.+{pattern}'
+        pattern = f'^.*?{pattern}'
     if not pattern.endswith('$'):
-        pattern = f'{pattern}.+$'
+        pattern = f'{pattern}.*?$'
 
-    return re.compile(pattern, re.IGNORECASE)
+    flags = re.IGNORECASE if _pattern_ignore_case(pattern) else re.NOFLAG
+
+    return re.compile(pattern, flags)
 
 
 # noinspection PyPep8Naming
 def RegExArg(pattern: str) -> re.Pattern:
-    return re.compile(pattern, re.IGNORECASE)
+    flags = re.IGNORECASE if _pattern_ignore_case(pattern) else re.NOFLAG
+
+    return re.compile(pattern, flags)
 
 
 # noinspection PyPep8Naming
