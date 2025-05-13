@@ -11,6 +11,7 @@ if not _config.transient or not _config.transient.exists():
 
 ztk_base_dir = _config.base_dir
 
+dependencies_lock = _config.transient / '.state_dependencies_lock'
 dependencies_checked = _config.transient / '.state_dependencies_checked'
 update_dependencies = _config.transient / '.state_update_dependencies'
 trigger_re_source = _config.transient / '.state_trigger_resource'

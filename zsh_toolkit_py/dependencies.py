@@ -1,4 +1,5 @@
 import sys
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
 import json
@@ -44,7 +45,24 @@ if _cfg.pkg_mgr:
         _package_managers[_os_pm.name()] = _os_pm
 
 
+def acquire_lock():
+    while True:
+        try:
+            mf.dependencies_lock.open('x')
+            return True
+        except FileExistsError:
+            time.sleep(0.25)
+
+
+def release_lock():
+    mf.dependencies_lock.unlink(missing_ok=True)
+
+
 def init():
+    print('Waiting for lock')
+    acquire_lock()
+    print('Lock acquired')
+
     if not mf.repo_update_checked.exists() or datetime.fromtimestamp(mf.repo_update_checked.stat().st_mtime) < (datetime.now() - timedelta(days=7)):
         if shutil.which('_ztk-update') is None:
             print('ztk updater seems to be missing')

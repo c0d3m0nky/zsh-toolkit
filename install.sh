@@ -20,14 +20,22 @@ if [[ -z $zshrcCheck ]]
 then
   cp "$HOME/.zshrc" "$HOME/.zshrc.bak"
 
+
+
+
   # shellcheck disable=SC2016
   {
     echo ''
     echo ''
     echo '### zsh-toolkit init';
-    echo 'export PATH="$PATH:$HOME/.local/bin"';
     echo 'ZSHCOM="$HOME/.zsh-toolkit"';
-    echo 'source $ZSHCOM/init.sh';
+    echo 'if [[ -f "$ZSHCOM/init.sh" ]]; then';
+    echo '  localBin="$HOME/.local/bin"';
+    echo '  if [[ ! $PATH =~ $localBin ]]; then export PATH="$localBin:$PATH"; fi';
+    echo '  source $ZSHCOM/init.sh';
+    echo 'else';
+    echo '  echo "[zsh-toolkit]: missing $ZSHCOM/init.sh"';
+    echo 'fi';
   } >> "$HOME/.zshrc"
 fi
 
