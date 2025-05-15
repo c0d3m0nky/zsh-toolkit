@@ -1,4 +1,5 @@
 #!/bin/zsh
+autoload is-at-least
 
 # https://codehs.com/tutorial/ryan/add-color-with-ansi-in-javascript
 export zcRed="\033[91m"
@@ -39,8 +40,13 @@ if [[ -n "$ZSHCOM" ]]; then
   if [[ -z "$ZSHCOM_PYTHON" ]]; then
     ZSHCOM_PYTHON=$(which python3.12)
 
-    if [[ -z "$ZSHCOM_PYTHON" ]]
-    then
+    if [[ -z "$ZSHCOM_PYTHON" ]]; then
+      if ! is-at-least 3.11 "$(python3 --version)"; then
+        ZSHCOM_PYTHON=$(which python3)
+      fi
+    fi
+
+    if [[ -z "$ZSHCOM_PYTHON" ]]; then
       pyLibLoc="$(dirname "$(which python3)")"
       # shellcheck disable=SC2086
       # shellcheck disable=SC2016
@@ -73,7 +79,7 @@ if [[ -n "$ZSHCOM" ]]; then
     # Load config
     _trace "config.py"
     while read -r e; do
-    if [[ "$e" =~ 'export '* ]]; then
+      if [[ "$e" =~ 'export '* ]]; then
         k=$(echo "$e" | sed -E 's/^export ([^=]+)=(.+)$/\1/' )
         v=$(echo "$e" | sed -E 's/^export ([^=]+)=(.+)$/\2/' )
 
@@ -89,15 +95,12 @@ if [[ -n "$ZSHCOM" ]]; then
     # shellcheck source=cleanup.sh
     source "${ZSHCOM__basedir:?}/cleanup.sh"
 
-    if [[ -d $ZSHCOM_PRELOAD ]]
-    then
+    if [[ -d $ZSHCOM_PRELOAD ]]; then
       _loadSource "$ZSHCOM_PRELOAD"
     fi
 
-    if [[ ! -f "$ZSHCOM__mf_break_init" ]]
-    then
-      if [[ -n $(which rclone) ]]
-      then
+    if [[ ! -f "$ZSHCOM__mf_break_init" ]]; then
+      if [[ -n $(which rclone) ]]; then
         export ZSHCOM__feat_rclone=true
       else
         export ZSHCOM__feat_rclone=false
@@ -108,21 +111,17 @@ if [[ -n "$ZSHCOM" ]]; then
 
       _trace dependencies.py
       $ZSHCOM_PYTHON "$ZSHCOM__basedir/zsh_toolkit_py/dependencies.py"
-      if [[ -f "${ZSHCOM__mf_trigger_update:?}" ]]
-      then
+      if [[ -f "${ZSHCOM__mf_trigger_update:?}" ]]; then
         rm "$ZSHCOM__mf_trigger_update"
         ztk-update
-        if [[ -f "${ZSHCOM__mf_repo_updated:?}" ]]
-        then
+        if [[ -f "${ZSHCOM__mf_repo_updated:?}" ]]; then
           # sourcing again to trigger _post_ztk-update
           source "$ZSHCOM__basedir/update.sh"
         fi
       fi
 
-      if [[ ! -f "$ZSHCOM__mf_break_init" ]]
-      then
-        if [[ -d $ZSHCOM_POSTLOAD ]]
-        then
+      if [[ ! -f "$ZSHCOM__mf_break_init" ]]; then
+        if [[ -d $ZSHCOM_POSTLOAD ]]; then
           _loadSource "$ZSHCOM_POSTLOAD"
           # ToDo: handle python
         fi
