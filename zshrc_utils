@@ -53,7 +53,32 @@ dockerZsh() {
 }
 
 function pip_install_save {
-    pip install "$1" && pip freeze | grep "$1" >> requirements.txt
+  prefreeze=$(pip freeze);
+  pip install "$1";
+  res=$?;
+
+  if [[ $res != 0 ]]; then
+    return $res;
+  fi
+
+  postfreeze=$(pip freeze);
+
+  if [[ "$prefreeze" == "$postfreeze" ]]; then
+    return 0;
+  fi
+
+  line=$(pip freeze | ack "^$1=");
+
+  if [[ -n "$line" ]]; then
+    if [[ "$line" =~ "\n" ]]; then
+      echo "Multiple matches on $1 in freeze"
+      echo "$line"
+    else
+      echo "$line" >> ./requirements.txt
+    fi
+  else
+    echo "$1 not found in freeze"
+  fi
 }
 
 function set_title() {
