@@ -28,6 +28,9 @@
     "unrar": {
       "os": "unrar",
       "which": "unrar"
+    },
+    "tldr": {
+      "pipx": "tldr"
     }
   }
 }
