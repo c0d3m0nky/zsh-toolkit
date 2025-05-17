@@ -144,6 +144,7 @@ basic_distro_checks: Dict[str, Tuple[str, str, Union[str, None]]] = {
     'ubuntu': ('=', 'ubuntu', 'apt'),
     'debian': ('*', 'debian', 'apt'),
     'slackware': ('=', 'unraid', None),
+    'nixos': ('=', 'nixos', None),
 }
 
 
