@@ -1,5 +1,9 @@
 #!/bin/zsh
 
+function commandExists() {
+  return $(command -v $1 >/dev/null 2>&1);
+}
+
 if [[ ${ZSHCOM__feat_rclone:?} == true ]]
 then
   alias rmv="rclone move -P --ignore-existing"
@@ -10,10 +14,10 @@ fi
 alias listDirs="find ./ -type d"
 
 function whatsmyip() {
-  if command -v host >/dev/null 2>&1; then
+  if commandExists host; then
     # shellcheck disable=SC2016
     host myip.opendns.com resolver1.opendns.com | ack 'myip.opendns.com has address ([\d.]+)' --output '\$1'
-  elif command -v host >/dev/null 2>&1; then
+  elif commandExists curl; then
     curl checkip.amazonaws.com
   else
     >&2 echo "host nor curl commands available"
@@ -22,7 +26,13 @@ function whatsmyip() {
 }
 
 if [[ -n $ZSHCOM__known_os && $ZSHCOM__known_os == 'win' ]]; then  alias clip="tee /dev/clipboard";
-else alias clip="tee >(xclip -r -selection clipboard)"; fi
+else 
+  if commandExists xclip; then
+    alias clip="tee >(xclip -r -selection clipboard)";
+  elif commandExists wl-copy; then
+    alias clip="tee >(wl-copy -n)";
+  fi
+fi
 
 # shellcheck disable=SC2154
 alias popout='upd=$(dirname "$(pwd)"); while [[ ! -d "$upd" ]]; do upd=$(dirname "$upd"); done; cd "$upd"'
