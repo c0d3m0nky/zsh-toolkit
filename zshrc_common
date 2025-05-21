@@ -45,7 +45,12 @@ alias ztk-varCache="for f in \$(find \$ZSHCOM/.var*); do echo \$(basename \$f) |
 # shellcheck disable=SC2142
 alias dockerStop='$HOME/scripts/dockerStop.sh $@'
 alias rmrf='rm -rf'
-alias view='nano -Sv'
+
+if commandExists bat; then
+  alias view='bat -pp';
+else
+  alias view='nano -Sv';
+fi
 
 if ! command -v json_pp &> /dev/null
 then
