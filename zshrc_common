@@ -66,3 +66,33 @@ then
     echo No xml pretty printer
   fi
 fi
+
+
+function ssh_alias() {
+  name=$1
+  host=$2
+
+  if [[ -n $4 ]]; then
+    user=$3
+    ident=$4
+  elif [[ -n $3 ]]; then
+    if [[ -f $3 ]]; then
+      ident=$3
+      user=$(whoami)
+    else
+      ident="$HOME/.ssh/id_ed25519"
+      user=$3
+    fi
+  else
+    ident="$HOME/.ssh/id_ed25519"
+    user=$(whoami)
+  fi
+
+  if [[ $(cat "/proc/$PPID/comm") == 'kitty' ]]
+  then
+    alias "$name"="kitty +kitten ssh ${user}@${host} -i $ident"
+  else
+    alias "$name"="ssh ${user}@${host} -i $ident"
+  fi
+}
+
