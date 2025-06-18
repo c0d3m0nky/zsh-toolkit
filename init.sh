@@ -19,6 +19,10 @@ function _trace() {
   fi
 }
 
+function commandExists() {
+  return $(command -v $1 >/dev/null 2>&1);
+}
+
 _trace "Loading zsh-toolkit"
 
 function _loadSource() {
@@ -36,29 +40,33 @@ function _loadSource() {
   done
 }
 
+function __trySetPython() {
+  cmd=$1
+  min=$2
+  if commandExists $cmd; then
+    ver=$($cmd --version | ack '^Python (.+)' --output '$1');
+    if is-at-least $min $ver; then
+      ZSHCOM_PYTHON=$(which $cmd)
+      return 0
+    else
+      _trace "$cmd $ver is below $min"
+    fi
+  fi
+
+  return 1
+}
+
 if [[ -n "$ZSHCOM" ]]; then
   if [[ -z "$ZSHCOM_PYTHON" ]]; then
-    ZSHCOM_PYTHON=$(which python3.12)
+    pythonMinMinor=12
+    pythonMin="3.$pythonMinMinor"
 
-    if [[ -z "$ZSHCOM_PYTHON" ]]; then
-      if ! is-at-least 3.11 "$(python3 --version)"; then
-        ZSHCOM_PYTHON=$(which python3)
-      fi
-    fi
+    if ! __trySetPython python3 $pythonMin; then
+      pythonSearchStart=15
 
-    if [[ -z "$ZSHCOM_PYTHON" ]]; then
-      pyLibLoc="$(dirname "$(which python3)")"
-      # shellcheck disable=SC2086
-      # shellcheck disable=SC2016
-      pyVers=$(find $pyLibLoc/python*.* -type f -exec basename {} \; | ack '^python\d\.\d+$' --output '$1' | sort -Vr)
-
-      for p in $pyVers
-      do
-        # shellcheck disable=SC2086
-        ZSHCOM_PYTHON=$(which python$p)
-        if [[ -n $ZSHCOM_PYTHON ]]
-        then
-          break
+      for ((i=$pythonSearchStart;i>=$pythonMinMinor;--i)); do
+        if __trySetPython python3.$i pythonMin; then
+          break;
         fi
       done
     fi
