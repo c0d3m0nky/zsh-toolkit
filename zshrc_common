@@ -84,7 +84,9 @@ function ssh_alias() {
     user=$(whoami)
   fi
 
-  if [[ $(cat "/proc/$PPID/comm") == 'kitty' ]]
+  comm=$(cat "/proc/$PPID/comm")
+
+  if [[ "$TERM" == "xterm-kitty" ]]
   then
     alias "$name"="kitty +kitten ssh ${user}@${host} -i $ident"
   else

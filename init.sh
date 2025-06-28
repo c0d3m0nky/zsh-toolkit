@@ -43,9 +43,12 @@ function _loadSource() {
 function __trySetPython() {
   cmd=$1
   min=$2
+  _trace "__trySetPython $cmd $min"
   if commandExists $cmd; then
+    _trace "$cmd exists"
     ver=$($cmd --version | ack '^Python (.+)' --output '$1');
     if is-at-least $min $ver; then
+      # ToDo: make it so I don't need to which it
       ZSHCOM_PYTHON=$(which $cmd)
       return 0
     else
