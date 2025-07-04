@@ -65,6 +65,7 @@ then
   fi
 fi
 
+alias lsa='ls -lha --group-directories-first';
 
 function ssh_alias() {
   name=$1

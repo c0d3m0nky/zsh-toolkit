@@ -10,3 +10,7 @@ function gitDiff() {
 
   git difftool HEAD "$left" "$file"
 }
+
+function git-rename-fix() {
+  mv $1 $2 && git mv $2 $1
+}

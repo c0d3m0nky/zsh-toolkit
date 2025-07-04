@@ -30,22 +30,29 @@ perfwatch() {
 }
 
 function shellColors() {
-  for i in {0..255};
-  do
-    # shellcheck disable=SC2296
-    # shellcheck disable=SC2298
-    print -Pn "%K{$i}  %k%F{$i}${(l:3::0:)i}%f " ${${(M)$((i%6)):#3}:+$'\n'};
-  done
+  isnum='^[0-9]+$'
+  if [[ "$1" =~ $isnum && -n $2 ]] ; then
+    echo '\\u001b[38;5;'$1'm'$2'\\033[0m';
+    echo   "\u001b[38;5;$1m$2\033[0m";
+  else
+    echo '\n\n\\u001b[38;5;***COLOR CODE HERE***m ***TEXT*** \\033[0m  \n\n'
+    for i in {0..255};
+    do
+      # shellcheck disable=SC2296
+      # shellcheck disable=SC2298
+      print -Pn "%K{$i}  %k%F{$i}${(l:3::0:)i}%f " ${${(M)$((i%6)):#3}:+$'\n'};
+    done
 
-  echo ''
-  echo ''
-  echo 'zsh-toolkit tokens'
-  echo ''
+    echo ''
+    echo ''
+    echo 'zsh-toolkit tokens'
+    echo ''
 
-  for zc in $(printenv | grep -P 'zc[A-Z][a-z]+=' | grep -Po 'zc[A-Z][a-z]+'); do
-    # shellcheck disable=SC2086
-    eval echo -e "\$$zc" $zc "\$zcOFF";
-  done
+    for zc in $(printenv | grep -P 'zc[A-Z][a-z]+=' | grep -Po 'zc[A-Z][a-z]+'); do
+      # shellcheck disable=SC2086
+      eval echo -e "\$$zc" $zc "\$zcOFF";
+    done
+  fi
 }
 
 dockerZsh() {
