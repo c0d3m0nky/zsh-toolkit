@@ -21,9 +21,11 @@ function whatsmyip() {
   fi
 }
 
-if [[ -n $ZSHCOM__known_os && $ZSHCOM__known_os == 'win' ]]; then  alias clip="tee /dev/clipboard";
-else 
-  if commandExists xclip; then
+if [[ $ZSHCOM__known_os == 'win' ]]; then  alias clip="tee /dev/clipboard";
+else
+  if [[ "$TERM" == 'xterm-kitty' ]] && commandExists kitten; then
+    alias clip="tee >(kitten clipboard)";
+  elif commandExists xclip; then
     alias clip="tee >(xclip -r -selection clipboard)";
   elif commandExists wl-copy; then
     alias clip="tee >(wl-copy -n)";
