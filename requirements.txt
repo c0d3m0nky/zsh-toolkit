@@ -10,3 +10,4 @@ PyYAML>=6.0.1,<7.0
 prettytable>=3.10.2,<4.0
 english-words>=2.0.1,<3.0
 unrar2-cffi>=0.4.1,<1.0
+setuptools==80.9.0
