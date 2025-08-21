@@ -66,6 +66,7 @@ then
 fi
 
 alias lsa='ls -lha --group-directories-first';
+alias sulsa='sudo ls -lha --group-directories-first'
 
 function ssh_alias() {
   name=$1
