@@ -164,11 +164,11 @@ def str_in(value: str, coll: List[str], case_insensitive: bool = True, strip: bo
     return False
 
 
-def shell(cmd: str, check=False, suppress_error=False) -> str:
+def shell(cmd: str, check=False, suppress_error=False, timeout=None) -> str:
     if suppress_error:
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, check=check)
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, check=check, timeout=timeout)
     else:
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True, check=check)
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True, check=check, timeout=timeout)
 
     return res.stdout.decode('utf-8').strip()
 

@@ -7,6 +7,7 @@ from pathlib import Path
 from multiprocessing import Pool
 from typing import List, Tuple, Iterator, Dict, Any, Callable
 from prettytable import PrettyTable, PLAIN_COLUMNS
+from elevate import elevate
 
 from zsh_toolkit_py.shared.cli_args import BaseTap
 
@@ -43,6 +44,7 @@ class Args(BaseTap):
     exclude_hidden: bool = False
     exclude_folders: List[Path] = []
     csv: bool
+    sudo: bool
 
     def configure(self) -> None:
         self.description = "A beefed up du"
@@ -55,6 +57,7 @@ class Args(BaseTap):
         self.add_flag("--timed", help="Print seek time")
         self.add_flag("--no-term-colors", help="Disable terminal colors")
         self.add_flag("--csv", help="Prints CSV compatible")
+        self.add_flag('--sudo', help="Elevate privileges")
         self.add_trace()
 
     def process_args(self) -> None:
@@ -367,6 +370,10 @@ def main():
 
     try:
         _args = Args().parse_args()
+
+        if _args.sudo:
+            elevate(graphical=False)
+
         state = State(_args.root.expanduser().resolve(), BareStat('./'), BareStat('Total'))
 
         sorter: Callable[[Stat], Any]

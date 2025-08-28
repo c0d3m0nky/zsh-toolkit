@@ -46,6 +46,7 @@ setup(
         'docker',
         'PyYAML',
         'prettytable',
-        'english-words'
+        'english-words',
+        'elevate',
     ]
 )

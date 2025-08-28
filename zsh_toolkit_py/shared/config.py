@@ -56,7 +56,7 @@ def detect_transient_candidates() -> Generator[Path, None, None]:
     if platform.system() == 'Windows':
         yield Path('/tmp/zsh_toolkit')
     else:
-        dfr = shell('df').split('\n')
+        dfr = shell('df', timeout=3).split('\n')
         rx = re.compile(r'^tmpfs.+(/dev/shm|/run/user)')
         mounts = []
 
@@ -159,18 +159,21 @@ class Config:
         r = self._get_path(k, False)
 
         if r is None:
-            for t in detect_transient_candidates():
-                if t.exists():
-                    r = t
-                    break
-                else:
-                    # noinspection PyBroadException
-                    try:
-                        t.mkdir(parents=True)
+            try:
+                for t in detect_transient_candidates():
+                    if t.exists():
                         r = t
                         break
-                    except:
-                        pass
+                    else:
+                        # noinspection PyBroadException
+                        try:
+                            t.mkdir(parents=True)
+                            r = t
+                            break
+                        except:
+                            pass
+            except:
+                pass
 
         if r is None:
             print(f'.{k.file_key} is missing. Export in .ztk.json or {k.env_keys} environment variable')
