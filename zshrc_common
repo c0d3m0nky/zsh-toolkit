@@ -94,5 +94,10 @@ function ssh_alias() {
   else
     alias "$name"="ssh ${user}@${host} -i $ident"
   fi
+
+  function catskip() {
+    N=$(( $1 + 1 ));
+    tail -n "+$N" $2;
+  }
 }
 
