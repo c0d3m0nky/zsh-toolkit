@@ -100,3 +100,7 @@ function catskip() {
   N=$(( $1 + 1 ));
   tail -n "+$N" $2;
 }
+
+function jtail() {
+  tail -F $@ | jq -C .
+}
