@@ -32,6 +32,10 @@ else
   fi
 fi
 
+if commandExists qrencode; then
+  alias qrencode='qrencode -t UTF8'
+fi
+
 # shellcheck disable=SC2154
 alias popout='upd=$(dirname "$(pwd)"); while [[ ! -d "$upd" ]]; do upd=$(dirname "$upd"); done; cd "$upd"'
 
