@@ -106,5 +106,5 @@ function catskip() {
 }
 
 function jtail() {
-  tail -F $@ | jq -C .
+  tail -qF $@ | jq -C .
 }
