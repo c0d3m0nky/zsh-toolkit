@@ -6,8 +6,6 @@ import json
 import shutil
 from typing import Union, Dict
 
-from zsh_toolkit_py.shared.utils import getenv_bool
-
 sys.path.append(Path(__file__).parent.parent.resolve().as_posix())
 
 from shared.config import Config  # nopep8
@@ -17,7 +15,7 @@ from pkgmgr.models import InitData  # nopep8
 
 import shared.magic_files as mf  # nopep8
 from pkgmgr.installers import PipX, PackageManager, PackageInfo, PipXLocal, package_manager_factory  # nopep8
-from shared.utils import shell  # nopep8
+from shared.utils import shell, getenv_bool  # nopep8
 
 _cfg = Config()
 
