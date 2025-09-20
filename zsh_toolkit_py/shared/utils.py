@@ -1,4 +1,5 @@
 import subprocess
+import os
 from typing import Union, List, Any, TypeVar, Callable, Tuple
 
 ZTK_UTV = TypeVar('ZTK_UTV')
@@ -55,6 +56,10 @@ def parse_bool(s: str, also_true: List[Union[str, None]] = []) -> Union[bool, No
             return True if s in also_true else None
     else:
         return s in also_true
+
+
+def getenv_bool(key: str) -> bool:
+    return parse_bool(os.getenv(key))
 
 
 def pretty_size(size: int) -> str:

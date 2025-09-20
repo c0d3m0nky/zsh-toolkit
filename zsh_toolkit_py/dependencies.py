@@ -1,9 +1,12 @@
 import sys
+import os
 from datetime import datetime, timedelta
 from pathlib import Path
 import json
 import shutil
 from typing import Union, Dict
+
+from zsh_toolkit_py.shared.utils import getenv_bool
 
 sys.path.append(Path(__file__).parent.parent.resolve().as_posix())
 
@@ -49,12 +52,13 @@ def init():
         if shutil.which('_ztk-update') is None:
             print('ztk updater seems to be missing')
         else:
-            resp = input(
-                f'You have not checked for zsh-toolkit updates in over a week, would you like to check now: ').strip()
+            if not getenv_bool("ZSHCOM_WARN_UPDATE"):
+                resp = input(
+                    f'You have not checked for zsh-toolkit updates in over a week, would you like to check now: ').strip()
 
-            if resp.lower() == 'y':
-                mf.trigger_update.touch()
-                return
+                if resp.lower() == 'y':
+                    mf.trigger_update.touch()
+                    return
 
     # sys.argv check for dev
     force_update_dependencies = mf.update_dependencies.exists() or (len(sys.argv) > 1 and sys.argv[1] == 'force_update_dependencies')

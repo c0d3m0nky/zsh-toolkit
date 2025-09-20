@@ -31,6 +31,10 @@
     },
     "tldr": {
       "pipx": "tldr"
+    },
+    "column": {
+      "which": "column",
+      "required": true
     }
   }
 }
