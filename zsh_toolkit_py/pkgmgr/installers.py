@@ -142,8 +142,8 @@ class PipX(PackageManager):
 
     def get_info(self, pkg_name: str) -> PackageInfo:
         if self._pipx_packages is None:
-            pipx_local = shell('pipx list --short')
-            pipx_global = shell('pipx list --global --short')
+            pipx_local = shell('pipx list --short', suppress_error=True)
+            pipx_global = shell('pipx list --global --short', suppress_error=True)
 
             self.log('boop')
 
