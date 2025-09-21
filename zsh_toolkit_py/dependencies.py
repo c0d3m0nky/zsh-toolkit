@@ -62,9 +62,10 @@ def init():
     force_update_dependencies = mf.update_dependencies.exists() or (len(sys.argv) > 1 and sys.argv[1] == 'force_update_dependencies')
 
     if (
-            mf.dependencies_checked.exists()
+            getenv_bool('ZSHCOM__disable_check_dependencies') or
+            (mf.dependencies_checked.exists()
             and datetime.fromtimestamp(mf.dependencies_checked.stat().st_mtime) > (datetime.now() - timedelta(hours=24))
-            and not force_update_dependencies
+            and not force_update_dependencies)
     ):
         return
 
