@@ -5,7 +5,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, Union, List, Tuple
 
-from zsh_toolkit_py.shared.utils import shell
+from zsh_toolkit_py.shared.utils import shell, getenv_bool
 
 
 def _sudo(cmd: List[str]) -> Tuple[int, str, str]:
@@ -112,11 +112,13 @@ class PipX(PackageManager):
     _zsh_toolkit_version: str
     _python_bin: str
     _pipx_packages: Union[Dict[str, str], None]
+    _global_arg: str
 
     def __init__(self, zsh_toolkit_version: str, python_bin: str) -> None:
         self._zsh_toolkit_version = zsh_toolkit_version
         self._python_bin = python_bin
         self._pipx_packages = None
+        self._global_arg = '--global' if getenv_bool('ZSHCOM__pipx_global') else ''
 
     def name(self) -> str:
         return PackageManagers.pipx.value
@@ -124,7 +126,7 @@ class PipX(PackageManager):
     def install(self, pkg_name: str) -> None:
         self.log(f'installing {pkg_name}')
 
-        res = shell(f'pipx install {pkg_name} --python="{self._python_bin}"')
+        res = shell(f'pipx install {pkg_name} {self._global_arg} --python="{self._python_bin}"')
         find = re.findall(r'installed package ' + pkg_name, res)
 
         if len(find) == 0:
@@ -136,7 +138,7 @@ class PipX(PackageManager):
     def update(self, pkg_name: str) -> None:
         self.log(f'Upgrading {pkg_name}')
         # ToDo: detect error
-        shell(f'pipx upgrade {pkg_name}')
+        shell(f'pipx upgrade {pkg_name} {self._global_arg}')
 
     def get_info(self, pkg_name: str) -> PackageInfo:
         if self._pipx_packages is None:
