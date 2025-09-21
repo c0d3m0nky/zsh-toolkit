@@ -140,9 +140,10 @@ class PipX(PackageManager):
 
     def get_info(self, pkg_name: str) -> PackageInfo:
         if self._pipx_packages is None:
-            res = shell('pipx list --short')
+            pipx_local = shell('pipx list --short')
+            pipx_global = shell('pipx list --global --short')
 
-            for ln in res.splitlines():
+            for ln in pipx_local.splitlines() + pipx_global.splitlines():
                 m: re.Match = re.search(_pipx_list_re, ln)
 
                 if m:
