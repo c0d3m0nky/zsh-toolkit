@@ -1,8 +1,7 @@
 {
   "pkg": {
     "pipx": {
-      "pipx": "pipx",
-      "os": "python-pipx",
+      "which": "pipx",
       "required": true
     },
     "zsh_toolkit_py": {
