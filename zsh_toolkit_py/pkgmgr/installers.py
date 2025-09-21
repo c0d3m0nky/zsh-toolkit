@@ -124,7 +124,7 @@ class PipX(PackageManager):
         return PackageManagers.pipx.value
 
     def install(self, pkg_name: str) -> None:
-        self.log(f'installing {pkg_name}')
+        self.log(f'installing {pkg_name} {self._global_arg}')
 
         res = shell(f'pipx install {pkg_name} {self._global_arg} --python="{self._python_bin}"')
         find = re.findall(r'installed package ' + pkg_name, res)
@@ -136,7 +136,7 @@ class PipX(PackageManager):
         return True
 
     def update(self, pkg_name: str) -> None:
-        self.log(f'Upgrading {pkg_name}')
+        self.log(f'Upgrading {pkg_name} {self._global_arg}')
         # ToDo: detect error
         shell(f'pipx upgrade {pkg_name} {self._global_arg}')
 
