@@ -143,6 +143,8 @@ class PipX(PackageManager):
             pipx_local = shell('pipx list --short')
             pipx_global = shell('pipx list --global --short')
 
+            self.log('boop')
+
             for ln in pipx_local.splitlines() + pipx_global.splitlines():
                 m: re.Match = re.search(_pipx_list_re, ln)
 
