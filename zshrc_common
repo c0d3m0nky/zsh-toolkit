@@ -10,7 +10,9 @@ fi
 alias listDirs="find ./ -type d"
 
 function whatsmyip() {
-  if commandExists host; then
+  if commandExists curl && commandExists jq; then
+    curl -sS https://ipinfo.io/json | jq '.'
+  elif commandExists host; then
     # shellcheck disable=SC2016
     host myip.opendns.com resolver1.opendns.com | ack 'myip.opendns.com has address ([\d.]+)' --output '\$1'
   elif commandExists curl; then
