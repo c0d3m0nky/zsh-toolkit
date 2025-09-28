@@ -9,6 +9,10 @@ fi
 
 alias listDirs="find ./ -type d"
 
+function dirItemCount() {
+  echo $((($(ls -Al "$1" | wc -l)-1)));
+}
+
 function whatsmyip() {
   if commandExists curl && commandExists jq; then
     curl -sS https://ipinfo.io/json | jq '.'
