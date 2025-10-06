@@ -106,7 +106,7 @@ else
 fi
 
 function listExt() {
-  find "${1:-.}"/**/*.* | ack '[^.]+$' -o | sort | uniq;
+  find "${1:-.}"/**/* -type f | ack '[^.]+$' -o | sort | uniq
 }
 
 function findWithExtension() {
