@@ -105,6 +105,10 @@ else
   }
 fi
 
+function listExt() {
+  find "${1:-.}"/**/*.* | ack '[^.]+$' -o | sort | uniq;
+}
+
 function findWithExtension() {
   badImg='\.(jpg_.+|r\d+|me-downloaders|torrent)$'
 
@@ -167,4 +171,6 @@ function rclsa() {
   rclone lsd --max-depth 1 "$@";
   echo '---'
   rclone lsl --max-depth 1 "$@";
+}
+
 }

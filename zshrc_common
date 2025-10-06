@@ -112,5 +112,11 @@ function catskip() {
 }
 
 function jtail() {
+  # shellcheck disable=SC2068
   tail -qF $@ | jq -C .
 }
+
+if commandExists perl; then
+  # shellcheck disable=SC2154
+  alias unique="perl -ne 'print unless \$seen{\$_}++'"
+fi
