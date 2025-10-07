@@ -173,4 +173,4 @@ function rclsa() {
   rclone lsl --max-depth 1 "$@";
 }
 
-}
+
