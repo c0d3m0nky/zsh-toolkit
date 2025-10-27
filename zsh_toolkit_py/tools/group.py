@@ -10,7 +10,7 @@ from zsh_toolkit_py.shared.utils import int_safe
 
 class Args(BaseTap):
     pattern: re.Pattern
-    folder: str
+    folder_rx_group: str
     dirs: bool
     min_items: int
     plan: bool
@@ -18,7 +18,7 @@ class Args(BaseTap):
     def configure(self) -> None:
         self.description = 'Group files into folders'
         self.add_argument('pattern', type=RegExPartialArg, help=f'Regex pattern {RegExPartialBlurb}')
-        self.add_argument('folder', help='Group number to use for folder or prefix with ! for substitution')
+        self.add_argument('folder_rx_group', help='Group number to use for folder or prefix with ! for substitution')
         self.add_optional('-m', '--min-items', type=int, help='Minimum number of items', default=2)
         self.add_flag('-d', '--dirs', help='Group folders')
         self.add_plan("Don't commit moves")
@@ -62,13 +62,13 @@ def main() -> None:
         return re.sub(args.pattern, var, name)
 
     get_fn_var: Any
-    gn = int_safe(args.folder)
+    gn = int_safe(args.folder_rx_group)
 
     if gn:
         get_fn_var = gn
         get_fn = get_fn_group
-    elif args.folder.startswith('!'):
-        get_fn_var = args.folder[1:]
+    elif args.folder_rx_group.startswith('!'):
+        get_fn_var = args.folder_rx_group[1:]
         get_fn = get_fn_sub
     else:
         print('Invalid folder argument', file=sys.stderr)

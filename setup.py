@@ -31,7 +31,7 @@ setup(
             'repdb=zsh_toolkit_py.tools.replace_double_byte_chars:main',
             'git_auto_commit=zsh_toolkit_py.tools.git_auto_commit:main',
             'random=zsh_toolkit_py.tools.disorder:_main',
-            'group=zsh_toolkit_py.tools.group:main'
+            'group_files=zsh_toolkit_py.tools.group:main'
         ],
     },
     install_requires=[
