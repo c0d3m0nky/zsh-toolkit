@@ -124,6 +124,9 @@ class PathPartsRename:
         return RenameParts(file, root, [res.stem], res.suffix, '')
 
 
+_default_max_length = 254
+
+
 class Args(BaseTap):
     root: Path
     delimiter: str = '_'
@@ -135,6 +138,7 @@ class Args(BaseTap):
     replace_dbyte: bool
     plan: bool = False
     keep_empty_dirs = False
+    max_length: int = _default_max_length
     sorter: Callable[[List[T], Callable[[T], R], bool], List[T]] = None
 
     def configure(self) -> None:
@@ -149,11 +153,15 @@ class Args(BaseTap):
         self.add_optional("-fr", "--file-rename", type=str, default='', help="RegEx rename on file (relative path string is provided without leading . or /)")
         self.add_flag('-rdp', "--replace-dbyte", help="Replace double byte chars")
         self.add_flag("--keep-empty-dirs", help="Keep empty dirs")
+        self.add_optional("-ml", "--max-length", type=int, default=_default_max_length, help=f"Max length of any path part ( <= {_default_max_length})")
         self.add_hidden("-s", "--sorter")
 
     def process_args(self) -> None:
         if not self.delimiter == '_' and self.file_rename:
             raise ValueError('Conflicting arguments: --delimiter --file-rename')
+
+        if self.max_length > _default_max_length:
+            raise ValueError(f'--max-length must be <= {_default_max_length}')
 
         if not self.delimiter and not self.file_rename:
             self.delimiter = '_'
@@ -174,7 +182,6 @@ _args: Args
 
 _skipped_extensions = {}
 _skipped_re_filter = 0
-_max_length = 254
 
 
 def flatten_path():
@@ -203,7 +210,7 @@ def flatten_path():
             global skip_file
             altered = False
 
-            while nfn.get_byte_length() > _max_length:
+            while nfn.get_byte_length() > _args.max_length:
                 altered = True
                 option_number = 1
                 pc = len(nfn.parts)
@@ -247,7 +254,7 @@ def flatten_path():
                     nfn.remove_consecutive_filler_chars()
                     pi = act - 1
 
-                    while nfn.get_byte_length() > _max_length:
+                    while nfn.get_byte_length() > _args.max_length:
                         nfn.parts[pi] = nfn.parts[pi][:-1]
                 elif pc < act <= pc * 2:
                     pi = act - 1 - pc
