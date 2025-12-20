@@ -56,6 +56,8 @@ alias rmrf='rm -rf'
 if commandExists bat; then
   alias view='bat -pp';
   alias colorlog='bat -pp -l log'
+  alias -g -- -h='-h 2>&1 | bat --language=help -pp'
+  alias -g -- --help='--help 2>&1 | bat --language=help --style=plain'
 else
   alias view='nano -Sv';
 fi
