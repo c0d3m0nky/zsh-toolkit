@@ -1,4 +1,5 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
+
 autoload is-at-least
 
 missing=()
@@ -65,9 +66,9 @@ then
     echo '### zsh-toolkit init';
     echo 'export PATH="$PATH:$HOME/.local/bin"';
     echo 'ZSHCOM="$HOME/.zsh-toolkit"';
-    echo 'source $ZSHCOM/init.sh';
+    echo 'source $ZSHCOM/init.zsh';
   } >> "$HOME/.zshrc"
 fi
 
 ZSHCOM="$HOME/.zsh-toolkit"
-source "$ZSHCOM/init.sh"
+source "$ZSHCOM/init.zsh"

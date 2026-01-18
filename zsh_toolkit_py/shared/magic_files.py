@@ -24,7 +24,7 @@ trigger_update = _transient / '.state_trigger_update'
 repo_update_checked = _config.cache / '.state_repo_update_checked'
 repo_updated = _config.cache / '.state_repo_updated'
 init_data = _config.base_dir / 'initData.json'
-init = _config.base_dir / 'init.sh'
+init = _config.base_dir / 'init.zsh'
 break_init = _transient / '.state_break_init'
 
 _cache_prefixes: List[str] = ['.var_', '.cache_', '.state_']

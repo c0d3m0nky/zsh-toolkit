@@ -51,8 +51,7 @@ def init():
             print('ztk updater seems to be missing')
         else:
             if not getenv_bool("ZSHCOM_WARN_UPDATE"):
-                resp = input(
-                    f'You have not checked for zsh-toolkit updates in over a week, would you like to check now: ').strip()
+                resp = input(f'You have not checked for zsh-toolkit updates in over a week, would you like to check now: ').strip()
 
                 if resp.lower() == 'y':
                     mf.trigger_update.touch()

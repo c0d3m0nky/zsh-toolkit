@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 
 if [[ ${ZSHCOM__feat_rclone:?} == true ]]
 then
@@ -51,7 +51,6 @@ alias popout='upd=$(dirname "$(pwd)"); while [[ ! -d "$upd" ]]; do upd=$(dirname
 alias ztk-varCache="for f in \$(find \$ZSHCOM/.var*); do echo \$(basename \$f) | ack '^\.var_(.+)$' --output '\$1'; cat \$f; done"
 
 # shellcheck disable=SC2142
-alias dockerStop='$HOME/scripts/dockerStop.sh $@'
 alias rmrf='rm -rf'
 
 if commandExists bat; then

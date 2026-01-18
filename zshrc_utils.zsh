@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 
 if [[ -z $ZSHCOM_DSH_USEZSH ]]; then ZSHCOM_DSH_USEZSH=''; fi
 

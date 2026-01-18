@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 
 function ztk-update() {
   _ztk-update "$@"
@@ -6,7 +6,7 @@ function ztk-update() {
     if [[ -f "${ZSHCOM__mf_repo_updated:?}" ]]
   then
     # Re-sourcing self to apply changes before calling post
-    source "${ZSHCOM__basedir:?}/update.sh"
+    source "${ZSHCOM__basedir:?}/update.zsh"
   fi
 
   if [[ -f "${ZSHCOM__mf_update_dependencies:?}" ]]

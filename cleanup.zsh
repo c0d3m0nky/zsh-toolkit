@@ -1,5 +1,4 @@
-#!/bin/zsh
-
+#!/usr/bin/env zsh
 
 find "${ZSHCOM__basedir:?}/" -maxdepth 0 -type f  -name ".(state|var)*" -exec rm {} \;
 

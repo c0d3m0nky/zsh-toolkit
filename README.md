@@ -2,14 +2,13 @@
 A collection of bash & python scripts I use as helpers in zsh
 
 # Install
-```zsh -c "$(curl -fsSL https://raw.githubusercontent.com/c0d3m0nky/zsh-toolkit/main/install.sh)"```
+```zsh -c "$(curl -fsSL https://raw.githubusercontent.com/c0d3m0nky/zsh-toolkit/main/install.zsh)"```
 
 # ToDo
 * Merge local dependencies init file from ~/.ztk_init.json
 * Separate and cache of heuristics
 * Troubleshoot and optimize load times
 * Prevent changes to pack from being committed without updating version
-* Expand magicFiles.sh to all
 * Write tests
   * Each py pack applet
 * Add to install script

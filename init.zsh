@@ -1,4 +1,5 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
+
 autoload is-at-least
 
 # https://codehs.com/tutorial/ryan/add-color-with-ansi-in-javascript
@@ -103,8 +104,8 @@ if [[ -n "$ZSHCOM" ]]; then
     done < <("${ZSHCOM_PYTHON:?}" "${ZSHCOM:?}/zsh_toolkit_py/init.py" --source)
 
     # ToDo: Hopefully one day shellcheck will use this directive to check for assignment and avoid SC2154 everywhere https://github.com/koalaman/shellcheck/issues/2956
-    # shellcheck source=cleanup.sh
-    source "${ZSHCOM__basedir:?}/cleanup.sh"
+    # shellcheck source=cleanup.zsh
+    source "${ZSHCOM__basedir:?}/cleanup.zsh"
 
     if [[ -d $ZSHCOM_PRELOAD ]]; then
       _loadSource "$ZSHCOM_PRELOAD"
@@ -118,7 +119,7 @@ if [[ -n "$ZSHCOM" ]]; then
       fi
 
       _loadSource "$ZSHCOM__basedir"
-      source "$ZSHCOM__basedir/update.sh"
+      source "$ZSHCOM__basedir/update.zsh"
 
       _trace dependencies.py
       $ZSHCOM_PYTHON "$ZSHCOM__basedir/zsh_toolkit_py/dependencies.py"
@@ -127,7 +128,7 @@ if [[ -n "$ZSHCOM" ]]; then
         ztk-update
         if [[ -f "${ZSHCOM__mf_repo_updated:?}" ]]; then
           # sourcing again to trigger _post_ztk-update
-          source "$ZSHCOM__basedir/update.sh"
+          source "$ZSHCOM__basedir/update.zsh"
         fi
       fi
 
@@ -151,7 +152,7 @@ if [[ -n "$ZSHCOM" ]]; then
           if [[ -z "$ZSHCOM__banner" ]]; then ZSHCOM__banner="default"; fi
         fi
 
-        source "$ZSHCOM__basedir/splash.sh"
+        source "$ZSHCOM__basedir/splash.zsh"
       fi
     fi
 

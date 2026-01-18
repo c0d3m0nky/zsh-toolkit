@@ -1,15 +1,14 @@
 {
   "pkg": {
-    "pipx": {
-      "which": "pipx",
-      "required": true
-    },
     "zsh_toolkit_py": {
       "pipx_local": "./",
       "required": true
     },
     "yq": {
       "pipx": "yq"
+    },
+    "faker": {
+      "pipx": "faker"
     },
     "ack": {
       "os": "ack",
