@@ -100,7 +100,7 @@ _name_min_width = 17
 
 
 def exclude_dir(d: Path, args: Args) -> bool:
-    return (args.exclude_hidden and d.name.startswith('.')) or d.expanduser().resolve() in args.exclude_folders or d.is_mount() or d.is_symlink()
+    return (args.exclude_hidden and d.name.startswith('.')) or d in args.exclude_folders or d.is_mount() or d.is_symlink()
 
 
 def walk_dir(tgt_dir: Path, state: State, log: Logger, args: Args) -> Iterator[Tuple[Path, List[Path]]]:
@@ -390,7 +390,7 @@ def main():
         root_dirs: List[Path] = []
         root_files: List[Path] = []
 
-        for fso in _args.root.iterdir():
+        for fso in _args.root.expanduser().resolve().iterdir():
             if fso.is_dir():
                 if not exclude_dir(fso, _args):
                     root_dirs.append(fso)
